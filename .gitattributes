@@ -1,0 +1,7 @@
+* text=auto
+*.sh text eol=lf
+*.pcap binary
+*.png binary
+*.ico binary
+*.icns binary
+*.exe binary
