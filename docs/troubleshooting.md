@@ -28,6 +28,7 @@ Start with `uv run python -m osintcc.doctor` (or `osintcc.doctor --json`) and `G
 | Plugin shows *tampered* | Files changed after review | Review again and re-enable with the new hash (or reinstall) |
 | Plugin fails only in the packaged build | The packaged sidecar has no separate Python; it can import only bundled standard-library modules | Use the standard library, or run from source |
 | `address already in use` on 8791 | A previous dev backend (or another program) holds the port | `OSINTCC_PORT=<n>`; the packaged app uses an ephemeral port |
+| Overview says "OUTSIDE CONNECTIONS DETECTED while idle" | A process of the app's own tree held a non-loopback connection during the first 90 s without any action of yours | Open the audit log entry `selfcheck.egress` for the process and address; this should never happen, so treat it as a bug report. `engine_only` is the known WebView2 behaviour on Windows |
 | Windows SmartScreen warning | The build is not code-signed | Expected; verify the SHA-256 from `SHA256SUMS.txt` |
 | `playwright` can't launch a browser | Needs Microsoft Edge installed (it uses the system Edge, no download) | Install Edge or point `channel` at another installed Chromium browser |
 | Linux: shell won't build | Needs WebKitGTK and the Tauri Linux prerequisites | Not verified in this project; the backend and tests do run on Linux |

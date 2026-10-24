@@ -971,6 +971,15 @@ async def restore(request: Request, body: RestoreIn):
     return {"restored_to": str(out), "note": "Restored into a NEW directory. Point OSINTCC_DATA_DIR at it to switch over."}
 
 
+@router.get("/system/egress-check")
+async def egress_check(request: Request):
+    """Result of the start-up self-check: did the app's own processes open outside connections while idle?"""
+    mon = S(request).egress
+    if mon is None:
+        return {"enabled": False, "state": "disabled", "verdict": None, "note": "The start-up egress self-check is not running in this mode."}
+    return mon.state
+
+
 @router.get("/system/vault")
 async def vault_status(request: Request):
     st = S(request)

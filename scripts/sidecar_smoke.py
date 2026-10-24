@@ -46,7 +46,7 @@ def docx() -> bytes:
 def run_checks(encrypted: bool) -> None:
     """One full pass. encrypted=True uses a key from the environment (never the OS credential store) and checks the files on disk."""
     data = Path(tempfile.mkdtemp(prefix="osintcc-frozen-"))
-    env = {**os.environ, "OSINTCC_DATA_DIR": str(data)}
+    env = {**os.environ, "OSINTCC_DATA_DIR": str(data), "OSINTCC_EGRESS_WINDOW_S": "4"}
     if encrypted:
         env.update(OSINTCC_VAULT_ENCRYPTION="required", OSINTCC_VAULT_KEY=base64.b64encode(os.urandom(32)).decode())
     else:
@@ -69,6 +69,13 @@ def run_checks(encrypted: bool) -> None:
         c = httpx.Client(base_url=f"http://127.0.0.1:{kv['port']}/api/v1", headers={"Authorization": "Bearer " + kv["token"]}, timeout=60)
         r = c.get("/health/ready")
         check("health ready (migrations ran from bundled files)", r.status_code == 200 and r.json()["status"] == "ready", json.dumps(r.json())[:120])
+        eg = {}
+        for _ in range(30):  # the start-up egress self-check runs with a short window here (OSINTCC_EGRESS_WINDOW_S)
+            eg = c.get("/system/egress-check").json()
+            if eg.get("state") == "finished":
+                break
+            time.sleep(1)
+        check("start-up egress self-check finished and found no outside connections", eg.get("verdict") == "clean" and eg.get("samples", 0) >= 1, json.dumps({k: eg.get(k) for k in ("verdict", "samples")}))
         cid = c.post("/cases", json={"title": "frozen", "purpose": "packaging smoke test"}).json()["id"]
         for name, body in (("a.jpg", si.jpeg_with_gps(48.8, 2.3)), ("m.docx", docx()), ("w.pdf", b"%PDF-1.4\n1 0 obj<</S/JavaScript>>endobj\n%%EOF"),
                            ("x.pcap", si.pcap())):

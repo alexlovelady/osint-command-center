@@ -7820,6 +7820,23 @@
     "summary": "Doctor"
    }
   },
+  "/api/v1/system/egress-check": {
+   "get": {
+    "description": "Result of the start-up self-check: did the app's own processes open outside connections while idle?",
+    "operationId": "egress_check_api_v1_system_egress_check_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Egress Check"
+   }
+  },
   "/api/v1/system/retention/due": {
    "get": {
     "description": "Lists sources past their retention date. Nothing is deleted automatically.",

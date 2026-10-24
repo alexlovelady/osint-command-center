@@ -27,6 +27,7 @@ from .evidence.crypto import VaultCipher, load_or_create_key
 from .evidence.vault import Vault
 from .jobs.runner import JobRunner
 from .policy.ssrf import SafeHttp
+from .telemetry import audit
 
 if TYPE_CHECKING:
     from .plugins.manager import PluginManager
@@ -56,6 +57,7 @@ class AppState:
     request_shutdown: Callable[[], None] | None = None  # set by run(): makes uvicorn exit gracefully
     db_key: bytes | None = None  # SQLCipher key when the database is encrypted
     setup_tasks: dict = field(default_factory=dict)  # first-run setup progress (in memory)
+    egress: Any = None  # startup egress self-check monitor (see selfcheck/egress.py)
     update_http: Any = None  # test/dev seam: SafeHttp used by the update check
 
 
@@ -117,7 +119,21 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
         app.state.recovered_captures = recover_sessions(sm)
         if settings.run_scheduler:
             scheduler.start()
+        egress_task = None
+        if settings.run_scheduler and os.environ.get("OSINTCC_EGRESS_SELFCHECK", "1") != "0":
+            from .selfcheck.egress import EgressMonitor
+
+            def _done(st: dict) -> None:
+                with sm() as db:
+                    audit.record(db, "selfcheck.egress", actor="system", metadata={k: st[k] for k in ("verdict", "samples", "window_s", "user_activity")}
+                                 | {"offenders": st["offenders"][:10], "engine_connections": len(st["engine_connections"])})
+                    db.commit()
+            busy = lambda: bool(state.tasks) or any(t["status"] == "running" for t in state.setup_tasks.values())
+            state.egress = EgressMonitor(window_s=float(os.environ.get("OSINTCC_EGRESS_WINDOW_S", "90")), busy=busy, on_done=_done)
+            egress_task = asyncio.create_task(state.egress.run())
         yield
+        if egress_task:
+            egress_task.cancel()
         await scheduler.stop()
         for t in list(state.tasks):
             t.cancel()

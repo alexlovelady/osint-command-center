@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-149 operations in 34 groups.
+150 operations in 34 groups.
 
 ## ai
 
@@ -296,6 +296,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 |---|---|---|
 | POST | `/api/v1/system/database/remove-plaintext-leftovers` | Overwrite-and-delete the plaintext copies left by the one-time encryption migration (and pre-migration .bak files). |
 | GET | `/api/v1/system/doctor` | Doctor |
+| GET | `/api/v1/system/egress-check` | Result of the start-up self-check: did the app's own processes open outside connections while idle? |
 | GET | `/api/v1/system/retention/due` | Lists sources past their retention date. Nothing is deleted automatically. |
 | POST | `/api/v1/system/shutdown` | Graceful stop requested by the desktop shell (lifespan then cancels jobs and checkpoints the WAL). |
 | GET | `/api/v1/system/vault` | Vault Status |

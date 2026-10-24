@@ -31,6 +31,16 @@ What the application stores, where it can go, and what it does not do. Written f
 
 The local case search does **not** hide RESTRICTED rows (they are your own case's data); the MCP search and AI retrieval do hide them unless you opt in.
 
+## Start-up egress self-check
+
+Every launch, for 90 s (`OSINTCC_EGRESS_WINDOW_S`; off with `OSINTCC_EGRESS_SELFCHECK=0`), the backend samples the OS connection table for its own process
+tree (desktop shell, backend, and the browser-engine processes the shell starts) every 2 s and records any non-loopback connection. The verdict
+(`clean` / `engine_only` / `offending` / `unavailable`) is shown on the Overview page, served at `GET /api/v1/system/egress-check` and written to the
+audit log as `selfcheck.egress`. Connections that appear after you start an action (search, download, job) are listed separately as user-confirmed
+activity and never fail the check. It is a connection-level sampler, not a packet capture: it needs no administrator rights but can miss a
+connection that opens and closes between two samples. On the development machine the real Windows desktop reported `engine_only` (WebView2's
+connection to Microsoft; 25 samples, 0 from our code), matching the packet capture.
+
 ## Sensitive categories
 
 - **Sensitivity labels** (`PUBLIC`, `INTERNAL`, `RESTRICTED`, `SECRET`) travel with evidence and observations. Positions, GPS tracks,

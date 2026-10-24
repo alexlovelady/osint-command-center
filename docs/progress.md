@@ -8,15 +8,15 @@ the command shown on this machine; anything not run is listed under *Not verifie
 
 | Check | Result |
 |---|---|
-| `uv run pytest -q`, Windows, Python 3.14 | **433 passed, 0 failed, 0 warnings** (offline) |
-| Same suite on Python **3.12.14** and **3.13.15** (Windows) | **433 passed** on each; `mypy` clean on each |
-| Same suite on Linux (Ubuntu 22.04 container, Python 3.12.15) | **432 passed, 1 skipped** (the real-ExifTool test: not installed in that container); `ruff` and `mypy` clean |
+| `uv run pytest -q`, Windows, Python 3.14 | **440 passed, 0 failed, 0 warnings** (offline) |
+| Same suite on Python **3.12.14** and **3.13.15** (Windows) | **433 passed** on each when last run (before the self-check tests were added); `mypy` clean |
+| Same suite on Linux (Ubuntu 22.04 container, Python 3.12.15) | **439 passed, 1 skipped** (the real-ExifTool test: not installed in that container); `ruff` and `mypy` clean |
 | Backend coverage (`--cov=osintcc`) | **89%** overall (9772 statements). db/encrypt 95%, reporting/store 86%, ingest/exiftool 91%, vault 95%, policy 82–97%. Lowest: `setup/installer.py` 67% (the real download/extract/venv paths are exercised by real installs, not unit tests), `server.py` 0% (covered by the frozen smoke test) |
 | `ruff check backend tests scripts`, `mypy` (96 files) | clean / `no issues found` |
-| Web: `tsc`, `eslint`, `vitest`, `vite build` | clean · **16 tests** · build OK |
+| Web: `tsc`, `eslint`, `vitest`, `vite build` | clean · **19 tests** · build OK |
 | Browser E2E (`pnpm e2e`, Playwright 1.60 + system Edge, mocked network) | **7 passed**, including axe WCAG 2.0/2.1 A+AA with no serious/critical violations on every page (now incl. Setup) and all 16 case tabs, light and dark |
 | `cargo test` (shell) | 2 passed on Windows and in the Linux container |
-| Frozen backend, `scripts/sidecar_smoke.py` | **28/28 on Windows and 28/28 on Linux**: each run does a plain pass and an **encrypted** pass (database file is ciphertext, report stored as `.enc` yet downloadable, MCP `initialize`, plugin runner, keyring backend, graceful exit) plus the `setup status` subcommand |
+| Frozen backend, `scripts/sidecar_smoke.py` | **30/30 on Windows and 30/30 on Linux** (includes the start-up egress self-check): each run does a plain pass and an **encrypted** pass (database file is ciphertext, report stored as `.enc` yet downloadable, MCP `initialize`, plugin runner, keyring backend, graceful exit) plus the `setup status` subcommand |
 | Linux desktop shell (container, Xvfb) | Built (4 MB) and **run**: the real window renders the first-run Setup page (`docs/evidence/linux-egress/shell.png`), starts the bundled backend, and `kill -9` of the shell left **0** backend processes |
 | **Real local model** (`scripts/ai_live_check.py`) | `huihui_ai/qwen3-abliterated:8b` (5.0 GB) answered through the app's retrieval → prompt → model → citation-verification pipeline: grounded answer with a verified evidence id, in **17 s**; CPU-only generation **5.9 tokens/s** |
 | **Real tool installs** (Setup code, Windows) | Subfinder 2.17.0, Amass 5.1.1, ExifTool 13.59, Sherlock 0.16.2, Maigret 0.6.6 installed under `%APPDATA%\osintcc\tools`; every download matched the publisher's SHA-256 and each reports its version |
@@ -40,6 +40,13 @@ the command shown on this machine; anything not run is listed under *Not verifie
 Consequence you should know about: on Windows the UI is hosted by Microsoft's WebView2 runtime, and that runtime talks to Microsoft on its own. If
 that is unacceptable, block `msedgewebview2.exe` for the app's WebView folder (`%LOCALAPPDATA%\local.osintcc.desktop\EBWebView`) in Windows Firewall,
 or use the Linux build (WebKitGTK) where the capture shows nothing.
+
+### Start-up self-check (added after the capture)
+
+The capture became a built-in test: `selfcheck/egress.py` runs automatically at launch (90 s window), writes an audit event and shows the verdict on the
+Overview page. Verified: 7 backend tests (verdict logic, user-activity exemption, a real socket to a non-loopback address is attributed to this
+process, endpoint + audit event, opt-out), 3 UI tests, frozen-build smoke on Windows (clean), and the **real Windows desktop app** reported `engine_only`
+(25 samples, 0 connections from our code, 1 from WebView2). Limits: sampling every 2 s (short connections can be missed), connection-level only.
 
 ## Phase gates (spec §15, §21, §23.10)
 
