@@ -1,0 +1,130 @@
+{
+ "slug": "case-02-entity-correlation",
+ "key": "CASE-02",
+ "version": 1,
+ "category": "Evidence",
+ "name": "Entity Correlation",
+ "description": "When new findings arrive, suggests links between domains and addresses that share values and tells you how many to review.",
+ "catalog_trigger": "New finding",
+ "tags": [
+  "correlation"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [],
+ "legal_notes": "Suggestions only; the verification gate is you: nothing is merged.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+ "capability_gaps": [],
+ "instructions": "When new findings arrive, suggests links between domains and addresses that share values and tells you how many to review.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "case-02-entity-correlation",
+  "name": "Entity Correlation",
+  "description": "When new findings arrive, suggests links between domains and addresses that share values and tells you how many to review.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "correlation"
+  ],
+  "trigger": {
+   "type": "event",
+   "event": "new_finding",
+   "enabled": false
+  },
+  "inputs": {},
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "domains",
+    "type": "case_findings",
+    "depends_on": [],
+    "config": {
+     "entity_types": [
+      "domain"
+     ]
+    }
+   },
+   {
+    "id": "ips",
+    "type": "case_findings",
+    "depends_on": [],
+    "config": {
+     "entity_types": [
+      "ip"
+     ]
+    }
+   },
+   {
+    "id": "corr",
+    "type": "correlate",
+    "depends_on": [
+     "domains",
+     "ips"
+    ],
+    "config": {
+     "refs": [
+      "$nodes.domains.output",
+      "$nodes.ips.output"
+     ]
+    }
+   },
+   {
+    "id": "any",
+    "type": "condition",
+    "depends_on": [
+     "corr"
+    ],
+    "config": {
+     "ref": "$nodes.corr.output.count",
+     "op": "gt",
+     "value": 0
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "any"
+    ],
+    "config": {
+     "change_ref": "$nodes.any.output",
+     "title": "Suggested entity links to review",
+     "severity": "info",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {},
+  "adapter_findings": {},
+  "case_findings": [
+   {
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "dns.a",
+    "value": "192.0.2.10"
+   },
+   {
+    "entity": "192.0.2.10",
+    "entity_type": "ip",
+    "predicate": "dns.a",
+    "value": "192.0.2.10"
+   }
+  ]
+ }
+}

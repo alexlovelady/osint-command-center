@@ -198,6 +198,12 @@ def to_html(d: dict[str, Any]) -> str:
     if d["notes"]:
         parts.append("<h2>Analyst notes</h2>" + "".join(
             f"<div><small>{e(n['created_at'] or '')}</small>{n['html']}</div>" for n in d["notes"]))
+    if d.get("automation_runs"):
+        parts.append("<h2>Automation runs (audit references)</h2><table><tr><th>Workflow</th><th>Revision</th><th>Version hash</th><th>Run</th><th>Trigger</th><th>State</th><th>Evidence</th></tr>")
+        for a in d["automation_runs"]:
+            parts.append(f"<tr><td>{e(a['workflow'])}</td><td>{a['revision']}</td><td><code>{e(a['version_hash'] or '')}</code></td><td><code>{e(a['run_id'])}</code></td>"
+                         f"<td>{e(a['trigger'])}</td><td>{e(a['state'])}</td><td>{a['evidence_count']}</td></tr>")
+        parts.append("</table>")
     parts.append(f"<h2>Evidence manifest</h2><p>Manifest SHA-256: <code>{d['evidence_manifest_sha256']}</code> · "
                  f"redaction: {e(d['redaction'])}</p><table><tr><th>Evidence</th><th>Title</th><th>SHA-256</th>"
                  "<th>Bytes</th><th>Retrieved</th></tr>")
@@ -237,6 +243,9 @@ def to_markdown(d: dict[str, Any]) -> str:
     if d.get("observations"):
         out += ["", "## Imported observations", "", "| Discipline | Kind | Observed | Evidence |", "|---|---|---|---|"]
         out += [f"| {o['discipline']} | {o['kind']} | {o['observed_at']} | {o['evidence_id']} |" for o in d["observations"]]
+    if d.get("automation_runs"):
+        out += ["", "## Automation runs (audit references)", "", "| Workflow | Revision | Version hash | Run | Trigger | State | Evidence |", "|---|---|---|---|---|---|---|"]
+        out += [f"| {a['workflow']} | {a['revision']} | {a['version_hash']} | {a['run_id']} | {a['trigger']} | {a['state']} | {a['evidence_count']} |" for a in d["automation_runs"]]
     out += ["", "## Evidence manifest", "", f"Manifest SHA-256: `{d['evidence_manifest_sha256']}`", ""]
     out += [f"- `{m['evidence_id']}` {m['title']} — `{m['sha256']}` ({m['bytes']} bytes)" for m in d["evidence_manifest"]]
     return "\n".join(out) + "\n"
@@ -354,8 +363,22 @@ def _extras(db: Session, case_id: str, redact: bool) -> dict[str, Any]:
             "alternative_explanations": [h for h in hyps if h["status"] in ("open", "supported", "refuted")]}
 
 
+def _automation_runs(db: Session, case_id: str) -> list[dict[str, Any]]:
+    """Which automation versions produced or touched this case's data: workflow, revision, content hash, run id, state (real runs only)."""
+    from ..db.models import AutomationRun, AutomationVersion, AutomationWorkflow
+    rows = db.execute(select(AutomationRun, AutomationWorkflow).join(AutomationWorkflow, AutomationWorkflow.id == AutomationRun.workflow_id)
+                      .where(AutomationRun.case_id == case_id, AutomationRun.dry_run.is_(False)).order_by(AutomationRun.queued_at).limit(200)).all()
+    out = []
+    for r, wf in rows:
+        v = db.get(AutomationVersion, r.version_id) if r.version_id else None
+        out.append({"run_id": r.id, "workflow": wf.name, "revision": v.revision if v else None, "version_hash": v.content_hash[:16] if v else None, "trigger": r.trigger_type,
+                    "state": r.state, "queued_at": _iso(r.queued_at), "ended_at": _iso(r.ended_at), "evidence_count": r.evidence_count})
+    return out
+
+
 def collect(db: Session, case_id: str, profile: str = "technical", redact_sensitive: bool = True) -> dict[str, Any]:
     data = _collect_base(db, case_id, profile, redact_sensitive)
     data.update(_extras(db, case_id, redact_sensitive))
+    data["automation_runs"] = _automation_runs(db, case_id)
     data["summary"]["claims"] = len(data["claims"])
     return data

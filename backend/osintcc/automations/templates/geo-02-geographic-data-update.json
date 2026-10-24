@@ -1,0 +1,152 @@
+{
+ "slug": "geo-02-geographic-data-update",
+ "key": "GEO-02",
+ "version": 1,
+ "category": "GEOINT",
+ "name": "Geographic Data Update",
+ "description": "Re-queries OpenStreetMap (Overpass) for features around a coordinate and reports additions and removals.",
+ "catalog_trigger": "Weekly, disabled",
+ "tags": [
+  "geo",
+  "monitor"
+ ],
+ "dependencies": [
+  "overpass"
+ ],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "coordinates",
+   "label": "Latitude,longitude",
+   "type": "coordinates",
+   "required": true,
+   "example": "51.5007,-0.1246"
+  }
+ ],
+ "legal_notes": "Overpass has usage limits; keep radii small, or use a local extract.",
+ "quota_note": "About 1 source request(s) per run",
+ "example_output": "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+ "capability_gaps": [],
+ "instructions": "Re-queries OpenStreetMap (Overpass) for features around a coordinate and reports additions and removals.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "geo-02-geographic-data-update",
+  "name": "Geographic Data Update",
+  "description": "Re-queries OpenStreetMap (Overpass) for features around a coordinate and reports additions and removals.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "geo",
+   "monitor"
+  ],
+  "trigger": {
+   "type": "schedule",
+   "schedule": "0 5 * * 0",
+   "timezone": "UTC",
+   "enabled": false,
+   "missed_run_policy": "coalesce"
+  },
+  "inputs": {
+   "coordinates": "51.5007,-0.1246"
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "scope",
+    "type": "authorization_check",
+    "depends_on": [],
+    "config": {
+     "target_ref": "$inputs.coordinates",
+     "target_type": "coordinates"
+    }
+   },
+   {
+    "id": "osm",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "overpass",
+     "target_ref": "$inputs.coordinates",
+     "target_type": "coordinates"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "osm"
+    ],
+    "config": {
+     "ref": "$nodes.osm.output"
+    }
+   },
+   {
+    "id": "diff",
+    "type": "snapshot_diff",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "dataset_ref": "$nodes.unique.output"
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "change_ref": "$nodes.diff.output",
+     "title": "Map data changed nearby",
+     "severity": "info",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   },
+   {
+    "id": "fail",
+    "type": "error_handler",
+    "depends_on": [
+     "unique",
+     "diff"
+    ],
+    "config": {
+     "title": "Geographic update failed"
+    },
+    "run_on": "failure"
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "coordinates": "51.5007,-0.1246"
+  },
+  "adapter_findings": {
+   "overpass": [
+    {
+     "entity": "51.5007,-0.1246",
+     "entity_type": "place",
+     "predicate": "osm.feature",
+     "value": "amenity=cafe name=Example Cafe",
+     "confidence": "medium"
+    }
+   ]
+  },
+  "previous_snapshot": []
+ }
+}

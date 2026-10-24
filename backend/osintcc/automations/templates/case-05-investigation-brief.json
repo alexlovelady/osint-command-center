@@ -1,0 +1,127 @@
+{
+ "slug": "case-05-investigation-brief",
+ "key": "CASE-05",
+ "version": 1,
+ "category": "Investigation",
+ "name": "Investigation Brief",
+ "description": "Compares today's case findings with the last run and, if something changed, writes an executive brief.",
+ "catalog_trigger": "Daily, disabled",
+ "tags": [
+  "reporting"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [],
+ "legal_notes": "Public, passive sources only. Respect each source's terms and keep to targets you own or have a documented reason to examine.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+ "capability_gaps": [],
+ "instructions": "Compares today's case findings with the last run and, if something changed, writes an executive brief.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "case-05-investigation-brief",
+  "name": "Investigation Brief",
+  "description": "Compares today's case findings with the last run and, if something changed, writes an executive brief.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "reporting"
+  ],
+  "trigger": {
+   "type": "schedule",
+   "schedule": "0 18 * * *",
+   "timezone": "UTC",
+   "enabled": false,
+   "missed_run_policy": "coalesce"
+  },
+  "inputs": {},
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "findings",
+    "type": "case_findings",
+    "depends_on": [],
+    "config": {}
+   },
+   {
+    "id": "diff",
+    "type": "snapshot_diff",
+    "depends_on": [
+     "findings"
+    ],
+    "config": {
+     "dataset_ref": "$nodes.findings.output"
+    }
+   },
+   {
+    "id": "brief",
+    "type": "report",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "profile": "executive",
+     "format": "html"
+    },
+    "when": {
+     "ref": "$nodes.diff.output.changed",
+     "op": "truthy"
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "change_ref": "$nodes.diff.output",
+     "title": "Investigation brief ready",
+     "severity": "info",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {},
+  "adapter_findings": {},
+  "case_findings": [
+   {
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "rdap.registrar",
+    "value": "Example Registrar Inc"
+   },
+   {
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "dns.a",
+    "value": "192.0.2.10"
+   }
+  ],
+  "previous_snapshot": [
+   {
+    "id": "p0",
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "rdap.registrar",
+    "value": "Old Registrar LLC",
+    "confidence": "medium"
+   }
+  ]
+ }
+}

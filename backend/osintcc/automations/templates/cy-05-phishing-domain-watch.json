@@ -1,0 +1,217 @@
+{
+ "slug": "cy-05-phishing-domain-watch",
+ "key": "CY-05",
+ "version": 1,
+ "category": "Cyber",
+ "name": "Phishing Domain Watch",
+ "description": "Generates look-alike names of a brand domain you own and checks which resolve in public DNS. Nothing is registered or contacted.",
+ "catalog_trigger": "Daily, disabled",
+ "tags": [
+  "brand",
+  "monitor"
+ ],
+ "dependencies": [
+  "dns",
+  "lookalike"
+ ],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "domain",
+   "label": "Domain you own or are authorised to examine",
+   "type": "domain",
+   "required": true,
+   "example": "example.org"
+  }
+ ],
+ "legal_notes": "Only for brands you own. Look-alike candidates are leads: a resolving name is not proof of abuse.",
+ "quota_note": "About 11 source request(s) per run",
+ "example_output": "Look-alike names that now resolve, with their addresses.",
+ "capability_gaps": [],
+ "instructions": "Generates look-alike names of a brand domain you own and checks which resolve in public DNS. Nothing is registered or contacted.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "cy-05-phishing-domain-watch",
+  "name": "Phishing Domain Watch",
+  "description": "Generates look-alike names of a brand domain you own and checks which resolve in public DNS. Nothing is registered or contacted.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "brand",
+   "monitor"
+  ],
+  "trigger": {
+   "type": "schedule",
+   "schedule": "0 6 * * *",
+   "timezone": "UTC",
+   "enabled": false,
+   "missed_run_policy": "coalesce"
+  },
+  "inputs": {
+   "domain": "example.org"
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "scope",
+    "type": "authorization_check",
+    "depends_on": [],
+    "config": {
+     "target_ref": "$inputs.domain"
+    }
+   },
+   {
+    "id": "look",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "lookalike",
+     "target_ref": "$inputs.domain"
+    }
+   },
+   {
+    "id": "resolve",
+    "type": "enrich",
+    "depends_on": [
+     "look"
+    ],
+    "config": {
+     "adapter": "dns",
+     "from_ref": "$nodes.look.output",
+     "entity_types": [
+      "domain"
+     ],
+     "max_targets": 10
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "resolve"
+    ],
+    "config": {
+     "ref": "$nodes.resolve.output"
+    }
+   },
+   {
+    "id": "diff",
+    "type": "snapshot_diff",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "dataset_ref": "$nodes.unique.output"
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "change_ref": "$nodes.diff.output",
+     "title": "Look-alike domain activity",
+     "severity": "warning",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   },
+   {
+    "id": "fail",
+    "type": "error_handler",
+    "depends_on": [
+     "unique",
+     "diff"
+    ],
+    "config": {
+     "title": "Phishing domain watch failed"
+    },
+    "run_on": "failure"
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "domain": "example.org"
+  },
+  "adapter_findings": {
+   "lookalike": [
+    {
+     "entity": "examp1e.org",
+     "entity_type": "domain",
+     "predicate": "lookalike.candidate",
+     "value": "examp1e.org",
+     "confidence": "low"
+    },
+    {
+     "entity": "exarnple.org",
+     "entity_type": "domain",
+     "predicate": "lookalike.candidate",
+     "value": "exarnple.org",
+     "confidence": "low"
+    }
+   ],
+   "dns": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "dns.a",
+     "value": "192.0.2.10",
+     "confidence": "high"
+    },
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "dns.mx",
+     "value": "mail.example.org",
+     "confidence": "high"
+    }
+   ]
+  },
+  "previous_snapshot": [
+   {
+    "id": "p0",
+    "entity": "examp1e.org",
+    "entity_type": "domain",
+    "predicate": "lookalike.candidate",
+    "value": "previous-value",
+    "confidence": "low",
+    "adapter": "lookalike"
+   },
+   {
+    "id": "p1",
+    "entity": "exarnple.org",
+    "entity_type": "domain",
+    "predicate": "lookalike.candidate",
+    "value": "exarnple.org",
+    "confidence": "low",
+    "adapter": "lookalike"
+   },
+   {
+    "id": "p2",
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "dns.a",
+    "value": "192.0.2.10",
+    "confidence": "high",
+    "adapter": "dns"
+   }
+  ]
+ }
+}

@@ -21,6 +21,7 @@ dependencies = [
   "cryptography>=50.0.2",
   "sqlcipher3-wheels>=0.5.7",
   "psutil>=7.2.2",
+  "tzdata>=2026.5",
 ]
 
 [dependency-groups]

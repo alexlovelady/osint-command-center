@@ -12,3 +12,8 @@ Items agreed to do later. Each says why it is waiting and what finishing it invo
 | B-006 | Copilot with llama.cpp, a real cloud provider, and other open-weight models | Only Ollama + `huihui_ai/qwen3-abliterated:8b` was exercised live; llama.cpp/cloud paths are covered by mocks | One real answer each, through `scripts/copilot_live_check.py` |
 | B-007 | Embedding-based retrieval for the Copilot | Lexical BM25 is deterministic and testable, but misses synonyms | Optional local embedding model; same "not documented" threshold logic re-validated |
 | B-008 | Copilot tool for hardware sessions | Deliberately not exposed (authorisation boundary) | Owner decision, then a proposal type with the existing assessment/acknowledgement steps |
+| B-009 | Automation notifications by email and inbound webhook triggers | Needs SMTP credentials / a listener the app deliberately does not run | Owner decision; separate approval-gated implementation |
+| B-010 | Live validation of the keyed and CLI-based templates (Sherlock/Maigret/Subfinder/Amass, VirusTotal, Shodan, Censys, OpenCorporates, EDGAR) | Needs installed tools and the owner's keys | One real run per template, results recorded in progress.md |
+| B-011 | Real physical-device test for Sensor Health Monitor and RF Spectrum Baseline | No hardware attached | Run against an owned receiver |
+| B-012 | Advisory/CVE feed connector, imagery change detection, fuzzy duplicate matching | Not implemented; the templates say so | Connector + handler + tests |
+| B-013 | Retire the older `workflows` module once the new engine covers its cases | Existing cases may use it | Migration + removal |

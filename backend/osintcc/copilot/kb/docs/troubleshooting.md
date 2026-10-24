@@ -53,6 +53,20 @@ someone who can rewrite the whole database file.
 | Walkthrough says it can't find a control | That control is not on screen (different tab, hidden) | Follow the step text; the highlight only appears for controls that exist |
 | "N damaged saved messages were skipped" | A saved message could not be read | The rest of the history is intact; the damaged rows are ignored |
 
+## Automations
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| Template says *setup required* | A needed tool or key is missing; the card lists which and how to fix it | Setup -> install the tool / add the key; refresh the Library |
+| Publish refused with INVALID_GRAPH | The Checks panel lists exact problems (missing scope check, bad reference, unknown source, over a limit) | Fix each, validate again |
+| Activate says APPROVAL_REQUIRED | No unexpired approval for THIS version | Request approval -> Approve -> Activate; a new version needs a new approval |
+| Schedule stopped by itself | Its activation approval expired (a notice says so) | Request and approve again |
+| Run failed with SOURCE_UNAVAILABLE on a flaky source (for example crt.sh) | The source returned an error | Retry safe failures; mark the source optional so the run continues with a partial result |
+| Run *paused* with OFFLINE | Offline mode is on | Turn it off, then Retry |
+| Run *paused* with INTERRUPTED | The app closed during a step that is not safe to repeat | Check for partial effects, then Retry |
+| Nothing ran overnight | The app was closed; schedules run only while it is open | Missed runs follow the schedule's policy (default: one catch-up run) |
+| No change alert although something looks different | The first run only records a baseline; a partial dataset is never used as a baseline | Look at the run's warnings and run it again |
+
 ## Collecting a bug report
 
 `doctor --json`, the failing request's `request_id` (every error body has one), and the relevant `audit` entries. Do not attach

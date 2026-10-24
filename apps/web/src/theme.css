@@ -157,3 +157,28 @@ button.linklike { background: none; border: none; padding: 0; color: var(--c-acc
 .tour-hole { position: fixed; border-radius: 4px; box-shadow: 0 0 0 9999px rgba(0,0,0,.55), 0 0 0 2px var(--c-accent), 0 0 14px var(--c-accent); transition: all .2s; pointer-events: none; }
 .tour-tip { position: fixed; width: 360px; max-width: 94vw; pointer-events: auto; box-shadow: 0 6px 24px rgba(0,0,0,.5); border-top: 2px solid var(--c-accent); }
 .row .grow { flex: 1; }
+
+/* ---- Automations: library, builder, canvas, console ---- */
+.tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+.tpl { border-left: 3px solid var(--c-border-strong); } .tpl.ready { border-left-color: var(--c-ok); } .tpl.partial { border-left-color: var(--c-warn); } .tpl.setup_required { border-left-color: var(--c-danger); }
+.tpl h4 { font-size: 15px; } .tpl-detail { margin-top: 10px; border-top: 1px solid var(--c-border); padding-top: 6px; } .tpl-detail h5 { margin: 10px 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--c-text-2); }
+.badge.avail-ready { color: var(--c-ok-text); border-color: var(--c-ok); } .badge.avail-partial { color: var(--c-warn-text); border-color: var(--c-warn); } .badge.avail-setup_required { color: var(--c-danger-text); border-color: var(--c-danger); background: var(--c-danger-wash); }
+.col { display: flex; flex-direction: column; gap: 2px; }
+button.linklike { background: none; border: none; padding: 0; color: var(--c-accent-text); text-decoration: underline; }
+.builder { display: grid; grid-template-columns: 270px minmax(0, 1fr) 290px; gap: 12px; align-items: start; margin-top: 8px; }
+@media (max-width: 1100px) { .builder { grid-template-columns: 1fr; } .builder > :nth-child(2) { order: -1; } }
+.ai-panel textarea { margin: 6px 0; } .inspector label, .ai-panel label { display: block; margin: 6px 0; font-size: 12px; color: var(--c-text-2); } .inspector input, .inspector select { margin-top: 2px; }
+.inspector fieldset { border: 1px solid var(--c-border); border-radius: 4px; margin: 8px 0; } .inspector fieldset label { display: flex; margin: 2px 0; }
+.canvas-wrap { border: 1px solid var(--c-border); border-radius: 4px; background: var(--c-sunken); }
+.canvas-tools { padding: 6px 8px; border-bottom: 1px solid var(--c-border); }
+.canvas { position: relative; height: 430px; overflow: hidden; cursor: grab; touch-action: none; background-image: linear-gradient(var(--c-grid) 1px, transparent 1px), linear-gradient(90deg, var(--c-grid) 1px, transparent 1px); background-size: 32px 32px; }
+.canvas:focus-visible { outline: 2px solid var(--c-focus); outline-offset: -2px; }
+.cv-edge { stroke: var(--chart-edge); stroke-width: 1.4; } .cv-arrow { fill: var(--chart-edge); }
+.cv-node { cursor: pointer; } .cv-node rect { fill: var(--c-panel); stroke: var(--c-border-strong); stroke-width: 1.2; }
+.cv-node.net rect { stroke: var(--c-accent); } .cv-node.opt rect { stroke-dasharray: 5 3; }
+.cv-node.sel rect { stroke: var(--c-focus); stroke-width: 2.5; fill: var(--c-accent-wash); } .cv-node:focus-visible rect { stroke: var(--c-focus); stroke-width: 3; }
+.cv-node.st-succeeded rect { stroke: var(--c-ok); } .cv-node.st-failed rect { stroke: var(--c-danger); fill: var(--c-danger-wash); } .cv-node.st-skipped rect, .cv-node.st-skipped_failed rect { stroke-dasharray: 3 3; } .cv-node.st-waiting rect, .cv-node.st-running rect { stroke: var(--c-tech); }
+.cv-id { fill: var(--c-text); font: 600 12px var(--font); } .cv-type { fill: var(--c-text-2); font: 11px var(--font); } .cv-state { fill: var(--c-text-2); font: 10px var(--font); text-transform: uppercase; }
+.cv-bad { fill: var(--c-danger); } .cv-warn { fill: var(--c-warn); } .cv-badn { fill: #fff; font: 700 10px var(--font); }
+.minimap { position: absolute; right: 8px; bottom: 8px; border: 1px solid var(--c-border-strong); background: var(--c-panel); opacity: .92; }
+.mm-bg { fill: var(--c-sunken); } .mm-node { fill: var(--c-border-strong); } .mm-node.sel { fill: var(--c-accent); } .mm-view { fill: none; stroke: var(--c-tech); stroke-width: 1.5; }

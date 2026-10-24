@@ -1,0 +1,126 @@
+{
+ "slug": "geo-05-sensor-health-monitor",
+ "key": "GEO-05",
+ "version": 1,
+ "category": "Sensors",
+ "name": "Sensor Health Monitor",
+ "description": "Reads the status of devices registered in the Hardware module and notifies on change. Health only.",
+ "catalog_trigger": "Hourly, disabled",
+ "tags": [
+  "sensors",
+  "monitor"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [],
+ "legal_notes": "Public, passive sources only. Respect each source's terms and keep to targets you own or have a documented reason to examine.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+ "capability_gaps": [
+  "Only simulated and replay devices have been exercised; no physical receiver has been tested. It reads registration status, it does not poll hardware."
+ ],
+ "instructions": "Reads the status of devices registered in the Hardware module and notifies on change. Health only.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "geo-05-sensor-health-monitor",
+  "name": "Sensor Health Monitor",
+  "description": "Reads the status of devices registered in the Hardware module and notifies on change. Health only.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "sensors",
+   "monitor"
+  ],
+  "trigger": {
+   "type": "schedule",
+   "schedule": "0 * * * *",
+   "timezone": "UTC",
+   "enabled": false,
+   "missed_run_policy": "coalesce"
+  },
+  "inputs": {},
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "devices",
+    "type": "sensor_health",
+    "depends_on": [],
+    "config": {
+     "include_simulated": true
+    }
+   },
+   {
+    "id": "diff",
+    "type": "snapshot_diff",
+    "depends_on": [
+     "devices"
+    ],
+    "config": {
+     "dataset_ref": "$nodes.devices.output"
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "change_ref": "$nodes.diff.output",
+     "title": "Sensor status changed",
+     "severity": "warning",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   },
+   {
+    "id": "fail",
+    "type": "error_handler",
+    "depends_on": [
+     "devices",
+     "diff"
+    ],
+    "config": {
+     "title": "Sensor health monitor failed"
+    },
+    "run_on": "failure"
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {},
+  "adapter_findings": {},
+  "devices": [
+   {
+    "name": "Replay device",
+    "status": "present"
+   },
+   {
+    "name": "Simulated SDR",
+    "status": "present"
+   }
+  ],
+  "previous_snapshot": [
+   {
+    "id": "d0",
+    "entity": "Replay device",
+    "entity_type": "device",
+    "predicate": "device.status",
+    "value": "absent",
+    "confidence": "high"
+   }
+  ]
+ }
+}

@@ -35,7 +35,9 @@ def main() -> int:
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'catalog.json'}{SEP}osintcc/setup",
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'requirements'}{SEP}osintcc/setup/requirements",
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'update_key.pub'}{SEP}osintcc/setup",
-        "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'copilot' / 'kb'}{SEP}osintcc/copilot/kb",   # Copilot knowledge base (modules, tutorials, docs)
+        "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'copilot' / 'kb'}{SEP}osintcc/copilot/kb",
+        "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'automations' / 'templates'}{SEP}osintcc/automations/templates",   # the 30 bundled workflow templates
+        "--collect-data", "tzdata",                                                                                         # IANA time zones (Windows has none of its own)   # Copilot knowledge base (modules, tutorials, docs)
         "--collect-submodules", "osintcc", "--collect-all", "alembic", "--collect-all", "sqlcipher3",
         "--collect-submodules", "uvicorn", "--collect-submodules", "keyring.backends",
         "--hidden-import", "sqlalchemy.dialects.sqlite", "--collect-data", "reportlab",

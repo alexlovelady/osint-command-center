@@ -1,0 +1,169 @@
+{
+ "slug": "cy-06-website-history",
+ "key": "CY-06",
+ "version": 1,
+ "category": "Cyber",
+ "name": "Website History",
+ "description": "Queries the Internet Archive index for a domain and reports changes in what the archive holds.",
+ "catalog_trigger": "Weekly, disabled",
+ "tags": [
+  "history",
+  "monitor"
+ ],
+ "dependencies": [
+  "wayback"
+ ],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "domain",
+   "label": "Domain you own or are authorised to examine",
+   "type": "domain",
+   "required": true,
+   "example": "example.org"
+  }
+ ],
+ "legal_notes": "Public, passive sources only. Respect each source's terms and keep to targets you own or have a documented reason to examine.",
+ "quota_note": "About 1 source request(s) per run",
+ "example_output": "New or changed archive index entries since last week.",
+ "capability_gaps": [
+  "Compares the archive's snapshot index, not the content of fetched pages."
+ ],
+ "instructions": "Queries the Internet Archive index for a domain and reports changes in what the archive holds.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "cy-06-website-history",
+  "name": "Website History",
+  "description": "Queries the Internet Archive index for a domain and reports changes in what the archive holds.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "history",
+   "monitor"
+  ],
+  "trigger": {
+   "type": "schedule",
+   "schedule": "0 9 * * 1",
+   "timezone": "UTC",
+   "enabled": false,
+   "missed_run_policy": "coalesce"
+  },
+  "inputs": {
+   "domain": "example.org"
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "scope",
+    "type": "authorization_check",
+    "depends_on": [],
+    "config": {
+     "target_ref": "$inputs.domain"
+    }
+   },
+   {
+    "id": "wayback",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "wayback",
+     "target_ref": "$inputs.domain"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "wayback"
+    ],
+    "config": {
+     "ref": "$nodes.wayback.output"
+    }
+   },
+   {
+    "id": "diff",
+    "type": "snapshot_diff",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "dataset_ref": "$nodes.unique.output"
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "change_ref": "$nodes.diff.output",
+     "title": "Website archive changed",
+     "severity": "info",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   },
+   {
+    "id": "fail",
+    "type": "error_handler",
+    "depends_on": [
+     "unique",
+     "diff"
+    ],
+    "config": {
+     "title": "Website history failed"
+    },
+    "run_on": "failure"
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "domain": "example.org"
+  },
+  "adapter_findings": {
+   "wayback": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "archive.first_seen",
+     "value": "2001-03-05",
+     "confidence": "medium"
+    },
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "archive.snapshot_count",
+     "value": 412,
+     "confidence": "medium"
+    }
+   ]
+  },
+  "previous_snapshot": [
+   {
+    "id": "p0",
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "archive.first_seen",
+    "value": "previous-value",
+    "confidence": "medium",
+    "adapter": "wayback"
+   }
+  ]
+ }
+}

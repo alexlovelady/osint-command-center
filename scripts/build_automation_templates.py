@@ -1,0 +1,342 @@
+"""Generate the 30 bundled automation templates into backend/osintcc/automations/templates/*.json.
+
+    uv run python scripts/build_automation_templates.py [--check]
+
+Every template is validated here with the SAME validator the application uses, against the real adapter registry. Templates ship DISABLED; scheduled ones
+are never active until a person approves and activates them. `capability_gaps` states plainly what a template cannot do yet.
+"""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "backend"))
+from osintcc.adapters.registry import default_adapters
+from osintcc.automations.graph_validator import validate
+
+OUT = ROOT / "backend" / "osintcc" / "automations" / "templates"
+ADAPTERS = default_adapters()
+
+ROWS: dict[str, list[dict[str, Any]]] = {
+    "rdap": [{"predicate": "rdap.registrar", "value": "Example Registrar Inc", "confidence": "high"}, {"predicate": "rdap.nameserver", "value": "ns1.example.net", "confidence": "high"}],
+    "dns": [{"predicate": "dns.a", "value": "192.0.2.10", "confidence": "high"}, {"predicate": "dns.mx", "value": "mail.example.org", "confidence": "high"}],
+    "crtsh": [{"predicate": "cert.subdomain", "value": "www.example.org", "confidence": "medium"}, {"predicate": "cert.subdomain", "value": "mail.example.org", "confidence": "medium"}],
+    "wayback": [{"predicate": "archive.first_seen", "value": "2001-03-05", "confidence": "medium"}, {"predicate": "archive.snapshot_count", "value": 412, "confidence": "medium"}],
+    "subfinder": [{"predicate": "subdomain", "value": "api.example.org", "confidence": "medium"}],
+    "urlscan": [{"predicate": "web.server", "value": "nginx", "confidence": "low"}],
+    "lookalike": [{"predicate": "lookalike.candidate", "value": "examp1e.org", "confidence": "low", "entity": "examp1e.org"}, {"predicate": "lookalike.candidate", "value": "exarnple.org", "confidence": "low", "entity": "exarnple.org"}],
+    "sherlock": [{"entity_type": "account", "predicate": "account.profile", "value": "https://social.example/alice", "confidence": "low"}],
+    "maigret": [{"entity_type": "account", "predicate": "account.profile", "value": "https://forum.example/u/alice", "confidence": "low"}],
+    "sec_edgar": [{"entity_type": "org", "predicate": "edgar.filing", "value": "10-K 2026-02-14", "confidence": "high"}, {"entity_type": "org", "predicate": "edgar.filing", "value": "8-K 2026-03-01", "confidence": "high"}],
+    "opencorporates": [{"entity_type": "org", "predicate": "company.jurisdiction", "value": "us_de", "confidence": "medium"}],
+    "gdelt": [{"predicate": "news.mention", "value": "Example Org announces new service (2026-03-02)", "confidence": "low"}],
+    "overpass": [{"entity_type": "place", "predicate": "osm.feature", "value": "amenity=cafe name=Example Cafe", "confidence": "medium"}],
+}
+LOOKALIKE_NOTE = "generated offline from the owned brand domain; a hit in DNS later is a lead, not proof of abuse"
+
+
+def N(id: str, type: str, deps: list[str] | None = None, *, optional: bool = False, when: dict[str, Any] | None = None, run_on: str = "success", label: str | None = None, **cfg: Any) -> dict[str, Any]:
+    d: dict[str, Any] = {"id": id, "type": type, "depends_on": deps or [], "config": cfg}
+    if optional:
+        d["optional"] = True
+    if when:
+        d["when"] = when
+    if run_on != "success":
+        d["run_on"] = run_on
+    if label:
+        d["label"] = label
+    return d
+
+
+def out(n: str, field: str | None = None) -> str:
+    return f"$nodes.{n}.output" + (f".{field}" if field else "")
+
+
+def scope(ref: str, ttype: str | None = None, id: str = "scope", deps: list[str] | None = None) -> dict[str, Any]:
+    cfg: dict[str, Any] = {"target_ref": ref}
+    if ttype:
+        cfg["target_type"] = ttype
+    return N(id, "authorization_check", deps, **cfg)
+
+
+def q(id: str, adapter: str, scope_id: str = "scope", ref: str = "$inputs.domain", ttype: str | None = None, optional: bool = False) -> dict[str, Any]:
+    cfg: dict[str, Any] = {"adapter": adapter, "target_ref": ref}
+    if ttype:
+        cfg["target_type"] = ttype
+    return N(id, "adapter_query", [scope_id], optional=optional, **cfg)
+
+
+def merge(id: str, parts: list[str]) -> dict[str, Any]:
+    return N(id, "transform", parts, ref=out(parts[0]), extra_refs=[out(p) for p in parts[1:]], op="merge")
+
+
+def dedupe(id: str, src: str) -> dict[str, Any]:
+    return N(id, "deduplicate", [src], ref=out(src))
+
+
+def diff(id: str, src: str) -> dict[str, Any]:
+    return N(id, "snapshot_diff", [src], dataset_ref=out(src))
+
+
+def notify(id: str, dep: str, title: str, sev: str = "info", field: str | None = None) -> dict[str, Any]:
+    return N(id, "notification", [dep], change_ref=out(dep, field), title=title, severity=sev, channel="local_desktop", only_if_changed=True)
+
+
+def onfail(id: str, deps: list[str], title: str) -> dict[str, Any]:
+    return N(id, "error_handler", deps[:8], run_on="failure", title=title)
+
+
+def consent(prompt: str) -> dict[str, Any]:
+    return N("consent", "analyst_review", [], prompt=prompt, timeout_hours=72)
+
+
+def sched(cron: str) -> dict[str, Any]:
+    return {"type": "schedule", "schedule": cron, "timezone": "UTC", "enabled": False, "missed_run_policy": "coalesce"}
+
+
+def fixture_for(nodes: list[dict[str, Any]], inputs: dict[str, Any], *, watch: bool, extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    target = next((str(v) for v in inputs.values() if v), "example.org")
+    adapter_rows: dict[str, list[dict[str, Any]]] = {}
+    flat: list[dict[str, Any]] = []
+    for n in nodes:
+        if n["type"] in ("adapter_query", "enrich"):
+            a = n["config"]["adapter"]
+            rows = []
+            for r in ROWS.get(a, []):
+                rows.append({"entity": r.get("entity", target), "entity_type": r.get("entity_type", "domain"), **{k: v for k, v in r.items() if k not in ("entity", "entity_type")}})
+            adapter_rows[a] = rows
+            flat += [{**r, "adapter": a} for r in rows]
+    fx: dict[str, Any] = {"inputs": dict(inputs), "adapter_findings": adapter_rows}
+    if watch and flat:
+        prev = [dict(r) for r in flat[:-1]]
+        if prev:
+            prev[0] = {**prev[0], "value": "previous-value"}                 # one changed and one added item
+        fx["previous_snapshot"] = [{"id": f"p{i}", **r} for i, r in enumerate(prev)]
+    fx |= extra or {}
+    return fx
+
+
+T: list[dict[str, Any]] = []
+
+
+def add(key: str, name: str, category: str, catalog_trigger: str, description: str, nodes: list[dict[str, Any]], inputs_spec: list[dict[str, Any]],
+        *, trigger: dict[str, Any] | None = None, inputs: dict[str, Any] | None = None, legal: str = "", gaps: list[str] | None = None, tags: list[str] | None = None,
+        watch: bool = False, fixture_extra: dict[str, Any] | None = None, example: str = "", policy: dict[str, Any] | None = None, instructions: str = "",
+        runtime_tested: bool = False) -> None:
+    slug = f"{key.lower()}-{name.lower().replace(' & ', '-').replace(' ', '-')}"
+    inputs = inputs if inputs is not None else {s["name"]: s.get("example") for s in inputs_spec}
+    definition = {"schema_version": 1, "workflow_key": slug, "name": name, "description": description, "owner_scope": "investigation", "status": "draft", "tags": tags or [],
+                  "trigger": trigger or {"type": "manual", "enabled": False}, "inputs": inputs,
+                  "policy": {"network_mode": "passive_only", "max_requests_per_provider_per_run": 50, "max_duration_seconds": 600, "max_concurrent_nodes": 2, "reentrancy": "skip"} | (policy or {}),
+                  "nodes": nodes, "error_policy": {"transient_retries": 2, "backoff": "exponential_jitter", "fail_closed_on_scope_error": True}}
+    used = [n["config"]["adapter"] for n in nodes if n["type"] in ("adapter_query", "enrich") and not n.get("optional")]
+    opt = [n["config"]["adapter"] for n in nodes if n["type"] in ("adapter_query", "enrich") and n.get("optional")]
+    requests = sum(n["config"].get("max_targets", 1) if n["type"] == "enrich" else 1 for n in nodes if n["type"] in ("adapter_query", "enrich"))
+    T.append({"slug": slug, "key": key, "version": 1, "category": category, "name": name, "description": description, "catalog_trigger": catalog_trigger,
+              "tags": tags or [], "dependencies": sorted(set(used)), "optional_dependencies": sorted(set(opt) - set(used)), "inputs": inputs_spec,
+              "legal_notes": legal or "Public, passive sources only. Respect each source's terms and keep to targets you own or have a documented reason to examine.",
+              "quota_note": f"About {requests} source request(s) per run" if requests else "No network requests (works on local data)",
+              "example_output": example or "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+              "capability_gaps": gaps or [], "instructions": instructions or description, "maturity": "runtime_tested" if runtime_tested else "fixture_tested",
+              "definition": definition, "fixture": fixture_for(nodes, inputs, watch=watch, extra=fixture_extra)})
+
+
+DOMAIN = [{"name": "domain", "label": "Domain you own or are authorised to examine", "type": "domain", "required": True, "example": "example.org"}]
+USERNAME = [{"name": "username", "label": "Username (with consent or a documented case basis)", "type": "username", "required": True, "example": "alice"}]
+CIK = [{"name": "cik", "label": "SEC CIK number", "type": "cik", "required": True, "example": "0000000001"}]
+COMPANY = [{"name": "company", "label": "Company name", "type": "company", "required": True, "example": "Example Holdings"}]
+FILE_IN = [{"name": "evidence_id", "label": "Supplied by the 'Run with file' action", "type": "evidence", "required": False, "example": None}]
+
+# ---------------------------------------------------------------------------------------------------------------------- Cyber
+add("CY-01", "Domain Recon", "Cyber", "Manual", "RDAP, DNS, certificate transparency and passive subdomain sources for a domain; normalise, de-duplicate and save as evidence.",
+    [scope("$inputs.domain"), q("rdap", "rdap"), q("dns", "dns"), q("crtsh", "crtsh", optional=True), q("wayback", "wayback", optional=True), q("subfinder", "subfinder", optional=True),
+     merge("merged", ["rdap", "dns", "crtsh", "wayback", "subfinder"]), dedupe("unique", "merged"),
+     N("save", "evidence_save", ["unique"], ref=out("unique"), title="Domain recon dataset")], DOMAIN, tags=["recon", "passive"],
+    example="Registrar, nameservers, DNS records, certificate-logged hostnames and archive history for the domain, each linked to its raw response.", runtime_tested=True)
+add("CY-02", "Domain Change Watch", "Cyber", "Daily, disabled", "Compares DNS, registrar and certificate data with the previous run and notifies only on material change.",
+    [scope("$inputs.domain"), q("rdap", "rdap"), q("dns", "dns"), q("crtsh", "crtsh", optional=True), merge("merged", ["rdap", "dns", "crtsh"]), dedupe("unique", "merged"), diff("diff", "unique"),
+     notify("notify", "diff", "Domain change detected", "warning"), onfail("fail", ["unique", "diff"], "Domain change watch failed")],
+    DOMAIN, trigger=sched("0 8 * * *"), tags=["monitor", "passive"], watch=True,
+    example="One notification per window listing new, changed and no-longer-observed records; the first run only records a baseline.")
+add("CY-03", "Attack Surface Watch", "Cyber", "Daily, disabled", "Compares the passive, public-facing asset inventory with the previous run. Active probing is NOT included.",
+    [scope("$inputs.domain"), q("crtsh", "crtsh", optional=True), q("subfinder", "subfinder", optional=True), merge("found", ["crtsh", "subfinder"]),
+     N("resolve", "enrich", ["found"], adapter="dns", from_ref=out("found"), entity_types=["domain"], max_targets=5), merge("all", ["found", "resolve"]), dedupe("unique", "all"),
+     diff("diff", "unique"), notify("notify", "diff", "New or changed public-facing assets", "warning"), onfail("fail", ["unique", "diff"], "Attack surface watch failed")],
+    DOMAIN, trigger=sched("0 7 * * *"), tags=["monitor", "passive"], watch=True,
+    gaps=["Active probes (port or service checks) are not part of this template; they need a separate scope authorization and the active module."],
+    example="Newly seen hostnames and their addresses since the last run.")
+add("CY-04", "CVE Intelligence", "Cyber", "Daily, disabled", "Ingests an SBOM and routes the component list to analyst review against advisories you obtained.",
+    [N("sbom", "file_ingest", [], evidence_ref="$inputs.evidence_id"), N("review", "analyst_review", ["sbom"], prompt="Compare the listed components with the advisories you hold; record what applies.", timeout_hours=72),
+     N("report", "report", ["review"], profile="technical", format="html")], FILE_IN, trigger={"type": "manual", "enabled": False}, inputs={"evidence_id": None}, tags=["vulnerability"],
+    gaps=["No CVE or advisory feed connector exists, so advisories are not fetched and versions are not matched automatically. Only the SBOM import and the review/report steps work."],
+    fixture_extra={"file": {"kind": "sbom", "count": 3, "preview": [{"kind": "sbom.component", "data": {"name": "libexample", "version": "1.2.3"}}]}})
+add("CY-05", "Phishing Domain Watch", "Cyber", "Daily, disabled", "Generates look-alike names of a brand domain you own and checks which resolve in public DNS. Nothing is registered or contacted.",
+    [scope("$inputs.domain"), q("look", "lookalike"), N("resolve", "enrich", ["look"], adapter="dns", from_ref=out("look"), entity_types=["domain"], max_targets=10),
+     dedupe("unique", "resolve"), diff("diff", "unique"), notify("notify", "diff", "Look-alike domain activity", "warning"), onfail("fail", ["unique", "diff"], "Phishing domain watch failed")],
+    DOMAIN, trigger=sched("0 6 * * *"), tags=["brand", "monitor"], watch=True,
+    legal="Only for brands you own. Look-alike candidates are leads: a resolving name is not proof of abuse.", example="Look-alike names that now resolve, with their addresses.")
+add("CY-06", "Website History", "Cyber", "Weekly, disabled", "Queries the Internet Archive index for a domain and reports changes in what the archive holds.",
+    [scope("$inputs.domain"), q("wayback", "wayback"), dedupe("unique", "wayback"), diff("diff", "unique"), notify("notify", "diff", "Website archive changed"), onfail("fail", ["unique", "diff"], "Website history failed")],
+    DOMAIN, trigger=sched("0 9 * * 1"), tags=["history", "monitor"], watch=True,
+    gaps=["Compares the archive's snapshot index, not the content of fetched pages."], example="New or changed archive index entries since last week.")
+add("CY-07", "Technology Profiler", "Cyber", "Manual", "Collects public certificate and scan-service signals about a domain's technology with a minimal number of requests.",
+    [scope("$inputs.domain"), q("crtsh", "crtsh", optional=True), q("dns", "dns"), q("urlscan", "urlscan", optional=True), merge("merged", ["crtsh", "dns", "urlscan"]), dedupe("unique", "merged"),
+     N("save", "evidence_save", ["unique"], ref=out("unique"), title="Technology signals")], DOMAIN, tags=["recon", "passive"],
+    gaps=["No HTTP response-header fingerprinting adapter exists yet; signals come from certificates, DNS and the optional urlscan.io service."], example="Hosts, addresses and any technology hints urlscan returns, with confidence labels.")
+
+# ---------------------------------------------------------------------------------------------------------------------- Identity
+CONSENT = "Confirm that the person consented, or that this is a legitimate documented case, and that the case purpose is written."
+add("ID-01", "Username Footprint", "Identity", "Manual", "Checks many public sites for accounts with a username. Name collisions are labelled unconfirmed.",
+    [consent(CONSENT), scope("$inputs.username", "username", deps=["consent"]), q("sherlock", "sherlock", ref="$inputs.username", ttype="username"),
+     q("maigret", "maigret", ref="$inputs.username", ttype="username", optional=True), merge("merged", ["sherlock", "maigret"]), dedupe("unique", "merged"),
+     N("save", "evidence_save", ["unique"], ref=out("unique"), title="Username footprint (unconfirmed candidates)")], USERNAME, tags=["identity", "consent"],
+    legal="A hit only shows that a name exists on a site, not that it is the same person. Needs consent or a documented case basis.",
+    example="Candidate profile URLs, all labelled low confidence until you confirm them.")
+add("ID-02", "Public Profile Changes", "Identity", "Weekly, disabled", "Re-checks which public profiles exist for an opted-in username and reports changes.",
+    [scope("$inputs.username", "username"), q("sherlock", "sherlock", ref="$inputs.username", ttype="username"), dedupe("unique", "sherlock"), diff("diff", "unique"),
+     notify("notify", "diff", "Public profile change"), onfail("fail", ["unique", "diff"], "Profile change watch failed")], USERNAME, trigger=sched("0 10 * * 1"), tags=["identity", "monitor"], watch=True,
+    legal="Recurring monitoring of a person needs a documented purpose and their consent or a legitimate basis. It never logs in or bypasses access controls.")
+add("ID-03", "Digital Footprint Audit", "Identity", "Manual", "Consent-based review of public accounts and exposure for a username, ending in a report.",
+    [consent(CONSENT), scope("$inputs.username", "username", deps=["consent"]), q("sherlock", "sherlock", ref="$inputs.username", ttype="username"),
+     q("maigret", "maigret", ref="$inputs.username", ttype="username", optional=True), merge("merged", ["sherlock", "maigret"]), dedupe("unique", "merged"),
+     N("report", "report", ["unique"], profile="technical", format="html")], USERNAME, tags=["identity", "consent"],
+    gaps=["Document and breach-exposure checks are not implemented; the audit covers public username presence only."])
+add("ID-04", "Public Mention Monitor", "Identity", "Daily, disabled", "Watches public news mentions of a brand or organisation domain and reports new ones.",
+    [scope("$inputs.domain"), q("gdelt", "gdelt"), dedupe("unique", "gdelt"), diff("diff", "unique"), notify("notify", "diff", "New public mentions"), onfail("fail", ["unique", "diff"], "Mention monitor failed")],
+    DOMAIN, trigger=sched("0 6 * * *"), tags=["media", "monitor"], watch=True, legal="For brands and organisations. Matching is by domain, which is conservative; mentions are not verified facts.")
+add("ID-05", "Document Metadata", "Identity", "File upload", "Parses a file you supply offline (ExifTool when installed), stores it hashed and summarises its metadata with sensitive values withheld.",
+    [N("ingest", "file_ingest", [], evidence_ref="$inputs.evidence_id"), N("summary", "evidence_save", ["ingest"], ref=out("ingest"), title="Document metadata summary")],
+    FILE_IN, trigger={"type": "file", "enabled": False}, inputs={"evidence_id": None}, tags=["files", "metadata"], runtime_tested=True,
+    fixture_extra={"file": {"kind": "jpeg_exif", "count": 2, "sha256": "a" * 64, "preview": [{"kind": "exif.camera", "data": {"make": "ExampleCam"}}, {"kind": "exif.gps", "data": {"withheld": "restricted"}}]}},
+    legal="Only files you own or are authorised to analyse. GPS and similar values are RESTRICTED and shown only in the Imports tab.",
+    example="File type, hash, camera/author metadata and counts; GPS withheld in the summary.")
+add("ID-06", "Identity Correlation Review", "Identity", "Manual", "Suggests links between accounts and emails already in the case and waits for a person to confirm each one.",
+    [N("accounts", "case_findings", [], entity_types=["account"]), N("emails", "case_findings", [], entity_types=["email"]), N("corr", "correlate", ["accounts", "emails"], refs=[out("accounts"), out("emails")]),
+     N("review", "analyst_review", ["corr"], prompt="Review every suggested link. Nothing is merged automatically; merge in the Graph tab only what you can support.", timeout_hours=72),
+     N("save", "evidence_save", ["review", "corr"], ref=out("corr"), title="Suggested identity links (unconfirmed)")], [], inputs={}, tags=["identity", "review"],
+    fixture_extra={"case_findings": [{"entity": "alice@example.org", "entity_type": "email", "predicate": "email.address", "value": "alice"}, {"entity": "alice", "entity_type": "account", "predicate": "email.address", "value": "alice"}]},
+    legal="Suggestions only. A shared name or handle is not an identity.")
+
+# ---------------------------------------------------------------------------------------------------------------------- Corporate
+add("CO-01", "Company Research", "Corporate", "Manual", "Public SEC filings and registry data for a company, de-duplicated and reported with citations.",
+    [scope("$inputs.cik", "cik", id="scope_cik"), q("edgar", "sec_edgar", scope_id="scope_cik", ref="$inputs.cik", ttype="cik"), scope("$inputs.company", "company", id="scope_co"),
+     q("opencorp", "opencorporates", scope_id="scope_co", ref="$inputs.company", ttype="company", optional=True), merge("merged", ["edgar", "opencorp"]), dedupe("unique", "merged"),
+     N("report", "report", ["unique"], profile="technical", format="html")], CIK + COMPANY, tags=["corporate"],
+    legal="SEC EDGAR needs your contact set in Setup and is rate limited. OpenCorporates needs a (free-tier) API token.")
+add("CO-02", "Corporate Change Watch", "Corporate", "Weekly, disabled", "Compares public registry/filing data with the previous run. No paid API is assumed.",
+    [scope("$inputs.cik", "cik"), q("edgar", "sec_edgar", ref="$inputs.cik", ttype="cik"), dedupe("unique", "edgar"), diff("diff", "unique"), notify("notify", "diff", "Corporate record changed"),
+     onfail("fail", ["unique", "diff"], "Corporate change watch failed")], CIK, trigger=sched("0 7 * * 1"), tags=["corporate", "monitor"], watch=True)
+add("CO-03", "SEC Filing Monitor", "Corporate", "Daily, disabled", "Checks EDGAR for new filings by a company and notifies when one appears.",
+    [scope("$inputs.cik", "cik"), q("edgar", "sec_edgar", ref="$inputs.cik", ttype="cik"), dedupe("unique", "edgar"), diff("diff", "unique"), notify("notify", "diff", "New SEC filing"),
+     onfail("fail", ["unique", "diff"], "SEC filing monitor failed")], CIK, trigger=sched("30 6 * * *"), tags=["corporate", "monitor"], watch=True,
+    legal="Uses the official EDGAR interface with the User-Agent contact you set in Setup and the agency's rate limit.")
+add("CO-04", "Ownership Mapping", "Corporate", "Manual", "Builds sourced organisation relationships from filings and registries and records what is missing.",
+    [scope("$inputs.cik", "cik", id="scope_cik"), q("edgar", "sec_edgar", scope_id="scope_cik", ref="$inputs.cik", ttype="cik"), scope("$inputs.company", "company", id="scope_co"),
+     q("opencorp", "opencorporates", scope_id="scope_co", ref="$inputs.company", ttype="company", optional=True), merge("merged", ["edgar", "opencorp"]), dedupe("unique", "merged"),
+     N("review", "analyst_review", ["unique"], prompt="Beneficial ownership is usually NOT in public filings. Record what is missing before relying on this map.", timeout_hours=72),
+     N("report", "report", ["review"], profile="technical", format="html")], CIK + COMPANY, tags=["corporate"],
+    gaps=["Beneficial-ownership data is not available from the implemented sources; the template says so in the review step."])
+add("CO-05", "News & Reputation Watch", "Corporate", "Daily, disabled", "Watches public news mentions of a company domain. Mentions are shown as mentions, never as sentiment facts.",
+    [scope("$inputs.domain"), q("gdelt", "gdelt"), dedupe("unique", "gdelt"), diff("diff", "unique"), notify("notify", "diff", "New public news mentions"), onfail("fail", ["unique", "diff"], "News watch failed")],
+    DOMAIN, trigger=sched("0 6 * * *"), tags=["media", "monitor"], watch=True)
+
+# ---------------------------------------------------------------------------------------------------------------------- GEOINT / sensors
+EV_A_B = [{"name": "evidence_a", "label": "Earlier image (evidence id)", "type": "evidence", "required": True, "example": None},
+          {"name": "evidence_b", "label": "Later image (evidence id)", "type": "evidence", "required": True, "example": None}]
+add("GEO-01", "Imagery Change Review", "GEOINT", "Manual", "Processes two imported images (dates, coordinates, resolution) and routes the comparison to a person.",
+    [N("a", "file_ingest", [], evidence_ref="$inputs.evidence_a"), N("b", "file_ingest", [], evidence_ref="$inputs.evidence_b"),
+     N("review", "analyst_review", ["a", "b"], prompt="Compare dates, registration and resolution of the two images before judging any change.", timeout_hours=72),
+     N("report", "report", ["review"], profile="technical", format="html")], EV_A_B, inputs={"evidence_a": None, "evidence_b": None}, tags=["imagery"],
+    gaps=["No automatic image registration or change detection: the comparison is a documented manual review."],
+    fixture_extra={"file": {"kind": "geotiff", "count": 1, "preview": [{"kind": "geotiff.metadata", "data": {"resolution_m": 10}}]}})
+add("GEO-02", "Geographic Data Update", "GEOINT", "Weekly, disabled", "Re-queries OpenStreetMap (Overpass) for features around a coordinate and reports additions and removals.",
+    [scope("$inputs.coordinates", "coordinates"), q("osm", "overpass", ref="$inputs.coordinates", ttype="coordinates"), dedupe("unique", "osm"), diff("diff", "unique"),
+     notify("notify", "diff", "Map data changed nearby"), onfail("fail", ["unique", "diff"], "Geographic update failed")],
+    [{"name": "coordinates", "label": "Latitude,longitude", "type": "coordinates", "required": True, "example": "51.5007,-0.1246"}], trigger=sched("0 5 * * 0"), tags=["geo", "monitor"], watch=True,
+    legal="Overpass has usage limits; keep radii small, or use a local extract.")
+add("GEO-03", "Aircraft Data Import", "GEOINT", "File import", "Analyses ADS-B data you lawfully obtained. No live feed is used.",
+    [N("ingest", "file_ingest", [], evidence_ref="$inputs.evidence_id", kind="adsb"), N("summary", "evidence_save", ["ingest"], ref=out("ingest"), title="ADS-B import summary")],
+    FILE_IN, trigger={"type": "file", "enabled": False}, inputs={"evidence_id": None}, tags=["files", "geo"],
+    fixture_extra={"file": {"kind": "adsb", "count": 120, "preview": [{"kind": "adsb.position", "data": {"icao": "ABC123"}}]}})
+add("GEO-04", "Vessel Data Import", "GEOINT", "File import", "Analyses AIS data you lawfully obtained. No live provider is used.",
+    [N("ingest", "file_ingest", [], evidence_ref="$inputs.evidence_id", kind="ais"), N("summary", "evidence_save", ["ingest"], ref=out("ingest"), title="AIS import summary")],
+    FILE_IN, trigger={"type": "file", "enabled": False}, inputs={"evidence_id": None}, tags=["files", "geo"],
+    fixture_extra={"file": {"kind": "ais", "count": 80, "preview": [{"kind": "ais.position", "data": {"mmsi": "000000001"}}]}})
+add("GEO-05", "Sensor Health Monitor", "Sensors", "Hourly, disabled", "Reads the status of devices registered in the Hardware module and notifies on change. Health only.",
+    [N("devices", "sensor_health", [], include_simulated=True), diff("diff", "devices"), notify("notify", "diff", "Sensor status changed", "warning"), onfail("fail", ["devices", "diff"], "Sensor health monitor failed")],
+    [], trigger=sched("0 * * * *"), inputs={}, tags=["sensors", "monitor"], watch=True,
+    gaps=["Only simulated and replay devices have been exercised; no physical receiver has been tested. It reads registration status, it does not poll hardware."],
+    fixture_extra={"devices": [{"name": "Replay device", "status": "present"}, {"name": "Simulated SDR", "status": "present"}], "previous_snapshot": [{"id": "d0", "entity": "Replay device", "entity_type": "device", "predicate": "device.status", "value": "absent", "confidence": "high"}]})
+add("GEO-06", "RF Spectrum Baseline", "Sensors", "Manual", "Processes a spectrum recording you own or are authorised to analyse and records it with a review step.",
+    [N("ingest", "file_ingest", [], evidence_ref="$inputs.evidence_id", kind="sigmf"), N("review", "analyst_review", ["ingest"], prompt="Confirm the recording is yours or authorised and note the baseline conditions.", timeout_hours=72),
+     N("summary", "evidence_save", ["review", "ingest"], ref=out("ingest"), title="Spectrum recording summary")], FILE_IN, inputs={"evidence_id": None}, tags=["rf", "files"],
+    legal="Analysis of recordings you own or are authorised to use. Private communications are never intercepted or decoded.",
+    gaps=["Baseline comparison between recordings is not automated; use the Imports tab's spectrum view."],
+    fixture_extra={"file": {"kind": "sigmf", "count": 1, "preview": [{"kind": "sigmf.capture", "data": {"sample_rate": 2000000}}]}})
+
+# ---------------------------------------------------------------------------------------------------------------------- Case / evidence
+add("CASE-01", "Evidence Processing", "Evidence", "File upload", "Hashes, timestamps and parses a supplied file, extracts metadata, classifies it by discipline and indexes it for search.",
+    [N("ingest", "file_ingest", [], evidence_ref="$inputs.evidence_id"), N("summary", "evidence_save", ["ingest"], ref=out("ingest"), title="Evidence processing summary")],
+    FILE_IN, trigger={"type": "file", "enabled": False}, inputs={"evidence_id": None}, tags=["files", "evidence"], runtime_tested=True,
+    fixture_extra={"file": {"kind": "eml", "count": 3, "sha256": "b" * 64, "preview": [{"kind": "email.header", "data": {"subject": "Example"}}]}},
+    example="Hash, size, import time, discipline, observation count and a preview; the file is searchable in the case.")
+add("CASE-02", "Entity Correlation", "Evidence", "New finding", "When new findings arrive, suggests links between domains and addresses that share values and tells you how many to review.",
+    [N("domains", "case_findings", [], entity_types=["domain"]), N("ips", "case_findings", [], entity_types=["ip"]), N("corr", "correlate", ["domains", "ips"], refs=[out("domains"), out("ips")]),
+     N("any", "condition", ["corr"], ref=out("corr", "count"), op="gt", value=0), N("notify", "notification", ["any"], change_ref=out("any"), title="Suggested entity links to review", severity="info", channel="local_desktop", only_if_changed=True)],
+    [], trigger={"type": "event", "event": "new_finding", "enabled": False}, inputs={}, tags=["correlation"],
+    fixture_extra={"case_findings": [{"entity": "example.org", "entity_type": "domain", "predicate": "dns.a", "value": "192.0.2.10"}, {"entity": "192.0.2.10", "entity_type": "ip", "predicate": "dns.a", "value": "192.0.2.10"}]},
+    legal="Suggestions only; the verification gate is you: nothing is merged.")
+add("CASE-03", "Duplicate Finder", "Evidence", "File import", "Detects when an imported file is already in the case (same content hash) and tells you.",
+    [N("ingest", "file_ingest", [], evidence_ref="$inputs.evidence_id"), N("dup", "condition", ["ingest"], ref=out("ingest", "duplicate"), op="truthy"),
+     N("notify", "notification", ["dup"], change_ref=out("dup"), title="Duplicate file already in this case", severity="info", channel="local_desktop", only_if_changed=True)],
+    FILE_IN, trigger={"type": "file", "enabled": False}, inputs={"evidence_id": None}, tags=["files", "evidence"],
+    fixture_extra={"file": {"kind": "eml", "count": 1, "duplicate": True}}, gaps=["Detection is by exact content hash; near-duplicate (fuzzy) matching is not implemented."])
+add("CASE-04", "Intelligence Gap Analysis", "Investigation", "Manual", "Compares your requirements and claims with the evidence and lists the open gaps for a report.",
+    [N("gaps", "case_gaps", []), N("review", "analyst_review", ["gaps"], prompt="Decide which gaps to collect for next; the list is in the run details.", timeout_hours=72),
+     N("report", "report", ["review"], profile="technical", format="html")], [], inputs={}, tags=["analysis"],
+    fixture_extra={"gaps": ["Who operates the domain? (unanswered, high)"]})
+add("CASE-05", "Investigation Brief", "Investigation", "Daily, disabled", "Compares today's case findings with the last run and, if something changed, writes an executive brief.",
+    [N("findings", "case_findings", []), diff("diff", "findings"), N("brief", "report", ["diff"], when={"ref": out("diff", "changed"), "op": "truthy"}, profile="executive", format="html"),
+     notify("notify", "diff", "Investigation brief ready")], [], trigger=sched("0 18 * * *"), inputs={}, tags=["reporting"], watch=True,
+    fixture_extra={"case_findings": [{"entity": "example.org", "entity_type": "domain", "predicate": "rdap.registrar", "value": "Example Registrar Inc"}, {"entity": "example.org", "entity_type": "domain", "predicate": "dns.a", "value": "192.0.2.10"}],
+                   "previous_snapshot": [{"id": "p0", "entity": "example.org", "entity_type": "domain", "predicate": "rdap.registrar", "value": "Old Registrar LLC", "confidence": "medium"}]})
+add("CASE-06", "Report Generator", "Investigation", "Manual", "Produces a cited report (methods, limitations, evidence manifest and automation audit references).",
+    [N("report", "report", [], profile="technical", format="html")], [], inputs={}, tags=["reporting"])
+
+
+def main(check: bool) -> int:
+    assert len(T) == 30, len(T)
+    problems = []
+    for t in T:
+        rep = validate(t["definition"], ADAPTERS)
+        if not rep["valid"]:
+            problems.append((t["key"], rep["errors"]))
+    if problems:
+        for k, e in problems:
+            print("INVALID", k, json.dumps(e, indent=1)[:600])
+        return 1
+    OUT.mkdir(parents=True, exist_ok=True)
+    stale = []
+    keep = set()
+    for t in T:
+        p = OUT / f"{t['slug']}.json"
+        keep.add(p.name)
+        text = json.dumps(t, indent=1, ensure_ascii=False) + "\n"
+        if not p.exists() or p.read_text(encoding="utf8") != text:
+            stale.append(p.name)
+            if not check:
+                p.write_text(text, encoding="utf8")
+    for old in OUT.glob("*.json"):
+        if old.name not in keep:
+            stale.append(old.name)
+            if not check:
+                old.unlink()
+    print(("stale: " if check else "wrote: ") + (", ".join(stale) or "none"), f"({len(T)} templates valid)")
+    return 1 if (check and stale) else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main("--check" in sys.argv))

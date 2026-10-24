@@ -1,0 +1,169 @@
+{
+ "slug": "co-03-sec-filing-monitor",
+ "key": "CO-03",
+ "version": 1,
+ "category": "Corporate",
+ "name": "SEC Filing Monitor",
+ "description": "Checks EDGAR for new filings by a company and notifies when one appears.",
+ "catalog_trigger": "Daily, disabled",
+ "tags": [
+  "corporate",
+  "monitor"
+ ],
+ "dependencies": [
+  "sec_edgar"
+ ],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "cik",
+   "label": "SEC CIK number",
+   "type": "cik",
+   "required": true,
+   "example": "0000000001"
+  }
+ ],
+ "legal_notes": "Uses the official EDGAR interface with the User-Agent contact you set in Setup and the agency's rate limit.",
+ "quota_note": "About 1 source request(s) per run",
+ "example_output": "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+ "capability_gaps": [],
+ "instructions": "Checks EDGAR for new filings by a company and notifies when one appears.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "co-03-sec-filing-monitor",
+  "name": "SEC Filing Monitor",
+  "description": "Checks EDGAR for new filings by a company and notifies when one appears.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "corporate",
+   "monitor"
+  ],
+  "trigger": {
+   "type": "schedule",
+   "schedule": "30 6 * * *",
+   "timezone": "UTC",
+   "enabled": false,
+   "missed_run_policy": "coalesce"
+  },
+  "inputs": {
+   "cik": "0000000001"
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "scope",
+    "type": "authorization_check",
+    "depends_on": [],
+    "config": {
+     "target_ref": "$inputs.cik",
+     "target_type": "cik"
+    }
+   },
+   {
+    "id": "edgar",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "sec_edgar",
+     "target_ref": "$inputs.cik",
+     "target_type": "cik"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "edgar"
+    ],
+    "config": {
+     "ref": "$nodes.edgar.output"
+    }
+   },
+   {
+    "id": "diff",
+    "type": "snapshot_diff",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "dataset_ref": "$nodes.unique.output"
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "change_ref": "$nodes.diff.output",
+     "title": "New SEC filing",
+     "severity": "info",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   },
+   {
+    "id": "fail",
+    "type": "error_handler",
+    "depends_on": [
+     "unique",
+     "diff"
+    ],
+    "config": {
+     "title": "SEC filing monitor failed"
+    },
+    "run_on": "failure"
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "cik": "0000000001"
+  },
+  "adapter_findings": {
+   "sec_edgar": [
+    {
+     "entity": "0000000001",
+     "entity_type": "org",
+     "predicate": "edgar.filing",
+     "value": "10-K 2026-02-14",
+     "confidence": "high"
+    },
+    {
+     "entity": "0000000001",
+     "entity_type": "org",
+     "predicate": "edgar.filing",
+     "value": "8-K 2026-03-01",
+     "confidence": "high"
+    }
+   ]
+  },
+  "previous_snapshot": [
+   {
+    "id": "p0",
+    "entity": "0000000001",
+    "entity_type": "org",
+    "predicate": "edgar.filing",
+    "value": "previous-value",
+    "confidence": "high",
+    "adapter": "sec_edgar"
+   }
+  ]
+ }
+}

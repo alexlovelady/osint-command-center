@@ -1,0 +1,173 @@
+{
+ "slug": "id-01-username-footprint",
+ "key": "ID-01",
+ "version": 1,
+ "category": "Identity",
+ "name": "Username Footprint",
+ "description": "Checks many public sites for accounts with a username. Name collisions are labelled unconfirmed.",
+ "catalog_trigger": "Manual",
+ "tags": [
+  "identity",
+  "consent"
+ ],
+ "dependencies": [
+  "sherlock"
+ ],
+ "optional_dependencies": [
+  "maigret"
+ ],
+ "inputs": [
+  {
+   "name": "username",
+   "label": "Username (with consent or a documented case basis)",
+   "type": "username",
+   "required": true,
+   "example": "alice"
+  }
+ ],
+ "legal_notes": "A hit only shows that a name exists on a site, not that it is the same person. Needs consent or a documented case basis.",
+ "quota_note": "About 2 source request(s) per run",
+ "example_output": "Candidate profile URLs, all labelled low confidence until you confirm them.",
+ "capability_gaps": [],
+ "instructions": "Checks many public sites for accounts with a username. Name collisions are labelled unconfirmed.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "id-01-username-footprint",
+  "name": "Username Footprint",
+  "description": "Checks many public sites for accounts with a username. Name collisions are labelled unconfirmed.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "identity",
+   "consent"
+  ],
+  "trigger": {
+   "type": "manual",
+   "enabled": false
+  },
+  "inputs": {
+   "username": "alice"
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "consent",
+    "type": "analyst_review",
+    "depends_on": [],
+    "config": {
+     "prompt": "Confirm that the person consented, or that this is a legitimate documented case, and that the case purpose is written.",
+     "timeout_hours": 72
+    }
+   },
+   {
+    "id": "scope",
+    "type": "authorization_check",
+    "depends_on": [
+     "consent"
+    ],
+    "config": {
+     "target_ref": "$inputs.username",
+     "target_type": "username"
+    }
+   },
+   {
+    "id": "sherlock",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "sherlock",
+     "target_ref": "$inputs.username",
+     "target_type": "username"
+    }
+   },
+   {
+    "id": "maigret",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "maigret",
+     "target_ref": "$inputs.username",
+     "target_type": "username"
+    },
+    "optional": true
+   },
+   {
+    "id": "merged",
+    "type": "transform",
+    "depends_on": [
+     "sherlock",
+     "maigret"
+    ],
+    "config": {
+     "ref": "$nodes.sherlock.output",
+     "extra_refs": [
+      "$nodes.maigret.output"
+     ],
+     "op": "merge"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "merged"
+    ],
+    "config": {
+     "ref": "$nodes.merged.output"
+    }
+   },
+   {
+    "id": "save",
+    "type": "evidence_save",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "ref": "$nodes.unique.output",
+     "title": "Username footprint (unconfirmed candidates)"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "username": "alice"
+  },
+  "adapter_findings": {
+   "sherlock": [
+    {
+     "entity": "alice",
+     "entity_type": "account",
+     "predicate": "account.profile",
+     "value": "https://social.example/alice",
+     "confidence": "low"
+    }
+   ],
+   "maigret": [
+    {
+     "entity": "alice",
+     "entity_type": "account",
+     "predicate": "account.profile",
+     "value": "https://forum.example/u/alice",
+     "confidence": "low"
+    }
+   ]
+  }
+ }
+}

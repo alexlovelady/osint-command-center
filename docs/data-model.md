@@ -2,7 +2,7 @@
 
 Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mode with foreign keys on; schema changes only through Alembic migrations (`backend/osintcc/db/migrations`). FTS5 `search_index` is maintained by triggers and is not an ORM table.
 
-51 tables.
+60 tables.
 
 ## ai_calls
 
@@ -63,6 +63,164 @@ Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mod
 | ts | DATETIME | no |  |
 | prev_hash | VARCHAR(64) | no |  |
 | event_hash | VARCHAR(64) | no |  |
+
+## automation_approvals
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| workflow_id | VARCHAR(36) | no | FK → automation_workflows |
+| version_id | VARCHAR(36) | no | FK → automation_versions |
+| kind | VARCHAR(12) | no |  |
+| authorization_id | VARCHAR(36) | yes |  |
+| approver_id | VARCHAR(80) | yes |  |
+| action_scope_json | JSON | no |  |
+| status | VARCHAR(12) | no |  |
+| requested_at | DATETIME | no |  |
+| approved_at | DATETIME | yes |  |
+| expires_at | DATETIME | yes |  |
+| revoked_at | DATETIME | yes |  |
+
+## automation_node_runs
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| run_id | VARCHAR(36) | no | FK → automation_runs |
+| node_id | VARCHAR(40) | no |  |
+| attempt | INTEGER | no |  |
+| state | VARCHAR(16) | no |  |
+| started_at | DATETIME | no |  |
+| ended_at | DATETIME | yes |  |
+| input_digest | VARCHAR(64) | yes |  |
+| output_json | JSON | yes |  |
+| error_code | VARCHAR(40) | yes |  |
+| diagnostics_json | JSON | no |  |
+
+## automation_notifications
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| run_id | VARCHAR(36) | yes |  |
+| workflow_id | VARCHAR(36) | yes |  |
+| owner_id | VARCHAR(80) | no |  |
+| channel | VARCHAR(20) | no |  |
+| destination_ref | VARCHAR(200) | yes |  |
+| dedupe_key | VARCHAR(80) | no |  |
+| severity | VARCHAR(10) | no |  |
+| status | VARCHAR(16) | no |  |
+| title | VARCHAR(200) | no |  |
+| body | TEXT | no |  |
+| details_json | JSON | no |  |
+| count | INTEGER | no |  |
+| created_at | DATETIME | no |  |
+| delivered_at | DATETIME | yes |  |
+| acknowledged_at | DATETIME | yes |  |
+
+## automation_runs
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| workflow_id | VARCHAR(36) | no | FK → automation_workflows |
+| version_id | VARCHAR(36) | yes |  |
+| case_id | VARCHAR(36) | yes |  |
+| trigger_type | VARCHAR(16) | no |  |
+| trigger_event_id | VARCHAR(80) | yes |  |
+| state | VARCHAR(24) | no |  |
+| dry_run | BOOLEAN | no |  |
+| queued_at | DATETIME | no |  |
+| started_at | DATETIME | yes |  |
+| ended_at | DATETIME | yes |  |
+| idempotency_key | VARCHAR(160) | no |  |
+| error_code | VARCHAR(40) | yes |  |
+| evidence_count | INTEGER | no |  |
+| inputs_json | JSON | no |  |
+| summary_json | JSON | no |  |
+| cancel_requested | BOOLEAN | no |  |
+| lease_until | DATETIME | yes |  |
+| created_by | VARCHAR(80) | no |  |
+
+## automation_snapshots
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| workflow_id | VARCHAR(36) | no | FK → automation_workflows |
+| case_id | VARCHAR(36) | yes |  |
+| node_id | VARCHAR(40) | no |  |
+| dataset_type | VARCHAR(30) | no |  |
+| content_hash | VARCHAR(64) | no |  |
+| items_json | JSON | no |  |
+| taken_at | DATETIME | no |  |
+| source_run_id | VARCHAR(36) | yes |  |
+
+## automation_suggestions
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| owner_id | VARCHAR(80) | no |  |
+| case_id | VARCHAR(36) | yes |  |
+| rationale | TEXT | no |  |
+| basis_json | JSON | no |  |
+| proposed_template_key | VARCHAR(40) | no |  |
+| category | VARCHAR(20) | no |  |
+| state | VARCHAR(12) | no |  |
+| snooze_until | DATETIME | yes |  |
+| created_at | DATETIME | no |  |
+| dismissed_at | DATETIME | yes |  |
+
+## automation_triggers
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| workflow_id | VARCHAR(36) | no | FK → automation_workflows |
+| version_id | VARCHAR(36) | no | FK → automation_versions |
+| type | VARCHAR(16) | no |  |
+| schedule | VARCHAR(80) | yes |  |
+| timezone | VARCHAR(64) | no |  |
+| enabled | BOOLEAN | no |  |
+| missed_run_policy | VARCHAR(12) | no |  |
+| next_due_at | DATETIME | yes |  |
+| last_fired_at | DATETIME | yes |  |
+| config_json | JSON | no |  |
+
+## automation_versions
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| workflow_id | VARCHAR(36) | no | FK → automation_workflows |
+| revision | INTEGER | no |  |
+| definition_json | JSON | no |  |
+| schema_version | INTEGER | no |  |
+| content_hash | VARCHAR(64) | no |  |
+| created_by | VARCHAR(80) | no |  |
+| created_at | DATETIME | no |  |
+| published_at | DATETIME | yes |  |
+
+## automation_workflows
+
+An editable draft plus a pointer to the active immutable version. owner_id/team_id leave room for multiuser sharing.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | yes | FK → cases |
+| owner_id | VARCHAR(80) | no |  |
+| team_id | VARCHAR(80) | yes |  |
+| name | VARCHAR(200) | no |  |
+| template_slug | VARCHAR(40) | yes |  |
+| draft_json | JSON | no |  |
+| draft_rev | INTEGER | no |  |
+| active_version_id | VARCHAR(36) | yes |  |
+| state | VARCHAR(16) | no |  |
+| created_at | DATETIME | no |  |
+| updated_at | DATETIME | no |  |
+| deleted_at | DATETIME | yes |  |
 
 ## capture_sessions
 

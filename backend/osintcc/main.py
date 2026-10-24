@@ -59,6 +59,8 @@ class AppState:
     setup_tasks: dict = field(default_factory=dict)  # first-run setup progress (in memory)
     secrets: Any = None  # SecretStore
     egress: Any = None  # startup egress self-check monitor (see selfcheck/egress.py)
+    automation: Any = None  # AutomationEngine (runs, retries, recovery)
+    automation_scheduler: Any = None  # AutomationScheduler (triggers, queue)
     update_http: Any = None  # test/dev seam: SafeHttp used by the update check
     update_transport: Any = None  # test/dev seam: httpx transport used by the update download
 
@@ -103,12 +105,17 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
     from .workflows import Scheduler
     scheduler = Scheduler(state)
     state.scheduler = scheduler
+    from .automations.executor import AutomationEngine
+    from .automations.scheduler import AutomationScheduler
+    state.automation = AutomationEngine(state, backoff_scale=settings.retry_scale)
+    state.automation_scheduler = AutomationScheduler(state, state.automation)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         recovered = runner.recover_interrupted()
         app.state.recovered_jobs = recovered
         scheduler.recover()
+        app.state.recovered_automation_runs = state.automation.recover()
         from .plugins.manager import PluginManager
         state.plugin_manager = PluginManager(state)
         state.plugin_manager.sync()  # re-register enabled, hash-verified plugins
@@ -116,6 +123,7 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
         app.state.recovered_captures = recover_sessions(sm)
         if settings.run_scheduler:
             scheduler.start()
+            state.automation_scheduler.start()
         egress_task = None
         if settings.run_scheduler and os.environ.get("OSINTCC_EGRESS_SELFCHECK", "1") != "0":
             from .selfcheck.egress import EgressMonitor
@@ -132,6 +140,7 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
         if egress_task:
             egress_task.cancel()
         await scheduler.stop()
+        await state.automation_scheduler.stop()
         for t in list(state.tasks):
             t.cancel()
         with engine.connect() as c:  # checkpoint WAL on clean shutdown

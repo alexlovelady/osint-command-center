@@ -1,0 +1,282 @@
+{
+ "slug": "cy-03-attack-surface-watch",
+ "key": "CY-03",
+ "version": 1,
+ "category": "Cyber",
+ "name": "Attack Surface Watch",
+ "description": "Compares the passive, public-facing asset inventory with the previous run. Active probing is NOT included.",
+ "catalog_trigger": "Daily, disabled",
+ "tags": [
+  "monitor",
+  "passive"
+ ],
+ "dependencies": [
+  "dns"
+ ],
+ "optional_dependencies": [
+  "crtsh",
+  "subfinder"
+ ],
+ "inputs": [
+  {
+   "name": "domain",
+   "label": "Domain you own or are authorised to examine",
+   "type": "domain",
+   "required": true,
+   "example": "example.org"
+  }
+ ],
+ "legal_notes": "Public, passive sources only. Respect each source's terms and keep to targets you own or have a documented reason to examine.",
+ "quota_note": "About 7 source request(s) per run",
+ "example_output": "Newly seen hostnames and their addresses since the last run.",
+ "capability_gaps": [
+  "Active probes (port or service checks) are not part of this template; they need a separate scope authorization and the active module."
+ ],
+ "instructions": "Compares the passive, public-facing asset inventory with the previous run. Active probing is NOT included.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "cy-03-attack-surface-watch",
+  "name": "Attack Surface Watch",
+  "description": "Compares the passive, public-facing asset inventory with the previous run. Active probing is NOT included.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "monitor",
+   "passive"
+  ],
+  "trigger": {
+   "type": "schedule",
+   "schedule": "0 7 * * *",
+   "timezone": "UTC",
+   "enabled": false,
+   "missed_run_policy": "coalesce"
+  },
+  "inputs": {
+   "domain": "example.org"
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "scope",
+    "type": "authorization_check",
+    "depends_on": [],
+    "config": {
+     "target_ref": "$inputs.domain"
+    }
+   },
+   {
+    "id": "crtsh",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "crtsh",
+     "target_ref": "$inputs.domain"
+    },
+    "optional": true
+   },
+   {
+    "id": "subfinder",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "subfinder",
+     "target_ref": "$inputs.domain"
+    },
+    "optional": true
+   },
+   {
+    "id": "found",
+    "type": "transform",
+    "depends_on": [
+     "crtsh",
+     "subfinder"
+    ],
+    "config": {
+     "ref": "$nodes.crtsh.output",
+     "extra_refs": [
+      "$nodes.subfinder.output"
+     ],
+     "op": "merge"
+    }
+   },
+   {
+    "id": "resolve",
+    "type": "enrich",
+    "depends_on": [
+     "found"
+    ],
+    "config": {
+     "adapter": "dns",
+     "from_ref": "$nodes.found.output",
+     "entity_types": [
+      "domain"
+     ],
+     "max_targets": 5
+    }
+   },
+   {
+    "id": "all",
+    "type": "transform",
+    "depends_on": [
+     "found",
+     "resolve"
+    ],
+    "config": {
+     "ref": "$nodes.found.output",
+     "extra_refs": [
+      "$nodes.resolve.output"
+     ],
+     "op": "merge"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "all"
+    ],
+    "config": {
+     "ref": "$nodes.all.output"
+    }
+   },
+   {
+    "id": "diff",
+    "type": "snapshot_diff",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "dataset_ref": "$nodes.unique.output"
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "change_ref": "$nodes.diff.output",
+     "title": "New or changed public-facing assets",
+     "severity": "warning",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   },
+   {
+    "id": "fail",
+    "type": "error_handler",
+    "depends_on": [
+     "unique",
+     "diff"
+    ],
+    "config": {
+     "title": "Attack surface watch failed"
+    },
+    "run_on": "failure"
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "domain": "example.org"
+  },
+  "adapter_findings": {
+   "crtsh": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "cert.subdomain",
+     "value": "www.example.org",
+     "confidence": "medium"
+    },
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "cert.subdomain",
+     "value": "mail.example.org",
+     "confidence": "medium"
+    }
+   ],
+   "subfinder": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "subdomain",
+     "value": "api.example.org",
+     "confidence": "medium"
+    }
+   ],
+   "dns": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "dns.a",
+     "value": "192.0.2.10",
+     "confidence": "high"
+    },
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "dns.mx",
+     "value": "mail.example.org",
+     "confidence": "high"
+    }
+   ]
+  },
+  "previous_snapshot": [
+   {
+    "id": "p0",
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "cert.subdomain",
+    "value": "previous-value",
+    "confidence": "medium",
+    "adapter": "crtsh"
+   },
+   {
+    "id": "p1",
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "cert.subdomain",
+    "value": "mail.example.org",
+    "confidence": "medium",
+    "adapter": "crtsh"
+   },
+   {
+    "id": "p2",
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "subdomain",
+    "value": "api.example.org",
+    "confidence": "medium",
+    "adapter": "subfinder"
+   },
+   {
+    "id": "p3",
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "dns.a",
+    "value": "192.0.2.10",
+    "confidence": "high",
+    "adapter": "dns"
+   }
+  ]
+ }
+}

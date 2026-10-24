@@ -15,6 +15,7 @@ from osintcc.db import (
 from osintcc.db.migrate import upgrade_to_head
 from osintcc.evidence.vault import Vault
 from osintcc.jobs.runner import JobRunner
+from osintcc.main import create_app
 from osintcc.policy.ssrf import SafeHttp
 
 PUBLIC_IP = "93.184.216.34"
@@ -91,3 +92,36 @@ def make_runner(sm, settings):
         return JobRunner(sm, settings, Vault(settings.vault_dir), adapters or default_adapters(),
                          lambda: AdapterContext(http=http, dns_query=fake_dns))
     return _make
+
+
+# ---- shared by integration tests: a keyring that never touches the real credential store, and a ready app + client ----------------------------
+class FakeKeyring:
+    def __init__(self):
+        self.data = {}
+
+    def get_password(self, s, u):
+        return self.data.get((s, u))
+
+    def set_password(self, s, u, p):
+        self.data[(s, u)] = p
+
+    def delete_password(self, s, u):
+        self.data.pop((s, u), None)
+
+
+@pytest.fixture
+def _no_real_keyring(monkeypatch):
+    from osintcc.secrets_store import SecretStore
+    kr = FakeKeyring()
+    monkeypatch.setattr(SecretStore, "_keyring", staticmethod(lambda: kr))
+
+
+@pytest.fixture
+async def api(settings, calls):
+    http = SafeHttp(resolver=fake_resolver, transport=httpx.MockTransport(make_handler(calls)))
+    app = create_app(settings, ctx_factory=lambda: AdapterContext(http=http, dns_query=fake_dns))
+    async with app.router.lifespan_context(app):
+        c = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1", headers={"Authorization": f"Bearer {settings.session_token}"}, timeout=60)
+        c.app = app
+        yield c
+        await c.aclose()

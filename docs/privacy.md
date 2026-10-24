@@ -70,6 +70,10 @@ findings, notes, evidence titles and observations that match your question (rest
 status, and the documentation. Keys are never given to it. It cannot approve its own proposals; running a search, saving a note or requirement,
 generating a report or running a workflow happens only when you press *Approve and run*, and each approval is audited.
 
+## Automations
+
+Automations store workflows, immutable versions, approvals, run records (inputs digests, outputs, errors), snapshots of datasets used for change detection, and notifications, all in the encrypted database and removed with their case. They contact only the sources a workflow lists, after a scope check at run time. Notifications are local (in-app/desktop) unless you approved a webhook destination by name; a webhook receives a short summary, never evidence content. The AI builder uses your local model by default; a cloud profile receives nothing unless you opted that profile in, and then only your goal text and the list of available tools. Suggestions are off by default; when on they read only searches and reports you ran in this application.
+
 ## Deleting data
 
 Case purge shows what will go and needs confirmation; it deletes that case's rows, vault objects and index entries and records an

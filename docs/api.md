@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-168 operations in 35 groups.
+213 operations in 36 groups.
 
 ## ai
 
@@ -33,6 +33,56 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | Method | Path | Summary |
 |---|---|---|
 | POST | `/api/v1/authorizations/{auth_id}/revoke` | Revoke Auth |
+
+## automations
+
+| Method | Path | Summary |
+|---|---|---|
+| POST | `/api/v1/automations/ai/diagnose` | Ai Diagnose |
+| POST | `/api/v1/automations/ai/explain` | Ai Explain |
+| POST | `/api/v1/automations/ai/propose` | Ai Propose |
+| GET | `/api/v1/automations/approvals` | Approvals |
+| POST | `/api/v1/automations/approvals/{aid}/decide` | Decide |
+| POST | `/api/v1/automations/approvals/{aid}/revoke` | Revoke |
+| GET | `/api/v1/automations/capabilities` | Capabilities |
+| POST | `/api/v1/automations/from-template` | From Template |
+| POST | `/api/v1/automations/import` | Import Wf |
+| GET | `/api/v1/automations/node-types` | Node Types |
+| GET | `/api/v1/automations/notifications` | Notifications |
+| PATCH | `/api/v1/automations/notifications/{nid}` | Patch Note |
+| GET | `/api/v1/automations/runs` | List Runs |
+| GET | `/api/v1/automations/runs/{rid}` | Get Run |
+| POST | `/api/v1/automations/runs/{rid}/cancel` | Cancel |
+| GET | `/api/v1/automations/runs/{rid}/compare/{other}` | Compare Runs |
+| GET | `/api/v1/automations/runs/{rid}/events` | Server-sent events: node records as they appear, then the final state. |
+| POST | `/api/v1/automations/runs/{rid}/retry` | Retry |
+| POST | `/api/v1/automations/runs/{rid}/review` | Review |
+| GET | `/api/v1/automations/schema` | Schema |
+| GET | `/api/v1/automations/scope-authorizations` | Scope Auths |
+| GET | `/api/v1/automations/settings` | Get Settings |
+| PATCH | `/api/v1/automations/settings` | Patch Settings |
+| GET | `/api/v1/automations/suggestions` | Suggestions |
+| POST | `/api/v1/automations/suggestions/{sid}/dismiss` | Dismiss |
+| POST | `/api/v1/automations/suggestions/{sid}/snooze` | Snooze |
+| GET | `/api/v1/automations/templates` | Templates |
+| GET | `/api/v1/automations/templates/{slug}` | Template |
+| GET | `/api/v1/automations/workflows` | List Wf |
+| POST | `/api/v1/automations/workflows` | Create Wf |
+| DELETE | `/api/v1/automations/workflows/{wid}` | Delete Wf |
+| GET | `/api/v1/automations/workflows/{wid}` | Get Wf |
+| PATCH | `/api/v1/automations/workflows/{wid}` | Patch Wf |
+| POST | `/api/v1/automations/workflows/{wid}/activate` | Activate |
+| POST | `/api/v1/automations/workflows/{wid}/deactivate` | Deactivate |
+| POST | `/api/v1/automations/workflows/{wid}/dry-run` | Runs the DRAFT against the template's fixture: no network, no writes. Every output is labelled simulated. |
+| GET | `/api/v1/automations/workflows/{wid}/export` | Export Wf |
+| POST | `/api/v1/automations/workflows/{wid}/publish` | Publish |
+| POST | `/api/v1/automations/workflows/{wid}/repair` | Apply diagnostic repair proposals to the DRAFT (never to a published version). Returns the diff and validation; publishing stays yours. |
+| POST | `/api/v1/automations/workflows/{wid}/request-approval` | Request Approval |
+| POST | `/api/v1/automations/workflows/{wid}/run` | Run Wf |
+| POST | `/api/v1/automations/workflows/{wid}/run-file` | File-triggered workflows: the file is parsed offline and stored like an import, then the workflow runs on it. |
+| GET | `/api/v1/automations/workflows/{wid}/runs` | Wf Runs |
+| POST | `/api/v1/automations/workflows/{wid}/validate` | Validate Wf |
+| POST | `/api/v1/automations/workflows/{wid}/versions/{rev}/clone` | Clone Version |
 
 ## backups
 

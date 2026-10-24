@@ -732,3 +732,157 @@ class CopilotProposal(Base):
     created_at: Mapped[datetime] = ts()
     decided_at: Mapped[datetime | None] = ts(nullable=True, default=False)
     decided_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+
+
+# ---- AI Automation Builder & Workflow Library (addendum A1.0) -------------------------------------------------------------------------------
+class AutomationWorkflow(Base):
+    """An editable draft plus a pointer to the active immutable version. owner_id/team_id leave room for multiuser sharing."""
+    __tablename__ = "automation_workflows"
+    id: Mapped[str] = pk()
+    case_id: Mapped[str | None] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), nullable=True, index=True)
+    owner_id: Mapped[str] = mapped_column(String(80), index=True)
+    team_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    name: Mapped[str] = mapped_column(String(200))
+    template_slug: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    draft_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    draft_rev: Mapped[int] = mapped_column(Integer, default=1)          # optimistic concurrency (ETag)
+    active_version_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    state: Mapped[str] = mapped_column(String(16), default="draft")     # draft | published | active | disabled
+    created_at: Mapped[datetime] = ts()
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow)
+    deleted_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+
+
+class AutomationVersion(Base):
+    __tablename__ = "automation_versions"
+    id: Mapped[str] = pk()
+    workflow_id: Mapped[str] = mapped_column(ForeignKey("automation_workflows.id", ondelete="CASCADE"), index=True)
+    revision: Mapped[int] = mapped_column(Integer)
+    definition_json: Mapped[dict[str, Any]] = mapped_column(JSON)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = ts()
+    published_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    __table_args__ = (UniqueConstraint("workflow_id", "revision", name="uq_automation_version"),)
+
+
+class AutomationTrigger(Base):
+    __tablename__ = "automation_triggers"
+    id: Mapped[str] = pk()
+    workflow_id: Mapped[str] = mapped_column(ForeignKey("automation_workflows.id", ondelete="CASCADE"))
+    version_id: Mapped[str] = mapped_column(ForeignKey("automation_versions.id", ondelete="CASCADE"))
+    type: Mapped[str] = mapped_column(String(16))                        # manual | schedule | event | file
+    schedule: Mapped[str | None] = mapped_column(String(80), nullable=True)   # 5-field cron
+    timezone: Mapped[str] = mapped_column(String(64), default="UTC")           # IANA zone; instants are stored in UTC
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    missed_run_policy: Mapped[str] = mapped_column(String(12), default="coalesce")  # skip | coalesce | catch_up
+    next_due_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    last_fired_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    config_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    __table_args__ = (Index("ix_automation_trigger_due", "enabled", "next_due_at"),)
+
+
+class AutomationApproval(Base):
+    __tablename__ = "automation_approvals"
+    id: Mapped[str] = pk()
+    workflow_id: Mapped[str] = mapped_column(ForeignKey("automation_workflows.id", ondelete="CASCADE"), index=True)
+    version_id: Mapped[str] = mapped_column(ForeignKey("automation_versions.id", ondelete="CASCADE"))
+    kind: Mapped[str] = mapped_column(String(12))                         # activation | collection
+    authorization_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    approver_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    action_scope_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(12), default="pending")    # pending | approved | rejected | revoked
+    requested_at: Mapped[datetime] = ts()
+    approved_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    expires_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    revoked_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+
+
+class AutomationRun(Base):
+    __tablename__ = "automation_runs"
+    id: Mapped[str] = pk()
+    workflow_id: Mapped[str] = mapped_column(ForeignKey("automation_workflows.id", ondelete="CASCADE"))
+    version_id: Mapped[str | None] = mapped_column(String(36), nullable=True)       # null for dry runs of an unpublished draft
+    case_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    trigger_type: Mapped[str] = mapped_column(String(16), default="manual")
+    trigger_event_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    state: Mapped[str] = mapped_column(String(24), default="queued")
+    dry_run: Mapped[bool] = mapped_column(Boolean, default=False)
+    queued_at: Mapped[datetime] = ts()
+    started_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    ended_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    idempotency_key: Mapped[str] = mapped_column(String(160), unique=True)
+    error_code: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    evidence_count: Mapped[int] = mapped_column(Integer, default=0)
+    inputs_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    summary_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    cancel_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    lease_until: Mapped[datetime | None] = ts(nullable=True, default=False)
+    created_by: Mapped[str] = mapped_column(String(80), default="local")
+    __table_args__ = (Index("ix_automation_run_wf", "workflow_id", "queued_at"), Index("ix_automation_run_state", "state", "queued_at"))
+
+
+class AutomationNodeRun(Base):
+    __tablename__ = "automation_node_runs"
+    id: Mapped[str] = pk()
+    run_id: Mapped[str] = mapped_column(ForeignKey("automation_runs.id", ondelete="CASCADE"))
+    node_id: Mapped[str] = mapped_column(String(40))
+    attempt: Mapped[int] = mapped_column(Integer, default=1)
+    state: Mapped[str] = mapped_column(String(16), default="running")     # running | succeeded | failed | skipped | interrupted | waiting
+    started_at: Mapped[datetime] = ts()
+    ended_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    input_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    output_json: Mapped[Any] = mapped_column(JSON, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    diagnostics_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    __table_args__ = (Index("ix_automation_node_run", "run_id", "node_id"),)
+
+
+class AutomationSnapshot(Base):
+    __tablename__ = "automation_snapshots"
+    id: Mapped[str] = pk()
+    workflow_id: Mapped[str] = mapped_column(ForeignKey("automation_workflows.id", ondelete="CASCADE"))
+    case_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    node_id: Mapped[str] = mapped_column(String(40), default="")
+    dataset_type: Mapped[str] = mapped_column(String(30), default="findings")
+    content_hash: Mapped[str] = mapped_column(String(64))
+    items_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)      # stable id -> value digest (+ short description)
+    taken_at: Mapped[datetime] = ts()
+    source_run_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    __table_args__ = (Index("ix_automation_snapshot_wf", "workflow_id", "taken_at"),)
+
+
+class AutomationNotification(Base):
+    __tablename__ = "automation_notifications"
+    id: Mapped[str] = pk()
+    run_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    workflow_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    owner_id: Mapped[str] = mapped_column(String(80), default="local", index=True)
+    channel: Mapped[str] = mapped_column(String(20))                       # in_app | local_desktop | webhook
+    destination_ref: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    dedupe_key: Mapped[str] = mapped_column(String(80), index=True)
+    severity: Mapped[str] = mapped_column(String(10), default="info")
+    status: Mapped[str] = mapped_column(String(16), default="delivered")   # delivered | held | digest_pending | suppressed | failed
+    title: Mapped[str] = mapped_column(String(200), default="")
+    body: Mapped[str] = mapped_column(Text, default="")
+    details_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    count: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = ts()
+    delivered_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    acknowledged_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+
+
+class AutomationSuggestion(Base):
+    __tablename__ = "automation_suggestions"
+    id: Mapped[str] = pk()
+    owner_id: Mapped[str] = mapped_column(String(80), index=True)
+    case_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    rationale: Mapped[str] = mapped_column(Text)
+    basis_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    proposed_template_key: Mapped[str] = mapped_column(String(40))
+    category: Mapped[str] = mapped_column(String(20), default="repeat_search")
+    state: Mapped[str] = mapped_column(String(12), default="open")         # open | dismissed | snoozed | accepted
+    snooze_until: Mapped[datetime | None] = ts(nullable=True, default=False)
+    created_at: Mapped[datetime] = ts()
+    dismissed_at: Mapped[datetime | None] = ts(nullable=True, default=False)

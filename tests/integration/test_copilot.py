@@ -92,7 +92,7 @@ def case_ctx(cid, tab="Findings"):
 # =============================================================================================== knowledge base
 def test_every_page_and_case_tab_has_documentation():
     ids = {c.id for c in static_chunks() if c.kind == "module"}
-    for page in ("overview", "cases", "tools", "setup", "settings", "universal-search", "copilot"):
+    for page in ("overview", "cases", "tools", "setup", "settings", "universal-search", "copilot", "automations"):
         assert f"module:{page}" in ids, page
     for tab in cx.TABS:
         assert "module:tab-" + tab.lower().replace(" ", "-") in ids, tab
@@ -105,7 +105,11 @@ def test_every_tutorial_highlight_target_exists_in_the_web_ui():
     for p in src.rglob("*.tsx"):
         found |= set(re.findall(r'data-tour="([a-z0-9-]+)"', p.read_text(encoding="utf8")))
     found |= {"tab-" + t for t in cx.TABS}                                   # CaseView renders these from its TABS list
-    found |= {"nav-" + r for r in ("overview", "cases", "tools", "setup", "settings")}
+    found |= {"nav-" + r for r in ("overview", "cases", "automations", "tools", "setup", "settings")}
+    page = (src / "pages" / "Automations.tsx").read_text(encoding="utf8")
+    tabs = re.search(r"const TABS = \[(.*?)\] as const", page, re.DOTALL)
+    assert tabs and re.findall(r'"([^"]+)"', tabs.group(1)) == cx.AUTO_TABS[:5]            # the page renders data-tour="auto-tab-<first word>" for each
+    found |= {"auto-tab-" + t.split()[0].lower() for t in cx.AUTO_TABS[:5]}
     missing = sorted({s["target"] for c in static_chunks() if c.kind == "tutorial" for s in c.meta["steps"] if s.get("target")} - found)
     assert not missing, f"tutorial steps point at UI elements that do not exist: {missing}"
 

@@ -6,6 +6,7 @@ import NavIcon from "./components/NavIcon";
 import { api, getToken } from "./lib/api";
 import { setAppCtx } from "./lib/appContext";
 import CaseView from "./pages/CaseView";
+import Automations from "./pages/Automations";
 import Cases from "./pages/Cases";
 import Overview from "./pages/Overview";
 import Settings from "./pages/Settings";
@@ -26,7 +27,7 @@ function useRoute(): [string, (r: string) => void] {
   return [r, (x) => { window.location.hash = `/${x}`; }];
 }
 
-const NAV: [string, string][] = [["overview", "Overview"], ["cases", "Cases"], ["tools", "Tool Manager"], ["setup", "Setup"], ["settings", "Settings"]];
+const NAV: [string, string][] = [["overview", "Overview"], ["cases", "Cases"], ["automations", "Automations"], ["tools", "Tool Manager"], ["setup", "Setup"], ["settings", "Settings"]];
 
 export default function App() {
   getToken(); // capture + scrub #token=… before routing reads the hash
@@ -55,6 +56,7 @@ export default function App() {
   let page;
   if (section === "case" && id) page = <CaseView id={id} />;
   else if (section === "cases") page = <Cases open={(i) => go(`case/${i}`)} />;
+  else if (section === "automations") page = <Automations workflowId={id} />;
   else if (section === "tools") page = <Tools />;
   else if (section === "settings") page = <Settings />;
   else if (section === "setup") page = <Setup />;

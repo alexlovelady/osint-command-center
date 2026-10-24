@@ -49,7 +49,7 @@ def main() -> int:
         for p in base.rglob("*"):
             if not p.is_file() or p.suffix.lower() in SKIP_SUFFIX and base == ROOT:
                 continue
-            if base == ROOT and any(part in SKIP_DIRS for part in p.relative_to(ROOT).parts[:-1]):
+            if base == ROOT and any(part in SKIP_DIRS or part.startswith(".venv") for part in p.relative_to(ROOT).parts[:-1]):
                 continue
             if p.stat().st_size > 8 * 1024 * 1024 and p.suffix != ".exe":
                 continue

@@ -52,6 +52,40 @@
     "title": "ActionIn",
     "type": "object"
    },
+   "ActivateIn": {
+    "properties": {
+     "revision": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revision"
+     }
+    },
+    "title": "ActivateIn",
+    "type": "object"
+   },
+   "ApprovalReq": {
+    "properties": {
+     "revision": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revision"
+     }
+    },
+    "title": "ApprovalReq",
+    "type": "object"
+   },
    "AskIn": {
     "properties": {
      "case_id": {
@@ -649,6 +683,55 @@
     "title": "ConsentIn",
     "type": "object"
    },
+   "DecideIn": {
+    "properties": {
+     "approve": {
+      "title": "Approve",
+      "type": "boolean"
+     },
+     "authorization_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Authorization Id"
+     },
+     "confirmed_adapters": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Confirmed Adapters",
+      "type": "array"
+     },
+     "expires_in_days": {
+      "default": 30,
+      "title": "Expires In Days",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "approve"
+    ],
+    "title": "DecideIn",
+    "type": "object"
+   },
+   "DiagIn": {
+    "properties": {
+     "run_id": {
+      "title": "Run Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "run_id"
+    ],
+    "title": "DiagIn",
+    "type": "object"
+   },
    "DownloadIn": {
     "properties": {
      "confirm": {
@@ -658,6 +741,57 @@
      }
     },
     "title": "DownloadIn",
+    "type": "object"
+   },
+   "DryRunIn": {
+    "properties": {
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "inputs": {
+      "additionalProperties": true,
+      "title": "Inputs",
+      "type": "object"
+     }
+    },
+    "title": "DryRunIn",
+    "type": "object"
+   },
+   "ExplainIn": {
+    "properties": {
+     "definition": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Definition"
+     },
+     "workflow_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Workflow Id"
+     }
+    },
+    "title": "ExplainIn",
     "type": "object"
    },
    "FromFinding": {
@@ -671,6 +805,47 @@
      "finding_id"
     ],
     "title": "FromFinding",
+    "type": "object"
+   },
+   "FromTemplate": {
+    "properties": {
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "inputs": {
+      "additionalProperties": true,
+      "title": "Inputs",
+      "type": "object"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "slug": {
+      "title": "Slug",
+      "type": "string"
+     }
+    },
+    "required": [
+     "slug"
+    ],
+    "title": "FromTemplate",
     "type": "object"
    },
    "GenIn": {
@@ -792,6 +967,31 @@
      "status"
     ],
     "title": "HypStatusIn",
+    "type": "object"
+   },
+   "ImportIn": {
+    "properties": {
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "document": {
+      "additionalProperties": true,
+      "title": "Document",
+      "type": "object"
+     }
+    },
+    "required": [
+     "document"
+    ],
+    "title": "ImportIn",
     "type": "object"
    },
    "LinkIn": {
@@ -950,6 +1150,54 @@
      "body_markdown"
     ],
     "title": "NoteIn",
+    "type": "object"
+   },
+   "NotePatch": {
+    "properties": {
+     "acknowledge": {
+      "default": true,
+      "title": "Acknowledge",
+      "type": "boolean"
+     }
+    },
+    "title": "NotePatch",
+    "type": "object"
+   },
+   "PatchIn": {
+    "properties": {
+     "definition": {
+      "additionalProperties": true,
+      "title": "Definition",
+      "type": "object"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "rev": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rev"
+     }
+    },
+    "required": [
+     "definition"
+    ],
+    "title": "PatchIn",
     "type": "object"
    },
    "PlanIn": {
@@ -1189,6 +1437,43 @@
     "title": "ProposalIn",
     "type": "object"
    },
+   "ProposeIn": {
+    "properties": {
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "goal": {
+      "maxLength": 1500,
+      "minLength": 8,
+      "title": "Goal",
+      "type": "string"
+     },
+     "profile_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Profile Id"
+     }
+    },
+    "required": [
+     "goal"
+    ],
+    "title": "ProposeIn",
+    "type": "object"
+   },
    "PurgeIn": {
     "properties": {
      "confirm": {
@@ -1203,6 +1488,34 @@
      }
     },
     "title": "PurgeIn",
+    "type": "object"
+   },
+   "RepairIn": {
+    "properties": {
+     "ops": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Ops",
+      "type": "array"
+     },
+     "rev": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rev"
+     }
+    },
+    "required": [
+     "ops"
+    ],
+    "title": "RepairIn",
     "type": "object"
    },
    "ReqLinkIn": {
@@ -1321,6 +1634,24 @@
     "title": "RestoreIn",
     "type": "object"
    },
+   "ReviewIn": {
+    "properties": {
+     "approve": {
+      "title": "Approve",
+      "type": "boolean"
+     },
+     "node": {
+      "title": "Node",
+      "type": "string"
+     }
+    },
+    "required": [
+     "node",
+     "approve"
+    ],
+    "title": "ReviewIn",
+    "type": "object"
+   },
    "RevokeIn": {
     "properties": {
      "confirm": {
@@ -1341,49 +1672,6 @@
      }
     },
     "title": "RevokeIn",
-    "type": "object"
-   },
-   "RunIn": {
-    "properties": {
-     "case_id": {
-      "title": "Case Id",
-      "type": "string"
-     },
-     "confirmed_adapters": {
-      "items": {
-       "type": "string"
-      },
-      "title": "Confirmed Adapters",
-      "type": "array"
-     },
-     "target": {
-      "maxLength": 2048,
-      "minLength": 1,
-      "title": "Target",
-      "type": "string"
-     },
-     "target_type": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Target Type"
-     },
-     "wait": {
-      "default": true,
-      "title": "Wait",
-      "type": "boolean"
-     }
-    },
-    "required": [
-     "case_id",
-     "target"
-    ],
-    "title": "RunIn",
     "type": "object"
    },
    "SchedIn": {
@@ -1620,6 +1908,33 @@
     "title": "SeriesIn",
     "type": "object"
    },
+   "SettingsPatch": {
+    "properties": {
+     "values": {
+      "additionalProperties": true,
+      "title": "Values",
+      "type": "object"
+     }
+    },
+    "required": [
+     "values"
+    ],
+    "title": "SettingsPatch",
+    "type": "object"
+   },
+   "SnoozeIn": {
+    "properties": {
+     "days": {
+      "default": 7,
+      "maximum": 90.0,
+      "minimum": 1.0,
+      "title": "Days",
+      "type": "integer"
+     }
+    },
+    "title": "SnoozeIn",
+    "type": "object"
+   },
    "SpecIn": {
     "properties": {
      "evidence_id": {
@@ -1723,7 +2038,52 @@
     "title": "VerifyIn",
     "type": "object"
    },
-   "WfIn": {
+   "osintcc__api__v1__automations__RunIn": {
+    "properties": {
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "confirmed_adapters": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Confirmed Adapters",
+      "type": "array"
+     },
+     "inputs": {
+      "additionalProperties": true,
+      "title": "Inputs",
+      "type": "object"
+     },
+     "revision": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revision"
+     },
+     "wait": {
+      "default": false,
+      "title": "Wait",
+      "type": "boolean"
+     }
+    },
+    "title": "RunIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__automations__WfIn": {
     "properties": {
      "case_id": {
       "anyOf": [
@@ -1740,6 +2100,18 @@
       "additionalProperties": true,
       "title": "Definition",
       "type": "object"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
      }
     },
     "required": [
@@ -2203,6 +2575,74 @@
     },
     "title": "EnableIn",
     "type": "object"
+   },
+   "osintcc__api__v1__workflows__RunIn": {
+    "properties": {
+     "case_id": {
+      "title": "Case Id",
+      "type": "string"
+     },
+     "confirmed_adapters": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Confirmed Adapters",
+      "type": "array"
+     },
+     "target": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "title": "Target",
+      "type": "string"
+     },
+     "target_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target Type"
+     },
+     "wait": {
+      "default": true,
+      "title": "Wait",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "case_id",
+     "target"
+    ],
+    "title": "RunIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__workflows__WfIn": {
+    "properties": {
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "definition": {
+      "additionalProperties": true,
+      "title": "Definition",
+      "type": "object"
+     }
+    },
+    "required": [
+     "definition"
+    ],
+    "title": "WfIn",
+    "type": "object"
    }
   }
  },
@@ -2481,6 +2921,2051 @@
      }
     },
     "summary": "Revoke Auth"
+   }
+  },
+  "/api/v1/automations/ai/diagnose": {
+   "post": {
+    "operationId": "ai_diagnose_api_v1_automations_ai_diagnose_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DiagIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Ai Diagnose"
+   }
+  },
+  "/api/v1/automations/ai/explain": {
+   "post": {
+    "operationId": "ai_explain_api_v1_automations_ai_explain_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ExplainIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Ai Explain"
+   }
+  },
+  "/api/v1/automations/ai/propose": {
+   "post": {
+    "operationId": "ai_propose_api_v1_automations_ai_propose_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProposeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Ai Propose"
+   }
+  },
+  "/api/v1/automations/approvals": {
+   "get": {
+    "operationId": "approvals_api_v1_automations_approvals_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "workflow_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Workflow Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Approvals"
+   }
+  },
+  "/api/v1/automations/approvals/{aid}/decide": {
+   "post": {
+    "operationId": "decide_api_v1_automations_approvals__aid__decide_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "aid",
+      "required": true,
+      "schema": {
+       "title": "Aid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DecideIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Decide"
+   }
+  },
+  "/api/v1/automations/approvals/{aid}/revoke": {
+   "post": {
+    "operationId": "revoke_api_v1_automations_approvals__aid__revoke_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "aid",
+      "required": true,
+      "schema": {
+       "title": "Aid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Revoke"
+   }
+  },
+  "/api/v1/automations/capabilities": {
+   "get": {
+    "operationId": "capabilities_api_v1_automations_capabilities_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Capabilities"
+   }
+  },
+  "/api/v1/automations/from-template": {
+   "post": {
+    "operationId": "from_template_api_v1_automations_from_template_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FromTemplate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "From Template"
+   }
+  },
+  "/api/v1/automations/import": {
+   "post": {
+    "operationId": "import_wf_api_v1_automations_import_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ImportIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Import Wf"
+   }
+  },
+  "/api/v1/automations/node-types": {
+   "get": {
+    "operationId": "node_types_api_v1_automations_node_types_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Node Types"
+   }
+  },
+  "/api/v1/automations/notifications": {
+   "get": {
+    "operationId": "notifications_api_v1_automations_notifications_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "unacknowledged",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Unacknowledged",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Notifications"
+   }
+  },
+  "/api/v1/automations/notifications/{nid}": {
+   "patch": {
+    "operationId": "patch_note_api_v1_automations_notifications__nid__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "nid",
+      "required": true,
+      "schema": {
+       "title": "Nid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NotePatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Patch Note"
+   }
+  },
+  "/api/v1/automations/runs": {
+   "get": {
+    "operationId": "list_runs_api_v1_automations_runs_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "case_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Case Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "workflow_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Workflow Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "template",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Template"
+      }
+     },
+     {
+      "in": "query",
+      "name": "state",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "State"
+      }
+     },
+     {
+      "in": "query",
+      "name": "source",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Source"
+      }
+     },
+     {
+      "in": "query",
+      "name": "since",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "format": "date-time",
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Since"
+      }
+     },
+     {
+      "in": "query",
+      "name": "until",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "format": "date-time",
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Until"
+      }
+     },
+     {
+      "in": "query",
+      "name": "dry_run",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Dry Run"
+      }
+     },
+     {
+      "in": "query",
+      "name": "sort",
+      "required": false,
+      "schema": {
+       "default": "-queued_at",
+       "title": "Sort",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Runs"
+   }
+  },
+  "/api/v1/automations/runs/{rid}": {
+   "get": {
+    "operationId": "get_run_api_v1_automations_runs__rid__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "rid",
+      "required": true,
+      "schema": {
+       "title": "Rid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Run"
+   }
+  },
+  "/api/v1/automations/runs/{rid}/cancel": {
+   "post": {
+    "operationId": "cancel_api_v1_automations_runs__rid__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "rid",
+      "required": true,
+      "schema": {
+       "title": "Rid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Cancel"
+   }
+  },
+  "/api/v1/automations/runs/{rid}/compare/{other}": {
+   "get": {
+    "operationId": "compare_runs_api_v1_automations_runs__rid__compare__other__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "rid",
+      "required": true,
+      "schema": {
+       "title": "Rid",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "other",
+      "required": true,
+      "schema": {
+       "title": "Other",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Compare Runs"
+   }
+  },
+  "/api/v1/automations/runs/{rid}/events": {
+   "get": {
+    "description": "Server-sent events: node records as they appear, then the final state.",
+    "operationId": "run_events_api_v1_automations_runs__rid__events_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "rid",
+      "required": true,
+      "schema": {
+       "title": "Rid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Run Events"
+   }
+  },
+  "/api/v1/automations/runs/{rid}/retry": {
+   "post": {
+    "operationId": "retry_api_v1_automations_runs__rid__retry_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "rid",
+      "required": true,
+      "schema": {
+       "title": "Rid",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "wait",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Wait",
+       "type": "boolean"
+      }
+     }
+    ],
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Retry"
+   }
+  },
+  "/api/v1/automations/runs/{rid}/review": {
+   "post": {
+    "operationId": "review_api_v1_automations_runs__rid__review_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "rid",
+      "required": true,
+      "schema": {
+       "title": "Rid",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "wait",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Wait",
+       "type": "boolean"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Review"
+   }
+  },
+  "/api/v1/automations/schema": {
+   "get": {
+    "operationId": "schema_api_v1_automations_schema_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Schema"
+   }
+  },
+  "/api/v1/automations/scope-authorizations": {
+   "get": {
+    "operationId": "scope_auths_api_v1_automations_scope_authorizations_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Scope Auths"
+   }
+  },
+  "/api/v1/automations/settings": {
+   "get": {
+    "operationId": "get_settings_api_v1_automations_settings_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Get Settings"
+   },
+   "patch": {
+    "operationId": "patch_settings_api_v1_automations_settings_patch",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SettingsPatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Patch Settings"
+   }
+  },
+  "/api/v1/automations/suggestions": {
+   "get": {
+    "operationId": "suggestions_api_v1_automations_suggestions_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Suggestions"
+   }
+  },
+  "/api/v1/automations/suggestions/{sid}/dismiss": {
+   "post": {
+    "operationId": "dismiss_api_v1_automations_suggestions__sid__dismiss_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "sid",
+      "required": true,
+      "schema": {
+       "title": "Sid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Dismiss"
+   }
+  },
+  "/api/v1/automations/suggestions/{sid}/snooze": {
+   "post": {
+    "operationId": "snooze_api_v1_automations_suggestions__sid__snooze_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "sid",
+      "required": true,
+      "schema": {
+       "title": "Sid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SnoozeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Snooze"
+   }
+  },
+  "/api/v1/automations/templates": {
+   "get": {
+    "operationId": "templates_api_v1_automations_templates_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Q"
+      }
+     },
+     {
+      "in": "query",
+      "name": "category",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Category"
+      }
+     },
+     {
+      "in": "query",
+      "name": "tag",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Tag"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Templates"
+   }
+  },
+  "/api/v1/automations/templates/{slug}": {
+   "get": {
+    "operationId": "template_api_v1_automations_templates__slug__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "slug",
+      "required": true,
+      "schema": {
+       "title": "Slug",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Template"
+   }
+  },
+  "/api/v1/automations/workflows": {
+   "get": {
+    "operationId": "list_wf_api_v1_automations_workflows_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "case_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Case Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Wf"
+   },
+   "post": {
+    "operationId": "create_wf_api_v1_automations_workflows_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__automations__WfIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Wf"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}": {
+   "delete": {
+    "operationId": "delete_wf_api_v1_automations_workflows__wid__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Delete Wf"
+   },
+   "get": {
+    "operationId": "get_wf_api_v1_automations_workflows__wid__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Wf"
+   },
+   "patch": {
+    "operationId": "patch_wf_api_v1_automations_workflows__wid__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PatchIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Patch Wf"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/activate": {
+   "post": {
+    "operationId": "activate_api_v1_automations_workflows__wid__activate_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ActivateIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Activate"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/deactivate": {
+   "post": {
+    "operationId": "deactivate_api_v1_automations_workflows__wid__deactivate_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Deactivate"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/dry-run": {
+   "post": {
+    "description": "Runs the DRAFT against the template's fixture: no network, no writes. Every output is labelled simulated.",
+    "operationId": "dry_run_api_v1_automations_workflows__wid__dry_run_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DryRunIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Dry Run"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/export": {
+   "get": {
+    "operationId": "export_wf_api_v1_automations_workflows__wid__export_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Export Wf"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/publish": {
+   "post": {
+    "operationId": "publish_api_v1_automations_workflows__wid__publish_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Publish"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/repair": {
+   "post": {
+    "description": "Apply diagnostic repair proposals to the DRAFT (never to a published version). Returns the diff and validation; publishing stays yours.",
+    "operationId": "repair_api_v1_automations_workflows__wid__repair_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RepairIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Repair"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/request-approval": {
+   "post": {
+    "operationId": "request_approval_api_v1_automations_workflows__wid__request_approval_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ApprovalReq"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Request Approval"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/run": {
+   "post": {
+    "operationId": "run_wf_api_v1_automations_workflows__wid__run_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__automations__RunIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Run Wf"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/run-file": {
+   "post": {
+    "description": "File-triggered workflows: the file is parsed offline and stored like an import, then the workflow runs on it.",
+    "operationId": "run_file_api_v1_automations_workflows__wid__run_file_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "filename",
+      "required": true,
+      "schema": {
+       "title": "Filename",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "case_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Case Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "consent_confirmed",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Consent Confirmed",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "query",
+      "name": "wait",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Wait",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "query",
+      "name": "revision",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Revision"
+      }
+     }
+    ],
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Run File"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/runs": {
+   "get": {
+    "operationId": "wf_runs_api_v1_automations_workflows__wid__runs_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Wf Runs"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/validate": {
+   "post": {
+    "operationId": "validate_wf_api_v1_automations_workflows__wid__validate_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Validate Wf"
+   }
+  },
+  "/api/v1/automations/workflows/{wid}/versions/{rev}/clone": {
+   "post": {
+    "operationId": "clone_version_api_v1_automations_workflows__wid__versions__rev__clone_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "wid",
+      "required": true,
+      "schema": {
+       "title": "Wid",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "rev",
+      "required": true,
+      "schema": {
+       "title": "Rev",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Clone Version"
    }
   },
   "/api/v1/backups": {
@@ -8997,7 +11482,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/WfIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__workflows__WfIn"
        }
       }
      },
@@ -9045,7 +11530,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/RunIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__workflows__RunIn"
        }
       }
      },
@@ -9092,7 +11577,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/RunIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__workflows__RunIn"
        }
       }
      },

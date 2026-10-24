@@ -298,5 +298,60 @@
   "code": "secret_store_unavailable",
   "meaning": "The operating system credential store could not be used for a key.",
   "fix": "Unlock or install a credential store (on Linux a Secret Service such as gnome-keyring); without one the app seals keys in its encrypted database."
+ },
+ {
+  "code": "INVALID_GRAPH",
+  "meaning": "The workflow definition is not valid (bad reference, cycle, missing scope check, unknown setting, over a limit).",
+  "fix": "Open the Checks panel: each problem names the step and the rule. Fix them, then publish."
+ },
+ {
+  "code": "UNSUPPORTED_ADAPTER",
+  "meaning": "A step names a source that is not registered in this installation.",
+  "fix": "Pick a registered source (the editor lists them) or install the tool in Setup."
+ },
+ {
+  "code": "SCOPE_DENIED",
+  "meaning": "The target was refused by scope policy (private, local, unauthorised or malformed). It is never retried.",
+  "fix": "Use a public target you are allowed to examine, or add a scope authorization for active collection; widening scope is your decision."
+ },
+ {
+  "code": "SCOPE_EXPIRED",
+  "meaning": "The scope authorization behind this run expired or was revoked.",
+  "fix": "Renew the authorization, then request and grant the approval again."
+ },
+ {
+  "code": "APPROVAL_REQUIRED",
+  "meaning": "An approval, confirmation or published version is missing or expired for this exact version.",
+  "fix": "Publish, press Request approval, decide it (with an expiry), then activate or run again."
+ },
+ {
+  "code": "CREDENTIAL_MISSING",
+  "meaning": "A source needs an API key or an approved destination that is not configured.",
+  "fix": "Add the key in Setup -> API keys, or approve the webhook name in Automations -> Settings."
+ },
+ {
+  "code": "SOURCE_UNAVAILABLE",
+  "meaning": "A source is not installed, is offline, or failed.",
+  "fix": "Install or repair it in Setup, retry later, or use the diagnosis's suggested alternative."
+ },
+ {
+  "code": "RUN_CANCELLED",
+  "meaning": "The run was stopped.",
+  "fix": "Start it again if you still want the result."
+ },
+ {
+  "code": "PARTIAL_RESULT",
+  "meaning": "The run finished but some sources failed or were optional and unavailable.",
+  "fix": "Open the run's warnings; results are marked partial and are not used as a baseline."
+ },
+ {
+  "code": "OFFLINE",
+  "meaning": "Offline mode is on, so network steps pause.",
+  "fix": "Turn offline mode off, then retry the paused run."
+ },
+ {
+  "code": "PRECONDITION_FAILED",
+  "meaning": "The draft changed since you loaded it (someone or something saved a newer revision).",
+  "fix": "Reload the workflow and re-apply your edit."
  }
 ]

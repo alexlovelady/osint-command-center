@@ -178,6 +178,17 @@ class JobRunner:
             db.commit()
         self._finalize(run_id)
 
+    def abort_run(self, run_id: str) -> None:
+        """Cancel EVERYTHING of a run, including jobs that are mid-flight (the caller has cancelled the asyncio tasks that were executing them)."""
+        self._cancel.add(run_id)
+        with self.sm() as db:
+            for job in db.scalars(select(Job).where(Job.run_id == run_id, Job.status.in_(("queued", "deferred", "running")))):
+                job.status = "cancelled"
+                emit(db, job, "cancelled")
+            audit.record(db, "search.cancel", resource_type="search_run", resource_id=run_id)
+            db.commit()
+        self._finalize(run_id)
+
     # ---- execution ------------------------------------------------------------------------------------------
     def _claim(self, db: Session, run_id: str | None) -> list[str]:
         now = _now()

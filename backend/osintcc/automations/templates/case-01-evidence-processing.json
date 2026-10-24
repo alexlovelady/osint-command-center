@@ -1,0 +1,101 @@
+{
+ "slug": "case-01-evidence-processing",
+ "key": "CASE-01",
+ "version": 1,
+ "category": "Evidence",
+ "name": "Evidence Processing",
+ "description": "Hashes, timestamps and parses a supplied file, extracts metadata, classifies it by discipline and indexes it for search.",
+ "catalog_trigger": "File upload",
+ "tags": [
+  "files",
+  "evidence"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "evidence_id",
+   "label": "Supplied by the 'Run with file' action",
+   "type": "evidence",
+   "required": false,
+   "example": null
+  }
+ ],
+ "legal_notes": "Public, passive sources only. Respect each source's terms and keep to targets you own or have a documented reason to examine.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "Hash, size, import time, discipline, observation count and a preview; the file is searchable in the case.",
+ "capability_gaps": [],
+ "instructions": "Hashes, timestamps and parses a supplied file, extracts metadata, classifies it by discipline and indexes it for search.",
+ "maturity": "runtime_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "case-01-evidence-processing",
+  "name": "Evidence Processing",
+  "description": "Hashes, timestamps and parses a supplied file, extracts metadata, classifies it by discipline and indexes it for search.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "files",
+   "evidence"
+  ],
+  "trigger": {
+   "type": "file",
+   "enabled": false
+  },
+  "inputs": {
+   "evidence_id": null
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "ingest",
+    "type": "file_ingest",
+    "depends_on": [],
+    "config": {
+     "evidence_ref": "$inputs.evidence_id"
+    }
+   },
+   {
+    "id": "summary",
+    "type": "evidence_save",
+    "depends_on": [
+     "ingest"
+    ],
+    "config": {
+     "ref": "$nodes.ingest.output",
+     "title": "Evidence processing summary"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "evidence_id": null
+  },
+  "adapter_findings": {},
+  "file": {
+   "kind": "eml",
+   "count": 3,
+   "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "preview": [
+    {
+     "kind": "email.header",
+     "data": {
+      "subject": "Example"
+     }
+    }
+   ]
+  }
+ }
+}

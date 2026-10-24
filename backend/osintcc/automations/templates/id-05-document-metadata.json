@@ -1,0 +1,107 @@
+{
+ "slug": "id-05-document-metadata",
+ "key": "ID-05",
+ "version": 1,
+ "category": "Identity",
+ "name": "Document Metadata",
+ "description": "Parses a file you supply offline (ExifTool when installed), stores it hashed and summarises its metadata with sensitive values withheld.",
+ "catalog_trigger": "File upload",
+ "tags": [
+  "files",
+  "metadata"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "evidence_id",
+   "label": "Supplied by the 'Run with file' action",
+   "type": "evidence",
+   "required": false,
+   "example": null
+  }
+ ],
+ "legal_notes": "Only files you own or are authorised to analyse. GPS and similar values are RESTRICTED and shown only in the Imports tab.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "File type, hash, camera/author metadata and counts; GPS withheld in the summary.",
+ "capability_gaps": [],
+ "instructions": "Parses a file you supply offline (ExifTool when installed), stores it hashed and summarises its metadata with sensitive values withheld.",
+ "maturity": "runtime_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "id-05-document-metadata",
+  "name": "Document Metadata",
+  "description": "Parses a file you supply offline (ExifTool when installed), stores it hashed and summarises its metadata with sensitive values withheld.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "files",
+   "metadata"
+  ],
+  "trigger": {
+   "type": "file",
+   "enabled": false
+  },
+  "inputs": {
+   "evidence_id": null
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "ingest",
+    "type": "file_ingest",
+    "depends_on": [],
+    "config": {
+     "evidence_ref": "$inputs.evidence_id"
+    }
+   },
+   {
+    "id": "summary",
+    "type": "evidence_save",
+    "depends_on": [
+     "ingest"
+    ],
+    "config": {
+     "ref": "$nodes.ingest.output",
+     "title": "Document metadata summary"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "evidence_id": null
+  },
+  "adapter_findings": {},
+  "file": {
+   "kind": "jpeg_exif",
+   "count": 2,
+   "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "preview": [
+    {
+     "kind": "exif.camera",
+     "data": {
+      "make": "ExampleCam"
+     }
+    },
+    {
+     "kind": "exif.gps",
+     "data": {
+      "withheld": "restricted"
+     }
+    }
+   ]
+  }
+ }
+}

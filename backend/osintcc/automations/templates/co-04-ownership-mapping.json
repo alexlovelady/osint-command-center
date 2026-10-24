@@ -1,0 +1,198 @@
+{
+ "slug": "co-04-ownership-mapping",
+ "key": "CO-04",
+ "version": 1,
+ "category": "Corporate",
+ "name": "Ownership Mapping",
+ "description": "Builds sourced organisation relationships from filings and registries and records what is missing.",
+ "catalog_trigger": "Manual",
+ "tags": [
+  "corporate"
+ ],
+ "dependencies": [
+  "sec_edgar"
+ ],
+ "optional_dependencies": [
+  "opencorporates"
+ ],
+ "inputs": [
+  {
+   "name": "cik",
+   "label": "SEC CIK number",
+   "type": "cik",
+   "required": true,
+   "example": "0000000001"
+  },
+  {
+   "name": "company",
+   "label": "Company name",
+   "type": "company",
+   "required": true,
+   "example": "Example Holdings"
+  }
+ ],
+ "legal_notes": "Public, passive sources only. Respect each source's terms and keep to targets you own or have a documented reason to examine.",
+ "quota_note": "About 2 source request(s) per run",
+ "example_output": "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+ "capability_gaps": [
+  "Beneficial-ownership data is not available from the implemented sources; the template says so in the review step."
+ ],
+ "instructions": "Builds sourced organisation relationships from filings and registries and records what is missing.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "co-04-ownership-mapping",
+  "name": "Ownership Mapping",
+  "description": "Builds sourced organisation relationships from filings and registries and records what is missing.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "corporate"
+  ],
+  "trigger": {
+   "type": "manual",
+   "enabled": false
+  },
+  "inputs": {
+   "cik": "0000000001",
+   "company": "Example Holdings"
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "scope_cik",
+    "type": "authorization_check",
+    "depends_on": [],
+    "config": {
+     "target_ref": "$inputs.cik",
+     "target_type": "cik"
+    }
+   },
+   {
+    "id": "edgar",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope_cik"
+    ],
+    "config": {
+     "adapter": "sec_edgar",
+     "target_ref": "$inputs.cik",
+     "target_type": "cik"
+    }
+   },
+   {
+    "id": "scope_co",
+    "type": "authorization_check",
+    "depends_on": [],
+    "config": {
+     "target_ref": "$inputs.company",
+     "target_type": "company"
+    }
+   },
+   {
+    "id": "opencorp",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope_co"
+    ],
+    "config": {
+     "adapter": "opencorporates",
+     "target_ref": "$inputs.company",
+     "target_type": "company"
+    },
+    "optional": true
+   },
+   {
+    "id": "merged",
+    "type": "transform",
+    "depends_on": [
+     "edgar",
+     "opencorp"
+    ],
+    "config": {
+     "ref": "$nodes.edgar.output",
+     "extra_refs": [
+      "$nodes.opencorp.output"
+     ],
+     "op": "merge"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "merged"
+    ],
+    "config": {
+     "ref": "$nodes.merged.output"
+    }
+   },
+   {
+    "id": "review",
+    "type": "analyst_review",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "prompt": "Beneficial ownership is usually NOT in public filings. Record what is missing before relying on this map.",
+     "timeout_hours": 72
+    }
+   },
+   {
+    "id": "report",
+    "type": "report",
+    "depends_on": [
+     "review"
+    ],
+    "config": {
+     "profile": "technical",
+     "format": "html"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "cik": "0000000001",
+   "company": "Example Holdings"
+  },
+  "adapter_findings": {
+   "sec_edgar": [
+    {
+     "entity": "0000000001",
+     "entity_type": "org",
+     "predicate": "edgar.filing",
+     "value": "10-K 2026-02-14",
+     "confidence": "high"
+    },
+    {
+     "entity": "0000000001",
+     "entity_type": "org",
+     "predicate": "edgar.filing",
+     "value": "8-K 2026-03-01",
+     "confidence": "high"
+    }
+   ],
+   "opencorporates": [
+    {
+     "entity": "0000000001",
+     "entity_type": "org",
+     "predicate": "company.jurisdiction",
+     "value": "us_de",
+     "confidence": "medium"
+    }
+   ]
+  }
+ }
+}

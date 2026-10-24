@@ -1,0 +1,258 @@
+{
+ "slug": "cy-01-domain-recon",
+ "key": "CY-01",
+ "version": 1,
+ "category": "Cyber",
+ "name": "Domain Recon",
+ "description": "RDAP, DNS, certificate transparency and passive subdomain sources for a domain; normalise, de-duplicate and save as evidence.",
+ "catalog_trigger": "Manual",
+ "tags": [
+  "recon",
+  "passive"
+ ],
+ "dependencies": [
+  "dns",
+  "rdap"
+ ],
+ "optional_dependencies": [
+  "crtsh",
+  "subfinder",
+  "wayback"
+ ],
+ "inputs": [
+  {
+   "name": "domain",
+   "label": "Domain you own or are authorised to examine",
+   "type": "domain",
+   "required": true,
+   "example": "example.org"
+  }
+ ],
+ "legal_notes": "Public, passive sources only. Respect each source's terms and keep to targets you own or have a documented reason to examine.",
+ "quota_note": "About 5 source request(s) per run",
+ "example_output": "Registrar, nameservers, DNS records, certificate-logged hostnames and archive history for the domain, each linked to its raw response.",
+ "capability_gaps": [],
+ "instructions": "RDAP, DNS, certificate transparency and passive subdomain sources for a domain; normalise, de-duplicate and save as evidence.",
+ "maturity": "runtime_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "cy-01-domain-recon",
+  "name": "Domain Recon",
+  "description": "RDAP, DNS, certificate transparency and passive subdomain sources for a domain; normalise, de-duplicate and save as evidence.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "recon",
+   "passive"
+  ],
+  "trigger": {
+   "type": "manual",
+   "enabled": false
+  },
+  "inputs": {
+   "domain": "example.org"
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "scope",
+    "type": "authorization_check",
+    "depends_on": [],
+    "config": {
+     "target_ref": "$inputs.domain"
+    }
+   },
+   {
+    "id": "rdap",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "rdap",
+     "target_ref": "$inputs.domain"
+    }
+   },
+   {
+    "id": "dns",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "dns",
+     "target_ref": "$inputs.domain"
+    }
+   },
+   {
+    "id": "crtsh",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "crtsh",
+     "target_ref": "$inputs.domain"
+    },
+    "optional": true
+   },
+   {
+    "id": "wayback",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "wayback",
+     "target_ref": "$inputs.domain"
+    },
+    "optional": true
+   },
+   {
+    "id": "subfinder",
+    "type": "adapter_query",
+    "depends_on": [
+     "scope"
+    ],
+    "config": {
+     "adapter": "subfinder",
+     "target_ref": "$inputs.domain"
+    },
+    "optional": true
+   },
+   {
+    "id": "merged",
+    "type": "transform",
+    "depends_on": [
+     "rdap",
+     "dns",
+     "crtsh",
+     "wayback",
+     "subfinder"
+    ],
+    "config": {
+     "ref": "$nodes.rdap.output",
+     "extra_refs": [
+      "$nodes.dns.output",
+      "$nodes.crtsh.output",
+      "$nodes.wayback.output",
+      "$nodes.subfinder.output"
+     ],
+     "op": "merge"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "merged"
+    ],
+    "config": {
+     "ref": "$nodes.merged.output"
+    }
+   },
+   {
+    "id": "save",
+    "type": "evidence_save",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "ref": "$nodes.unique.output",
+     "title": "Domain recon dataset"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "domain": "example.org"
+  },
+  "adapter_findings": {
+   "rdap": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "rdap.registrar",
+     "value": "Example Registrar Inc",
+     "confidence": "high"
+    },
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "rdap.nameserver",
+     "value": "ns1.example.net",
+     "confidence": "high"
+    }
+   ],
+   "dns": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "dns.a",
+     "value": "192.0.2.10",
+     "confidence": "high"
+    },
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "dns.mx",
+     "value": "mail.example.org",
+     "confidence": "high"
+    }
+   ],
+   "crtsh": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "cert.subdomain",
+     "value": "www.example.org",
+     "confidence": "medium"
+    },
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "cert.subdomain",
+     "value": "mail.example.org",
+     "confidence": "medium"
+    }
+   ],
+   "wayback": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "archive.first_seen",
+     "value": "2001-03-05",
+     "confidence": "medium"
+    },
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "archive.snapshot_count",
+     "value": 412,
+     "confidence": "medium"
+    }
+   ],
+   "subfinder": [
+    {
+     "entity": "example.org",
+     "entity_type": "domain",
+     "predicate": "subdomain",
+     "value": "api.example.org",
+     "confidence": "medium"
+    }
+   ]
+  }
+ }
+}

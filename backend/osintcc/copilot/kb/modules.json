@@ -807,5 +807,152 @@
    "telemetry",
    "outbound"
   ]
+ },
+ {
+  "id": "automations",
+  "title": "Automations page",
+  "kind": "page",
+  "where": {
+   "route": "automations"
+  },
+  "summary": "Reusable workflows for repeated OSINT work. Five tabs: Library (30 bundled templates), My automations, Runs (execution console), Inbox (notifications, suggestions, approvals waiting) and Settings. Everything starts disabled; nothing collects data on a schedule until you approve and activate it.",
+  "how_to": [
+   "Left menu: Automations.",
+   "Library: search or filter templates, press Details, read availability and what is missing, then 'Create from template' (this makes a disabled draft).",
+   "Open the draft: dry-run it (simulated, no network), edit it on the canvas, publish a version, request approval, then activate if it is scheduled."
+  ],
+  "keywords": [
+   "automation",
+   "workflow",
+   "template",
+   "schedule",
+   "monitor",
+   "builder",
+   "library"
+  ]
+ },
+ {
+  "id": "automation-library",
+  "title": "Automation library and templates",
+  "kind": "feature",
+  "where": {
+   "route": "automations",
+   "tab": "Library"
+  },
+  "summary": "30 bundled templates in six groups: Cyber (CY-01..07), Identity (ID-01..06), Corporate (CO-01..05), GEOINT and Sensors (GEO-01..06), Case and Evidence (CASE-01..06). Each shows its purpose, sources, availability (ready, partial, or setup required with exact instructions), quota estimate, legal notes, example output and any capability gaps. Templates are installed disabled. Maturity is stated: fixture-tested means its dry run passes on synthetic data; runtime-tested means it was run end to end through the engine (CY-01, ID-05, CASE-01).",
+  "notes": [
+   "A template marked 'partial' has a documented gap, for example CVE Intelligence has no advisory feed connector.",
+   "Setup required means a tool or key is missing; nothing pretends it worked."
+  ],
+  "keywords": [
+   "template",
+   "catalog",
+   "library",
+   "CY-01",
+   "domain recon",
+   "availability",
+   "setup required"
+  ]
+ },
+ {
+  "id": "automation-builder",
+  "title": "AI Automation Builder and canvas",
+  "kind": "feature",
+  "where": {
+   "route": "automations"
+  },
+  "summary": "Inside an automation: describe a goal in plain language and get a typed draft that a strict validator checks, edit it on a visual canvas (pan, zoom, minimap, keyboard arrows, inspector), Validate, Explain, Dry run, Publish a version, Request approval, Activate. The AI can only produce a draft: it cannot approve, schedule or run anything, and workflows cannot contain scripts, shell commands, SQL or free URLs. With no model it offers the closest bundled template and the manual editor keeps working.",
+  "how_to": [
+   "Open an automation from My automations.",
+   "Type the goal in 'Describe what you want' and press Generate a draft; read the assumptions and questions; Load into the editor.",
+   "Select a step to change its settings; add steps with 'Add a step'; every network step needs a scope check upstream.",
+   "Press Dry run to test on fixture data, Publish version when Validate passes."
+  ],
+  "keywords": [
+   "ai builder",
+   "canvas",
+   "draft",
+   "inspector",
+   "validate",
+   "dry run",
+   "publish"
+  ]
+ },
+ {
+  "id": "automation-approvals",
+  "title": "Automation approvals, activation and scope",
+  "kind": "concept",
+  "where": {
+   "route": "automations"
+  },
+  "summary": "Saving a draft never schedules anything. Publishing makes an immutable numbered version. A schedule starts only after you approve THAT version (the approval has an expiry) and activate it. Active or many-site collection also needs a separate collection approval tied to a current scope authorization. Changing an active workflow makes a new version that needs its own approval. Scope is re-checked before every network call at run time; private, local or unauthorised targets, and any target discovered during a run that is out of scope, are refused.",
+  "keywords": [
+   "approval",
+   "activation",
+   "scope",
+   "authorization",
+   "expiry",
+   "version",
+   "active"
+  ]
+ },
+ {
+  "id": "automation-runs",
+  "title": "Automation runs and execution console",
+  "kind": "feature",
+  "where": {
+   "route": "automations",
+   "tab": "Runs"
+  },
+  "summary": "Every run is recorded: states (queued, waiting for approval, running, paused, retrying, failed, cancelled, completed, completed with warnings), a step timeline with attempts, durations, input digests and results, the source URLs contacted, the workflow version used, evidence counts and the environment. You can stop, retry safe failures, approve a review step, diagnose, and compare two runs. Dry runs are always labelled SIMULATED. Runs resume after a restart from their checkpoints; steps that are not safe to replay pause for you.",
+  "keywords": [
+   "runs",
+   "console",
+   "history",
+   "retry",
+   "stop",
+   "diagnose",
+   "simulated",
+   "compare"
+  ]
+ },
+ {
+  "id": "automation-notifications",
+  "title": "Automation notifications and suggestions",
+  "kind": "feature",
+  "where": {
+   "route": "automations",
+   "tab": "Inbox"
+  },
+  "summary": "In-app and desktop notices (desktop shows while the app is open) and optional webhooks to destinations you approved by name in Settings. Repeated findings merge into one notice per window; quiet hours hold non-critical notices; digest mode combines info notices. Email is not implemented. Suggestions are off by default; when on they use only searches and reports you ran in this app, never keystrokes or other activity, and only propose a template.",
+  "keywords": [
+   "notification",
+   "inbox",
+   "webhook",
+   "quiet hours",
+   "digest",
+   "dedupe",
+   "suggestion",
+   "email"
+  ]
+ },
+ {
+  "id": "automation-scheduling",
+  "title": "Automation scheduling and time zones",
+  "kind": "concept",
+  "where": {
+   "route": "automations",
+   "tab": "Settings"
+  },
+  "summary": "Schedules are 5-field cron in an IANA time zone (UTC by default; pick yours, for example America/New_York). Times are stored in UTC. Spring-forward gaps run once after the gap; fall-back repeats run once. Schedules run only while this application is open; for runs missed while it was closed each schedule picks skip, coalesce (default: one catch-up run) or catch up (max 10). Nothing fires more often than every 15 minutes.",
+  "keywords": [
+   "cron",
+   "time zone",
+   "timezone",
+   "dst",
+   "missed run",
+   "coalesce",
+   "schedule"
+  ]
  }
 ]

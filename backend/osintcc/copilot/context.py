@@ -38,7 +38,8 @@ from ..db.models import (
 from .kb import KnowledgeBase
 
 RESTRICTED = ("RESTRICTED", "SECRET")
-ROUTES = {"overview", "cases", "tools", "setup", "settings", "case"}
+ROUTES = {"overview", "cases", "tools", "setup", "settings", "case", "automations"}
+AUTO_TABS = ["Library", "My automations", "Runs", "Inbox", "Settings", "Builder"]
 TABS = ["Search", "Plans", "Findings", "Graph", "Timeline", "Map", "Evidence", "Imports", "Analysis", "Cross-links", "Workflows", "Humint", "AI", "Hardware", "Notes", "Reports"]
 CONF_RANK = {"high": 3, "medium": 2, "low": 1, "unknown": 0}
 
@@ -47,7 +48,7 @@ def clean_ctx(raw: Any) -> dict[str, Any]:
     """The client reports where the user is. It is a hint, never trusted for access: case ids are re-checked on use."""
     r = raw if isinstance(raw, dict) else {}
     route = r.get("route") if r.get("route") in ROUTES else "overview"
-    tab = r.get("tab") if r.get("tab") in TABS else None
+    tab = r.get("tab") if (r.get("tab") in TABS or (route == "automations" and r.get("tab") in AUTO_TABS)) else None
     cid = r.get("case_id") if isinstance(r.get("case_id"), str) and len(r["case_id"]) <= 64 else None
     tool = r.get("tool_id") if isinstance(r.get("tool_id"), str) and len(r["tool_id"]) <= 80 else None
     return {"route": route, "tab": tab, "case_id": cid, "tool_id": tool}
