@@ -9,10 +9,9 @@ What the application stores, where it can go, and what it does not do. Written f
   you configure, the update check you press, and the downloads you confirm on the Setup page. Tests assert zero HTTP calls for
   previews, offline mode, unconfigured updates and a Setup plan. **Packet capture:** on Linux (container, so every packet is the
   app's) the packaged shell idling for 60 s plus a scripted pass through the no-network API paths produced no DNS, TCP or UDP
-  packets at all (only kernel ARP/IPv6 neighbour chatter in the first two seconds); the Windows capture needs your UAC approval and
-  its status is in `docs/progress.md`. **Windows caveat:** the UI is rendered by Microsoft's WebView2 runtime, which on every observed
-  launch opened two TLS connections to Microsoft-owned addresses by itself (the app's shell and backend opened none). Browser switches did not stop
-  it; see `docs/progress.md` for how to block it with a firewall rule or use the Linux build. Third-party CLIs are run with their own phone-home disabled where they have one (Maigret's
+  packets at all (only kernel ARP/IPv6 neighbour chatter in the first two seconds); the Windows `pktmon` capture is in `docs/progress.md`. **Windows caveat:** the UI is rendered by Microsoft's WebView2 runtime, which on every observed
+  launch opened two TLS connections to Microsoft by itself — the real `pktmon` capture shows the server name `substrate.office.com` (Microsoft 365)
+  (the app's shell and backend opened none). Browser switches did not stop it; see `docs/progress.md` for how to block it with a firewall rule or use the Linux build. Third-party CLIs are run with their own phone-home disabled where they have one (Maigret's
   automatic database update is switched off).
 - Offline mode denies every network adapter at plan time and again at run time.
 - Every request an adapter makes goes through the SSRF-safe client, so a target cannot steer the app into your own network.

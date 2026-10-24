@@ -43,7 +43,7 @@ real files to be rejected with a clear error rather than half-parsed.
 | NSIS/MSI installer, code signing | **Not built** (see `docs/packaging.md`) |
 | Clean-VM install test | **Not possible here** (Windows 11 Home has no Hyper-V/Sandbox) — unverified |
 | Browser E2E + axe (Edge, mocked network) | **Live**: `pnpm e2e` |
-| Packet capture of app launch | **Linux: done** (container, nothing from the app). **Windows: connection attribution done** (nothing from our code; WebView2 talks to Microsoft); real `pktmon` capture needs UAC approval and was not done |
+| Packet capture of app launch | **Linux: done** (container, nothing from the app). **Windows: connection attribution done** (nothing from our code; WebView2 talks to Microsoft); real `pktmon` capture done: the only app-tree traffic is WebView2 → `substrate.office.com` |
 | Screen readers (NVDA/Narrator) | Not tested; only automated axe checks |
 
 ## AI, MCP, hardware

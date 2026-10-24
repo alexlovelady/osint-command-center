@@ -69,7 +69,7 @@ uv run python scripts/sidecar_smoke.py       # after building the sidecar
 ```
 
 ## Known limitations (read before trusting it)
-Releases are unsigned and there is no installer (portable zip / tarball). The Windows packet-capture check needs your UAC approval (see progress.md).
+Releases are unsigned and there is no installer (portable zip / tarball). On Windows the WebView2 UI engine contacts Microsoft 365 (`substrate.office.com`) by itself; our code opens no outside connections (see progress.md).
 A lost master key or backup passphrase is unrecoverable by design. Real SDR/GPS hardware and a real MCP client were never exercised; the Linux
 desktop shell was run under a virtual display in a container, not on a physical desktop.
 See `SECURITY.md`, `docs/threat-model.md`, `docs/privacy.md`, `docs/decision-log.md`.

@@ -35,7 +35,7 @@ the command shown on this machine; anything not run is listed under *Not verifie
 |---|---|---|
 | **Linux** (container, so every packet on the interface belongs to the app) | `tcpdump -i any` for the whole run: real shell under Xvfb idle 60 s, then the bundled backend driven through case creation, search/plan **preview**, setup status/plan, update check, tools, doctor, offline mode and an offline search | 214 packets, all loopback except 11 kernel ARP / IPv6 neighbour-discovery frames in the first two seconds, before the app started. **No DNS, TCP or UDP from the app.** The offline search was refused (409) without a request. Evidence: `docs/evidence/linux-egress/` |
 | **Windows**, connection attribution (`scripts/egress_check.py --no-capture`) | `netstat -ano` polled every 0.5 s for the whole process tree (shell, bundled backend, and the WebView2 processes it spawns) for 75 s idle + the same API pass | **Our code (shell + backend): 0 non-loopback connections.** The **WebView2 engine** (Microsoft's `msedgewebview2.exe`, which renders the UI) opened **2 TLS connections to Microsoft-owned addresses (52.96.x.x / 40.104.x.x:443)** shortly after launch, every run. Extra Chromium switches (`--disable-background-networking`, `--disable-component-update`, `--disable-sync`, …) and a black-hole proxy did **not** stop them, so they are made by the browser process itself, not by the page or our code |
-| **Windows**, real packet capture (`pktmon`) | needs administrator rights: the script requests UAC twice | **Not done**: the UAC prompt was cancelled both times (nobody at the keyboard, or declined). Run `uv run python scripts/egress_check.py` yourself and accept the two prompts; it will identify the destinations |
+| **Windows**, real packet capture (`pktmon`, all adapters, 4 min 10 s, you accepted the UAC prompts) | app idle 75 s + the same API pass | 18 606 packets machine-wide. Our code: still 0 connections. The only connections from the app's process tree were the WebView2 engine's to **`substrate.office.com`** (Microsoft 365's Substrate service; 91 packets, 56 KB, within the first ~15 s after launch; the name was read from the TLS handshake bytes). Everything else in the capture was other programs/virtual adapters (SSDP, mDNS, NetBIOS broadcasts). Note: the script's own summary could not list the TCP flows (pktmon's frames are not plain Ethernet for the pcap parser), so the finding above came from a byte-level scan of the capture; a parser fix is open |
 
 Consequence you should know about: on Windows the UI is hosted by Microsoft's WebView2 runtime, and that runtime talks to Microsoft on its own. If
 that is unacceptable, block `msedgewebview2.exe` for the app's WebView folder (`%LOCALAPPDATA%\local.osintcc.desktop\EBWebView`) in Windows Firewall,
@@ -79,7 +79,7 @@ or use the Linux build (WebKitGTK) where the capture shows nothing.
 
 ## Not verified / not built (read this)
 
-1. **Windows packet capture** and identification of WebView2's Microsoft destinations — needs your UAC approval (see above).
+1. **WebView2's connection to `substrate.office.com`** (Microsoft 365) on Windows is not stopped by any browser switch I tried (background-networking/sync/component-update off, a black-hole proxy, and blocking all non-local name resolution all left it unchanged). It is made by Microsoft's runtime, not our code. Remedies: a Windows Firewall rule for `msedgewebview2.exe` under `%LOCALAPPDATA%\local.osintcc.desktop\EBWebView`, or use the Linux build.
 2. **Installer and code signing.** Portable zip (Windows) and tarball (Linux) only; unsigned. NSIS/MSI would need a toolchain download that was not approved.
 3. **Clean-machine installs** (either OS). The Linux shell has only run in a container under a virtual display.
 4. **Amass 5.1.1** produced no output within 5.5 minutes for example.com; its parsing of real names is unverified. Sherlock/Maigret were checked on one well-known public account, not across their full site lists.
@@ -112,7 +112,7 @@ This session:
 
 ## Next actions (if you continue)
 
-1. Run `uv run python scripts/egress_check.py` and accept the two UAC prompts; decide what to do about WebView2's Microsoft traffic.
+1. Decide what to do about WebView2's `substrate.office.com` traffic (firewall rule, or ship the UI in a different engine).
 2. Decide on an installer (NSIS download) and a signing certificate; test the portable builds on a clean Windows PC and a stock Ubuntu desktop.
 3. Give the keyed services real API keys and run them once; connect a real MCP client.
 4. Let `ci.yml` run and pin its actions to commit SHAs.

@@ -135,7 +135,7 @@ def main() -> int:
         app_pids = app_pids_a | pids_b
     finally:
         print("Stopping capture (accept the second UAC prompt)…" if not nocap else "done driving the app", flush=True)
-        rc2 = 0 if nocap else elevated(f"pktmon stop | Out-Null; pktmon etl2pcap '{etl}' --out '{pcap}' | Out-Null; exit 0")
+        rc2 = 0 if nocap else elevated(f"pktmon stop | Out-Null; pktmon etl2pcap '{etl}' --out '{pcap}' | Out-Null; foreach ($f in '{etl}','{pcap}') {{ takeown /F $f /A | Out-Null; icacls $f /grant '{os.environ.get('USERNAME', 'Users')}:(R)' | Out-Null }}; exit 0")
     duration = time.time() - started
     external = sorted({c for c in seen if not is_loopback(c[2]) and c[2] not in ("*:*",) and not c[2].startswith("0.0.0.0")})
     engine = [c for c in external if "msedgewebview2" in NAMES.get(c[3], "").lower()]
