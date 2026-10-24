@@ -29,7 +29,7 @@ function Keys() {
   return (
     <>
       <h3>API keys and contacts (optional)</h3>
-      <div className="card">
+      <div className="card" data-tour="setup-keys">
         <p className="muted">{q.data.note} Leave anything you do not have blank: that source simply stays unavailable and makes no request.</p>
         {q.data.items.map((k) => (
           <div key={k.provider} className="row" style={{ marginBottom: 6 }}>
@@ -95,7 +95,7 @@ export default function Setup() {
         <b>This machine</b>: {s.platform ?? "unsupported platform"}, {s.ram_gb ?? "unknown"} GB RAM.
       </div>
       <h3>Tools</h3>
-      <table>
+      <table data-tour="setup-install">
         <thead><tr><th /><th>Tool</th><th>Version</th><th>Licence</th><th>Status</th></tr></thead>
         <tbody>{s.tools.filter((t) => t.id !== "ollama").map((t) => {
           const can = t.installable && !t.installed;
@@ -111,7 +111,7 @@ export default function Setup() {
         <details className="card"><summary>Exact sources that will be contacted</summary>
           {plan.data.items.map((p) => <div key={p.id}><b>{p.name} {p.version}</b>{p.urls.map((u) => <div key={u} className="muted"><code>{u}</code></div>)}</div>)}</details>)}
       <h3>Local AI model</h3>
-      <div className="card">
+      <div className="card" data-tour="setup-model">
         <label className="row"><input type="checkbox" style={{ width: "auto" }} checked={wantModel} onChange={(e) => setWantModel(e.target.checked)} /> Download a local model and create an AI profile</label>
         <div className="row">
           <select aria-label="Model" value={chosenModel} onChange={(e) => setModel(e.target.value)} style={{ maxWidth: 640 }}>
@@ -133,7 +133,7 @@ export default function Setup() {
         <label className="row"><input type="checkbox" style={{ width: "auto" }} checked={confirm} onChange={(e) => setConfirm(e.target.checked)} /> I have reviewed the sources above and want to download and install the selected items</label>
         <div className="row" style={{ marginTop: 8 }}>
           <button className="primary" disabled={!confirm || nothing || start.isPending || running} onClick={() => start.mutate()}>Install selected</button>
-          <button onClick={() => done.mutate()} disabled={running}>{s.completed ? "Setup marked complete" : "Finish setup"}</button>
+          <button data-tour="setup-finish" onClick={() => done.mutate()} disabled={running}>{s.completed ? "Setup marked complete" : "Finish setup"}</button>
         </div>
         {start.isError && <ErrorBox error={start.error} />}
       </div>

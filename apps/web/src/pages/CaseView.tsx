@@ -12,12 +12,19 @@ import MapTab from "./case/MapTab";
 import WorkflowsTab from "./case/WorkflowsTab";
 import { Badge, Empty, ErrorBox, Loading, fmt, val } from "../components/ui";
 import { api, apiUrl, authHeader, type CaseT, type FindingT, type GraphT } from "../lib/api";
+import { setAppCtx } from "../lib/appContext";
 
 const TABS = ["Search", "Plans", "Findings", "Graph", "Timeline", "Map", "Evidence", "Imports", "Analysis", "Cross-links", "Workflows", "Humint", "AI", "Hardware", "Notes", "Reports"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function CaseView({ id }: { id: string }) {
   const [tab, setTab] = useState<Tab>("Search");
+  useEffect(() => { setAppCtx({ route: "case", case_id: id, tab }); }, [id, tab]);
+  useEffect(() => {  // the Copilot / tutorials switch tabs with an event; unknown names are ignored
+    const on = (e: Event) => { const t = (e as CustomEvent<string>).detail; if ((TABS as readonly string[]).includes(t)) setTab(t as Tab); };
+    window.addEventListener("osintcc:tab", on);
+    return () => window.removeEventListener("osintcc:tab", on);
+  }, []);
   const c = useQuery({ queryKey: ["case", id], queryFn: () => api<CaseT>(`/cases/${id}`) });
   if (c.isLoading) return <Loading what="case" />;
   if (c.isError) return <ErrorBox error={c.error} />;
@@ -31,7 +38,7 @@ export default function CaseView({ id }: { id: string }) {
         passive sources only unless a scope authorization exists.
       </div>
       <div className="tabs" role="tablist">
-        {TABS.map((t) => <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}>{t}</button>)}
+        {TABS.map((t) => <button key={t} role="tab" data-tour={`tab-${t}`} aria-selected={tab === t} onClick={() => setTab(t)}>{t}</button>)}
       </div>
       {tab === "Search" && <SearchComposer caseId={id} />}
       {tab === "Plans" && <PlansTab id={id} />}
@@ -248,11 +255,11 @@ function Reports({ id }: { id: string }) {
   return (
     <div className="card">
       <div className="row">
-        <select aria-label="Profile" value={profile} onChange={(e) => setProfile(e.target.value)} style={{ width: 160 }}>{["executive", "technical", "evidence_pack", "multi_int"].map((p) => <option key={p}>{p}</option>)}</select>
+        <select data-tour="report-profile" aria-label="Profile" value={profile} onChange={(e) => setProfile(e.target.value)} style={{ width: 160 }}>{["executive", "technical", "evidence_pack", "multi_int"].map((p) => <option key={p}>{p}</option>)}</select>
         <select aria-label="Format" value={fmtSel} onChange={(e) => setFmt(e.target.value)} style={{ width: 120 }}>{["html", "markdown", "json", "pdf"].map((p) => <option key={p}>{p}</option>)}</select>
         <label><input type="checkbox" style={{ width: "auto" }} checked={sensitive} onChange={(e) => setSensitive(e.target.checked)} /> include RESTRICTED material and exact coordinates</label>
-        <button onClick={() => preview.mutate()} disabled={preview.isPending}>Preview what will be included</button>
-        <button className="primary" onClick={() => mk.mutate()} disabled={mk.isPending}>Generate</button>
+        <button data-tour="report-preview" onClick={() => preview.mutate()} disabled={preview.isPending}>Preview what will be included</button>
+        <button data-tour="report-generate" className="primary" onClick={() => mk.mutate()} disabled={mk.isPending}>Generate</button>
       </div>
       <p className="muted">Restricted-sensitivity evidence is excluded by default. Every report carries limitations and an evidence hash manifest. The multi_int profile adds claims, contradictions, gaps, discipline annexes and methodology.</p>
       {preview.isError && <ErrorBox error={preview.error} />}
@@ -294,8 +301,8 @@ function Imports({ id }: { id: string }) {
           <select aria-label="Import type" value={kind} onChange={(e) => setKind(e.target.value)} style={{ width: 170 }}>
             {["auto", "eml", "sigmf", "sensor_csv"].map((k) => <option key={k}>{k}</option>)}
           </select>
-          <label><input type="checkbox" style={{ width: "auto" }} checked={consent} onChange={(e) => setConsent(e.target.checked)} /> I own or am authorized to analyse this material</label>
-          <input type="file" aria-label="Import analysis file" disabled={!consent} style={{ maxWidth: 280 }} onChange={(e) => e.target.files?.[0] && up.mutate(e.target.files[0])} />
+          <label data-tour="import-consent"><input type="checkbox" style={{ width: "auto" }} checked={consent} onChange={(e) => setConsent(e.target.checked)} /> I own or am authorized to analyse this material</label>
+          <input data-tour="import-file" type="file" aria-label="Import analysis file" disabled={!consent} style={{ maxWidth: 280 }} onChange={(e) => e.target.files?.[0] && up.mutate(e.target.files[0])} />
         </div>
         {up.isError && <ErrorBox error={up.error} />}
         {up.data?.warnings.map((w) => <div key={w} className="banner warn">{w}</div>)}
@@ -304,7 +311,7 @@ function Imports({ id }: { id: string }) {
       <input aria-label="Search this case" placeholder="Full-text search across findings, notes, evidence and observations" value={term} onChange={(e) => setTerm(e.target.value)} />
       {hits.data?.items.length === 0 && <p className="muted">No matches.</p>}
       {hits.data?.items.map((h) => <div key={h.kind + h.id} className="muted"><Badge v={h.kind} /> {h.snippet}</div>)}
-      <h3>Observations</h3>
+      <h3 data-tour="import-results">Observations</h3>
       {obs.isLoading && <Loading what="observations" />}
       {obs.isError && <ErrorBox error={obs.error} />}
       {obs.data?.items.length === 0 && <Empty title="No imported observations" hint="Observations are facts a parser extracted from a file, not conclusions." />}

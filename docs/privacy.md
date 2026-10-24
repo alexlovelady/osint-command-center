@@ -60,6 +60,16 @@ additionally needs (1) the case to allow cloud use, (2) a preview of the exact p
 approval of a one-time token bound to that payload. Restricted material is never sent to the cloud when the case forbids it. Each
 transfer is logged. Model output is never evidence: citations to evidence the model was not given are rejected and shown as rejected.
 
+## AI Copilot and Tutor
+
+The Copilot is a panel on every page (General, Investigation, Tutor). Its conversations are stored in the encrypted database, per user and per
+investigation, and are deleted with the case (or with *Delete conversation*). It uses your **local model by default**; with a local model nothing
+leaves the machine (only loopback is contacted). A cloud model is used only when you pick it, the case allows it, and you approve the **exact
+payload** shown to you for that one message; restricted evidence is never included in a cloud payload. What the assistant sees for a case: stored
+findings, notes, evidence titles and observations that match your question (restricted items withheld unless you tick the local-only box), tool
+status, and the documentation. Keys are never given to it. It cannot approve its own proposals; running a search, saving a note or requirement,
+generating a report or running a workflow happens only when you press *Approve and run*, and each approval is audited.
+
 ## Deleting data
 
 Case purge shows what will go and needs confirmation; it deletes that case's rows, vault objects and index entries and records an

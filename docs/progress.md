@@ -43,6 +43,19 @@ the command shown on this machine; anything not run is listed under *Not verifie
 | **CI on GitHub** | First runs: backend (Windows+Linux × Python 3.12/3.13/3.14) green, web incl. E2E green, supply-chain green, Linux container build + egress green; **desktop `cargo test` failed** (the shell embeds the built UI and CI had not built it) → fixed; actions now pinned to commit SHAs |
 | **WebView2 firewall script** | `scripts/windows/block-webview2-egress.ps1` (`-Mode Substrate` default / `All`, `-WhatIf`, `-Remove`, admin required). Dry-run tested; **not applied** to this machine. Caveat in its header: every WebView2 app shares `msedgewebview2.exe`, so any rule also affects them |
 
+## This round (AI Copilot & Interactive Tutor; see `docs/copilot.md`)
+
+| Item | Result |
+|---|---|
+| Backend suite, Windows | **539 passed** on Python 3.14 and 3.13.15, **538 on 3.12.14**; **Linux container: 538 passed, 1 skipped** (79 new Copilot tests: all 12 acceptance criteria, knowledge-base drift checks, safety and failure paths); ruff + mypy (109 files) clean |
+| Web | tsc, eslint, build clean; vitest **28** (6 new: markdown safety, streaming, approval card, cloud approval, no-model banner, tour highlight) |
+| Browser E2E | **11 passed** (4 new: no-model answers + "not documented", history across reload, tutor highlight lands on the real input, next steps + Go-to link); axe clean on the panel (it found a real `tablist` problem, fixed) |
+| Frozen backend smoke | **36/36 on Windows and on Linux** (adds: Copilot answers from the bundled knowledge base, bundled tutorials) |
+| **Real model** (`scripts/copilot_live_check.py`, Ollama `huihui_ai/qwen3-abliterated:8b`) | **5/5**: cited documentation answer, undocumented feature refused without calling the model, case answer cites real evidence, a request to search produced a proposal and ran nothing, tool failure explained from real health data; first token about 1 s after the model is warm |
+| Bugs found by running it | conversation row never committed (every chat failed once); documentation search matched noise (added coverage threshold, stemming); a model reply made only of a tool call showed an empty bubble; **Ollama's default context window would have silently cut the start of long prompts (now `num_ctx=8192`, also for the AI tab)**; a new test wrote to the real OS keyring (removed my test value; tests now use a fake keyring) |
+
+Not verified: llama.cpp and cloud providers against real servers (mocks only); models other than the one above; hardware actions are deliberately not exposed to the Copilot.
+
 ## Network egress ("packet capture")
 
 | Platform | Method | Result |

@@ -1,0 +1,51 @@
+[
+ {"id": "first-run", "title": "First-run setup", "module": "setup", "summary": "Install tools, pick a local model, add optional keys.",
+  "steps": [
+   {"go": {"route": "setup"}, "target": "setup-install", "beginner": "This is Setup. Tick the tools you want. Each shows exactly which web addresses it will be downloaded from. Nothing downloads until you tick the confirmation box and press Install.", "advanced": "Pinned SHA-256 per artifact, publisher-host allow-list. Expand 'Exact sources' to audit."},
+   {"go": {"route": "setup"}, "target": "setup-model", "beginner": "Tick the local model if you want AI help. It runs on your computer without internet once downloaded. The size recommended fits your memory.", "advanced": "Pulled through Ollama's /api/pull; profile 'local' is created on loopback."},
+   {"go": {"route": "setup"}, "target": "setup-keys", "beginner": "API keys are optional. Add one only if you have it; a source without a key stays off and sends nothing.", "advanced": "Stored in the OS credential store, never returned by the API."},
+   {"go": {"route": "setup"}, "target": "setup-finish", "beginner": "Press Finish setup. You can come back to Setup any time.", "advanced": ""}
+  ]},
+ {"id": "create-case", "title": "Create and manage an investigation", "module": "cases", "summary": "Make a case, understand its purpose, open it, close or archive it.",
+  "steps": [
+   {"go": {"route": "cases"}, "target": "case-title", "beginner": "Give the case a short title that says what you are investigating.", "advanced": "Titles are free text and appear on reports."},
+   {"go": {"route": "cases"}, "target": "case-category", "beginner": "Pick the category closest to your question. It only changes which tool suggestions you see first.", "advanced": "People cases require a documented purpose and enable stricter defaults."},
+   {"go": {"route": "cases"}, "target": "case-purpose", "beginner": "Write why you are investigating and what is in scope. This is written into every report. For anything about a person it is required.", "advanced": "Purpose is stored with the case and re-shown on monitoring schedules."},
+   {"go": {"route": "cases"}, "target": "case-create", "beginner": "Press Create case, then click its title in the list to open it. Each case keeps its own evidence, findings and Copilot conversation.", "advanced": "Entities are scoped to the case; nothing is shared across cases."}
+  ]},
+ {"id": "first-search", "title": "Run your first search", "module": "tab-search", "summary": "Preview, choose sources, confirm, read results.",
+  "steps": [
+   {"go": {"route": "case", "tab": "Search"}, "target": "search-target", "beginner": "Type what you want to look up, for example a domain. Typing sends nothing.", "advanced": "Targets are parsed strictly (domain, IP, URL, email, username, name)."},
+   {"go": {"route": "case", "tab": "Search"}, "target": "search-preview", "beginner": "Press Preview. You will see every source that could run, what it would contact, and why.", "advanced": "Policy is evaluated at preview and again at execution."},
+   {"go": {"route": "case", "tab": "Search"}, "target": "search-sources", "beginner": "Untick any source you do not want. Sources marked not_installed or requires_key will not run until you fix that in Setup.", "advanced": "Class passive vs public_site_query vs active determines confirmation requirements."},
+   {"go": {"route": "case", "tab": "Search"}, "target": "search-confirm", "beginner": "Press the confirm button to run. A run viewer shows progress per source.", "advanced": "Each source returns raw artifacts that are stored and hashed before any finding is derived."},
+   {"go": {"route": "case", "tab": "Findings"}, "target": "tab-Findings", "beginner": "Open Findings. Every row says which source reported it and how sure the app is. Remember: a finding is what a source claims.", "advanced": "Promote findings to claims in the Analysis tab to track verification."}
+  ]},
+ {"id": "evidence-analysis", "title": "Judge evidence and conflicts", "module": "tab-analysis", "summary": "Claims, contradictions, gaps, requirements.",
+  "steps": [
+   {"go": {"route": "case", "tab": "Analysis"}, "target": "tab-Analysis", "beginner": "Analysis is where you decide what you actually believe. Start by adding the questions the case must answer (requirements).", "advanced": "Requirements drive the gap list and the next-step recommendations."},
+   {"go": {"route": "case", "tab": "Analysis"}, "target": "analysis-coverage", "beginner": "Coverage and gaps lists open questions and claims with only one source. Those are your next jobs.", "advanced": "Stale = older than the staleness window; unverified = no analyst verification."},
+   {"go": {"route": "case", "tab": "Analysis"}, "target": "analysis-claims", "beginner": "For each claim you can Verify, Dispute or Reject. Only you can mark something verified. Contradictions show both versions side by side; the app never picks a winner.", "advanced": "Provenance shows the evidence chain for a claim."}
+  ]},
+ {"id": "import-files", "title": "Import and analyse a file", "module": "tab-imports", "summary": "Bring in a file you own and read the observations.",
+  "steps": [
+   {"go": {"route": "case", "tab": "Imports"}, "target": "import-consent", "beginner": "First tick that you own the file or are authorised to use it. The file picker stays disabled until you do.", "advanced": "Recorded as the access class OWNED_AUTHORIZED or IMPORTED with a custody event."},
+   {"go": {"route": "case", "tab": "Imports"}, "target": "import-file", "beginner": "Choose the file. The app stores it unchanged with a fingerprint and then reads it. Nothing in it is run or opened.", "advanced": "Parsers are bounded; macros, scripts and external links are reported but never executed or fetched."},
+   {"go": {"route": "case", "tab": "Imports"}, "target": "import-results", "beginner": "Read the observations and any warnings under the card. An observation is something the file says, not a verified fact.", "advanced": "Positions are RESTRICTED by default."}
+  ]},
+ {"id": "reports", "title": "Make a report", "module": "tab-reports", "summary": "Preview what is included, then generate.",
+  "steps": [
+   {"go": {"route": "case", "tab": "Reports"}, "target": "report-profile", "beginner": "Choose who the report is for: executive (short), technical (details), evidence_pack, or multi_int.", "advanced": "Profiles control sections; format controls the container (HTML, Markdown, JSON, PDF)."},
+   {"go": {"route": "case", "tab": "Reports"}, "target": "report-preview", "beginner": "Press 'Preview what will be included'. It shows what goes in and what is held back, before anything is written.", "advanced": "RESTRICTED items and exact coordinates are withheld unless the sensitive box is ticked."},
+   {"go": {"route": "case", "tab": "Reports"}, "target": "report-generate", "beginner": "Press Generate, then Download. Reports are stored encrypted.", "advanced": "AAD-bound AES-GCM; downloads decrypt on the fly."}
+  ]},
+ {"id": "local-model", "title": "Use and switch the AI model", "module": "local-ai", "summary": "Turn AI on, pick a profile, understand cloud warnings.",
+  "steps": [
+   {"go": {"route": "settings"}, "target": "settings-ai", "beginner": "In Settings find the AI section. Turn AI on, then choose a profile. A local profile never leaves your computer.", "advanced": "Profiles: ollama, llamacpp (loopback only), openai-compatible cloud (https + stored key)."},
+   {"go": {"route": "settings"}, "target": "settings-ai", "beginner": "To use a different installed model, add a profile with its name, or use the model picker on the Copilot panel.", "advanced": "Any model Ollama lists can be used; the app's controls gate every action regardless of model."}
+  ]},
+ {"id": "backup", "title": "Back up your data", "module": "backups", "summary": "Create an encrypted backup.",
+  "steps": [
+   {"go": {"route": "settings"}, "target": "settings-backup", "beginner": "Enter a passphrase of 8 or more characters and press Create encrypted backup. Keep the passphrase safe: it cannot be recovered.", "advanced": "Plaintext snapshot via sqlcipher_export is sealed with the passphrase-derived key."}
+  ]}
+]

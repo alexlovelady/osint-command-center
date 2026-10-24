@@ -41,6 +41,18 @@ Every denial, approval, import, correlation decision, update check and AI transf
 `GET /api/v1/system/doctor` (`audit_chain.ok`). The chain detects edits and deletions of single events; it is **not** proof against
 someone who can rewrite the whole database file.
 
+## Copilot
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| Copilot says "No AI model answered" | AI is off, no profile, Ollama not running, or the model is not installed | Read the reason shown under the model badge. Settings -> AI (turn on, add a profile) or Setup (install a model); `ollama pull <model>`. Documentation answers keep working |
+| Reply stops half way with "the model stopped responding" | Ollama crashed or ran out of memory on a large model | Pick a smaller model (Setup lists sizes), or restart Ollama |
+| "That isn't in the documentation I have" | The application's documentation does not cover it, so the Copilot will not guess | Search the docs in the panel; if it should be documented, it is a gap in `copilot/kb` |
+| Answer has no citations (shown with a warning) | The model did not cite its sources | Treat it as unverified; ask again or use the cited documentation links |
+| A proposal card says "refused" | Policy re-checked at approval time (offline mode, closed case, a source that needs confirmation) | Read the reason; fix it and ask again. Nothing ran |
+| Walkthrough says it can't find a control | That control is not on screen (different tab, hidden) | Follow the step text; the highlight only appears for controls that exist |
+| "N damaged saved messages were skipped" | A saved message could not be read | The rest of the history is intact; the damaged rows are ignored |
+
 ## Collecting a bug report
 
 `doctor --json`, the failing request's `request_id` (every error body has one), and the relevant `audit` entries. Do not attach

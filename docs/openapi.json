@@ -52,24 +52,6 @@
     "title": "ActionIn",
     "type": "object"
    },
-   "ApproveIn": {
-    "properties": {
-     "confirmed_adapters": {
-      "items": {
-       "type": "string"
-      },
-      "title": "Confirmed Adapters",
-      "type": "array"
-     },
-     "wait": {
-      "default": false,
-      "title": "Wait",
-      "type": "boolean"
-     }
-    },
-    "title": "ApproveIn",
-    "type": "object"
-   },
    "AskIn": {
     "properties": {
      "case_id": {
@@ -433,6 +415,100 @@
     "title": "ChangeIn",
     "type": "object"
    },
+   "ChatIn": {
+    "properties": {
+     "conversation_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Conversation Id"
+     },
+     "ctx": {
+      "additionalProperties": true,
+      "title": "Ctx",
+      "type": "object"
+     },
+     "include_restricted": {
+      "default": false,
+      "title": "Include Restricted",
+      "type": "boolean"
+     },
+     "intent_hint": {
+      "anyOf": [
+       {
+        "const": "next_steps",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Intent Hint"
+     },
+     "level": {
+      "default": "beginner",
+      "enum": [
+       "beginner",
+       "advanced"
+      ],
+      "title": "Level",
+      "type": "string"
+     },
+     "mode": {
+      "default": "general",
+      "enum": [
+       "general",
+       "investigation",
+       "tutor"
+      ],
+      "title": "Mode",
+      "type": "string"
+     },
+     "profile_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Profile Id"
+     },
+     "quick": {
+      "default": false,
+      "title": "Quick",
+      "type": "boolean"
+     },
+     "text": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     },
+     "transfer_token": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Transfer Token"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "title": "ChatIn",
+    "type": "object"
+   },
    "ClaimIn": {
     "properties": {
      "case_id": {
@@ -792,6 +868,51 @@
      }
     },
     "title": "ModelIn",
+    "type": "object"
+   },
+   "NewConv": {
+    "properties": {
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "mode": {
+      "default": "general",
+      "enum": [
+       "general",
+       "investigation",
+       "tutor"
+      ],
+      "title": "Mode",
+      "type": "string"
+     }
+    },
+    "title": "NewConv",
+    "type": "object"
+   },
+   "NextIn": {
+    "properties": {
+     "case_id": {
+      "title": "Case Id",
+      "type": "string"
+     },
+     "include_restricted": {
+      "default": false,
+      "title": "Include Restricted",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "case_id"
+    ],
+    "title": "NextIn",
     "type": "object"
    },
    "NoteIn": {
@@ -1499,20 +1620,6 @@
     "title": "SeriesIn",
     "type": "object"
    },
-   "SettingsIn": {
-    "properties": {
-     "values": {
-      "additionalProperties": true,
-      "title": "Values",
-      "type": "object"
-     }
-    },
-    "required": [
-     "values"
-    ],
-    "title": "SettingsIn",
-    "type": "object"
-   },
    "SpecIn": {
     "properties": {
      "evidence_id": {
@@ -1682,6 +1789,72 @@
      "decision"
     ],
     "title": "DecisionIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__copilot__ApproveIn": {
+    "properties": {
+     "confirm": {
+      "default": false,
+      "title": "Confirm",
+      "type": "boolean"
+     },
+     "confirmed_adapters": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Confirmed Adapters",
+      "type": "array"
+     }
+    },
+    "title": "ApproveIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__copilot__SettingsIn": {
+    "properties": {
+     "context_chars": {
+      "anyOf": [
+       {
+        "maximum": 200000.0,
+        "minimum": 2000.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Context Chars"
+     },
+     "profile_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Profile Id"
+     }
+    },
+    "title": "SettingsIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__fusion__ApproveIn": {
+    "properties": {
+     "confirmed_adapters": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Confirmed Adapters",
+      "type": "array"
+     },
+     "wait": {
+      "default": false,
+      "title": "Wait",
+      "type": "boolean"
+     }
+    },
+    "title": "ApproveIn",
     "type": "object"
    },
    "osintcc__api__v1__fusion__ReqIn": {
@@ -1981,6 +2154,20 @@
      "question"
     ],
     "title": "ReqIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__routes__SettingsIn": {
+    "properties": {
+     "values": {
+      "additionalProperties": true,
+      "title": "Values",
+      "type": "object"
+     }
+    },
+    "required": [
+     "values"
+    ],
+    "title": "SettingsIn",
     "type": "object"
    },
    "osintcc__api__v1__setup__InstallIn": {
@@ -5824,7 +6011,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/ApproveIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__fusion__ApproveIn"
        }
       }
      },
@@ -5888,6 +6075,681 @@
      }
     },
     "summary": "Plan Cancel"
+   }
+  },
+  "/api/v1/copilot/chat": {
+   "post": {
+    "operationId": "chat_api_v1_copilot_chat_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChatIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Chat"
+   }
+  },
+  "/api/v1/copilot/conversation": {
+   "get": {
+    "description": "The conversation for this investigation (or the general one) with its messages and proposals. Damaged rows are skipped and counted.",
+    "operationId": "current_conversation_api_v1_copilot_conversation_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "case_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Case Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "conversation_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Conversation Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Current Conversation"
+   }
+  },
+  "/api/v1/copilot/conversations": {
+   "get": {
+    "operationId": "conversations_api_v1_copilot_conversations_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "case_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Case Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "scope",
+      "required": false,
+      "schema": {
+       "default": "all",
+       "enum": [
+        "case",
+        "general",
+        "all"
+       ],
+       "title": "Scope",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Conversations"
+   },
+   "post": {
+    "operationId": "new_conversation_api_v1_copilot_conversations_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NewConv"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "New Conversation"
+   }
+  },
+  "/api/v1/copilot/conversations/{cid}": {
+   "delete": {
+    "operationId": "delete_conversation_api_v1_copilot_conversations__cid__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "cid",
+      "required": true,
+      "schema": {
+       "title": "Cid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Delete Conversation"
+   }
+  },
+  "/api/v1/copilot/docs/search": {
+   "get": {
+    "operationId": "docs_search_api_v1_copilot_docs_search_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "q",
+      "required": true,
+      "schema": {
+       "title": "Q",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "kinds",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kinds"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 8,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Docs Search"
+   }
+  },
+  "/api/v1/copilot/docs/{chunk_id}": {
+   "get": {
+    "operationId": "docs_get_api_v1_copilot_docs__chunk_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chunk_id",
+      "required": true,
+      "schema": {
+       "title": "Chunk Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Docs Get"
+   }
+  },
+  "/api/v1/copilot/next-steps": {
+   "post": {
+    "description": "Prioritised recommendations computed from the case's stored data. Deterministic: works with no model.",
+    "operationId": "next_steps_api_v1_copilot_next_steps_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NextIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Next Steps"
+   }
+  },
+  "/api/v1/copilot/proposals/{pid}/approve": {
+   "post": {
+    "operationId": "approve_api_v1_copilot_proposals__pid__approve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pid",
+      "required": true,
+      "schema": {
+       "title": "Pid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__copilot__ApproveIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Approve"
+   }
+  },
+  "/api/v1/copilot/proposals/{pid}/reject": {
+   "post": {
+    "operationId": "reject_api_v1_copilot_proposals__pid__reject_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pid",
+      "required": true,
+      "schema": {
+       "title": "Pid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reject"
+   }
+  },
+  "/api/v1/copilot/settings": {
+   "put": {
+    "operationId": "put_settings_api_v1_copilot_settings_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__copilot__SettingsIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Settings"
+   }
+  },
+  "/api/v1/copilot/status": {
+   "get": {
+    "operationId": "status_api_v1_copilot_status_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "profile_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Profile Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Status"
+   }
+  },
+  "/api/v1/copilot/suggestions": {
+   "get": {
+    "operationId": "suggestions_api_v1_copilot_suggestions_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "mode",
+      "required": false,
+      "schema": {
+       "default": "general",
+       "title": "Mode",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "route",
+      "required": false,
+      "schema": {
+       "default": "overview",
+       "title": "Route",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "tab",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Tab"
+      }
+     },
+     {
+      "in": "query",
+      "name": "case_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Case Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Suggestions"
+   }
+  },
+  "/api/v1/copilot/tutorials": {
+   "get": {
+    "operationId": "tutorials_api_v1_copilot_tutorials_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Tutorials"
+   }
+  },
+  "/api/v1/copilot/tutorials/{tid}": {
+   "get": {
+    "operationId": "tutorial_api_v1_copilot_tutorials__tid__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "tid",
+      "required": true,
+      "schema": {
+       "title": "Tid",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "level",
+      "required": false,
+      "schema": {
+       "default": "beginner",
+       "enum": [
+        "beginner",
+        "advanced"
+       ],
+       "title": "Level",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Tutorial"
    }
   },
   "/api/v1/correlations/{cid}/revoke": {
@@ -7643,7 +8505,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/SettingsIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__routes__SettingsIn"
        }
       }
      },

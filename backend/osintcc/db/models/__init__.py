@@ -691,3 +691,44 @@ class Correlation(Base):
     decided_by: Mapped[str] = mapped_column(String(80), default="local")
     decided_at: Mapped[datetime] = ts()
     __table_args__ = (UniqueConstraint("case_id", "obs_a_id", "obs_b_id", "kind", name="uq_correlation"),)
+
+
+class CopilotConversation(Base):
+    """A Copilot chat. One per investigation per user (plus general ones); history survives restarts."""
+    __tablename__ = "copilot_conversations"
+    id: Mapped[str] = pk()
+    user_id: Mapped[str] = mapped_column(String(80), index=True)
+    case_id: Mapped[str | None] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(200), default="New conversation")
+    mode: Mapped[str] = mapped_column(String(20), default="general")  # general | investigation | tutor (the last one used)
+    created_at: Mapped[datetime] = ts()
+    updated_at: Mapped[datetime] = ts()
+
+
+class CopilotMessage(Base):
+    __tablename__ = "copilot_messages"
+    id: Mapped[str] = pk()
+    conversation_id: Mapped[str] = mapped_column(ForeignKey("copilot_conversations.id", ondelete="CASCADE"), index=True)
+    seq: Mapped[int] = mapped_column(Integer)
+    role: Mapped[str] = mapped_column(String(12))  # user | assistant | note
+    mode: Mapped[str] = mapped_column(String(20), default="general")
+    content: Mapped[str] = mapped_column(Text, default="")
+    meta_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)  # sources, tool results, proposals, model, page context
+    created_at: Mapped[datetime] = ts()
+    __table_args__ = (Index("ix_copilot_msg_conv_seq", "conversation_id", "seq"),)
+
+
+class CopilotProposal(Base):
+    """An action the Copilot suggested. Nothing runs until a person approves exactly this proposal."""
+    __tablename__ = "copilot_proposals"
+    id: Mapped[str] = pk()
+    conversation_id: Mapped[str] = mapped_column(ForeignKey("copilot_conversations.id", ondelete="CASCADE"), index=True)
+    case_id: Mapped[str | None] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), nullable=True)
+    tool: Mapped[str] = mapped_column(String(40))
+    args_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    preview_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(12), default="pending")  # pending | approved | rejected | executed | failed
+    result_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = ts()
+    decided_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    decided_by: Mapped[str | None] = mapped_column(String(80), nullable=True)

@@ -31,7 +31,7 @@ export default function AnalysisTab({ id }: { id: string }) {
   return (
     <>
       <div className="banner">Labels are heuristics from the number of <b>independent</b> source groups, not probabilities. Only you can mark a claim verified.</div>
-      {gaps.data && <div className="card"><b>Coverage &amp; gaps</b> — {gaps.data.summary}
+      {gaps.data && <div className="card" data-tour="analysis-coverage"><b>Coverage &amp; gaps</b> — {gaps.data.summary}
         {gaps.data.unanswered_requirements.map((r) => <div key={r.id} className="muted">open: {r.question} ({r.priority})</div>)}</div>}
       <h3>Contradictions</h3>
       {contra.isLoading && <Loading what="contradictions" />}
@@ -47,7 +47,7 @@ export default function AnalysisTab({ id }: { id: string }) {
               </div>))}
           </div>
         </div>))}
-      <h3>Claims</h3>
+      <h3 data-tour="analysis-claims">Claims</h3>
       <div className="row"><input aria-label="Finding id to promote" placeholder="finding id (from the Findings tab API) → claim" value={fid} onChange={(e) => setFid(e.target.value)} style={{ maxWidth: 380 }} />
         <button disabled={!fid} onClick={() => promote.mutate()}>Promote finding to claim</button></div>
       {promote.isError && <ErrorBox error={promote.error} />}

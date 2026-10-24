@@ -17,12 +17,12 @@ export default function Cases({ open }: { open: (id: string) => void }) {
     <>
       <h2>Cases</h2>
       <form className="card row" onSubmit={(e) => { e.preventDefault(); create.mutate(); }} aria-label="New case">
-        <input aria-label="Case title" placeholder="Case title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ flex: 2, minWidth: 200 }} />
-        <select aria-label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} style={{ width: 140 }}>
+        <input data-tour="case-title" aria-label="Case title" placeholder="Case title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ flex: 2, minWidth: 200 }} />
+        <select data-tour="case-category" aria-label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} style={{ width: 140 }}>
           {CATS.map((c) => <option key={c}>{c}</option>)}
         </select>
-        <input aria-label="Purpose" placeholder={form.category === "people" ? "Purpose (required for people cases)" : "Purpose / scope (recommended)"} value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} style={{ flex: 3, minWidth: 220 }} />
-        <button className="primary" disabled={!form.title.trim() || create.isPending}>Create case</button>
+        <input data-tour="case-purpose" aria-label="Purpose" placeholder={form.category === "people" ? "Purpose (required for people cases)" : "Purpose / scope (recommended)"} value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} style={{ flex: 3, minWidth: 220 }} />
+        <button data-tour="case-create" className="primary" disabled={!form.title.trim() || create.isPending}>Create case</button>
       </form>
       {create.isError && <ErrorBox error={create.error} />}
       {q.isLoading && <Loading what="cases" />}

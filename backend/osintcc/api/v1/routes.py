@@ -1290,3 +1290,6 @@ router.include_router(_updates.router)
 from . import setup as _setup
 
 router.include_router(_setup.router)
+from . import copilot as _copilot
+
+router.include_router(_copilot.router)

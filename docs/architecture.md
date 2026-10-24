@@ -62,6 +62,7 @@ spec (`../OSINT_Master_Spec.md`) describes the intent. Where they differ, `docs/
 | `graph` | fusion (claims/confidence/contradictions/gaps), cross-discipline correlation, unified timeline |
 | `workflows` | data-only DAG validation, wave execution, snapshot diffs, scheduler |
 | `ai` | provider-neutral clients (Ollama, OpenAI-compatible), case-scoped retrieval, citation verification, cloud consent tokens |
+| `copilot` | Copilot & Tutor: BM25 knowledge base over modules/tutorials/glossary/errors/synced docs + live tool manifests (`kb.py`, `kb/`), live-state facts and rule-based next steps/diagnostics (`context.py`), read tools and approval-gated action proposals (`tools.py`), chat engine with modes, grounding checks and fallbacks (`engine.py`), defensive conversation store (`store.py`) |
 | `mcp_server.py` | stdio JSON-RPC server; read tools; write tools that wait for out-of-band approval |
 | `hardware` | receive-only driver protocol; simulated and replay drivers; capture sessions |
 | `plugins` | manifest validation, tree-hash review, out-of-process runner, quarantine |
@@ -76,7 +77,7 @@ spec (`../OSINT_Master_Spec.md`) describes the intent. Where they differ, `docs/
 React 18 + TanStack Query. Plain CSS tokens with light/dark themes. The API token is read from the URL fragment once, scrubbed
 from the address bar, and kept in `sessionStorage`. Case tabs: Search, Plans, Findings, Graph (Cytoscape), Timeline, Map
 (Leaflet; OpenStreetMap tiles only when the user opts in), Evidence, Imports, Analysis, Cross-links, Workflows, Humint, AI,
-Hardware, Notes, Reports. HTML from the server (notes) is already sanitized by an allow-list; there is no other
+Hardware, Notes, Reports. A floating Copilot panel (`CopilotPanel.tsx`) and a tutorial overlay that highlights elements marked `data-tour` (`TourOverlay.tsx`) sit above every page. HTML from the server (notes) is already sanitized by an allow-list; there is no other
 `dangerouslySetInnerHTML`.
 
 ## Processes and ports

@@ -35,6 +35,7 @@ def main() -> int:
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'catalog.json'}{SEP}osintcc/setup",
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'requirements'}{SEP}osintcc/setup/requirements",
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'update_key.pub'}{SEP}osintcc/setup",
+        "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'copilot' / 'kb'}{SEP}osintcc/copilot/kb",   # Copilot knowledge base (modules, tutorials, docs)
         "--collect-submodules", "osintcc", "--collect-all", "alembic", "--collect-all", "sqlcipher3",
         "--collect-submodules", "uvicorn", "--collect-submodules", "keyring.backends",
         "--hidden-import", "sqlalchemy.dialects.sqlite", "--collect-data", "reportlab",

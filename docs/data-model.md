@@ -2,7 +2,7 @@
 
 Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mode with foreign keys on; schema changes only through Alembic migrations (`backend/osintcc/db/migrations`). FTS5 `search_index` is maintained by triggers and is not an ORM table.
 
-48 tables.
+51 tables.
 
 ## ai_calls
 
@@ -183,6 +183,51 @@ A statement about the world supported by evidence. Facts a source reported are c
 | revoked_at | DATETIME | yes |  |
 | supporting_evidence_id | VARCHAR(36) | yes | FK → evidence |
 | created_at | DATETIME | no |  |
+
+## copilot_conversations
+
+A Copilot chat. One per investigation per user (plus general ones); history survives restarts.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| user_id | VARCHAR(80) | no |  |
+| case_id | VARCHAR(36) | yes | FK → cases |
+| title | VARCHAR(200) | no |  |
+| mode | VARCHAR(20) | no |  |
+| created_at | DATETIME | no |  |
+| updated_at | DATETIME | no |  |
+
+## copilot_messages
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| conversation_id | VARCHAR(36) | no | FK → copilot_conversations |
+| seq | INTEGER | no |  |
+| role | VARCHAR(12) | no |  |
+| mode | VARCHAR(20) | no |  |
+| content | TEXT | no |  |
+| meta_json | JSON | no |  |
+| created_at | DATETIME | no |  |
+
+## copilot_proposals
+
+An action the Copilot suggested. Nothing runs until a person approves exactly this proposal.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| conversation_id | VARCHAR(36) | no | FK → copilot_conversations |
+| case_id | VARCHAR(36) | yes | FK → cases |
+| tool | VARCHAR(40) | no |  |
+| args_json | JSON | no |  |
+| preview_json | JSON | no |  |
+| status | VARCHAR(12) | no |  |
+| result_json | JSON | no |  |
+| created_at | DATETIME | no |  |
+| decided_at | DATETIME | yes |  |
+| decided_by | VARCHAR(80) | yes |  |
 
 ## correlations
 

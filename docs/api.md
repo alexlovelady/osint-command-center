@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-153 operations in 34 groups.
+168 operations in 35 groups.
 
 ## ai
 
@@ -135,6 +135,26 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/collection-plans/{pid}` | Plan Get |
 | POST | `/api/v1/collection-plans/{pid}/approve` | Plan Approve |
 | POST | `/api/v1/collection-plans/{pid}/cancel` | Plan Cancel |
+
+## copilot
+
+| Method | Path | Summary |
+|---|---|---|
+| POST | `/api/v1/copilot/chat` | Chat |
+| GET | `/api/v1/copilot/conversation` | The conversation for this investigation (or the general one) with its messages and proposals. Damaged rows are skipped and counted. |
+| GET | `/api/v1/copilot/conversations` | Conversations |
+| POST | `/api/v1/copilot/conversations` | New Conversation |
+| DELETE | `/api/v1/copilot/conversations/{cid}` | Delete Conversation |
+| GET | `/api/v1/copilot/docs/search` | Docs Search |
+| GET | `/api/v1/copilot/docs/{chunk_id}` | Docs Get |
+| POST | `/api/v1/copilot/next-steps` | Prioritised recommendations computed from the case's stored data. Deterministic: works with no model. |
+| POST | `/api/v1/copilot/proposals/{pid}/approve` | Approve |
+| POST | `/api/v1/copilot/proposals/{pid}/reject` | Reject |
+| PUT | `/api/v1/copilot/settings` | Put Settings |
+| GET | `/api/v1/copilot/status` | Status |
+| GET | `/api/v1/copilot/suggestions` | Suggestions |
+| GET | `/api/v1/copilot/tutorials` | Tutorials |
+| GET | `/api/v1/copilot/tutorials/{tid}` | Tutorial |
 
 ## correlations
 

@@ -70,6 +70,15 @@ Start it per session with the cases it may see: `osintcc-backend mcp --cases <id
 It is read-only; anything that would change data appears under Settings → *MCP approvals* and waits for you. Restricted material is
 hidden unless you started it with `--allow-restricted`.
 
+## 8b. The AI Copilot and tutor
+
+Open it with the **Copilot** button (top bar or bottom right). **General** answers OSINT and how-the-app-works questions; **Investigation** (inside a
+case) answers from that case's stored evidence with citations and offers *Recommend next steps*; **Tutor** teaches step by step and can highlight
+the real controls (*Start walkthrough*). The model badge shows which model is answering; with no model (AI off, Ollama not running, model not
+installed) it says so and still answers from the built-in documentation and your stored data. Anything it proposes (a search, a note, a report, a
+workflow run) appears as a card; nothing happens until you press **Approve and run**. To switch models use the picker in the panel or Settings -> AI;
+to make one the default for everyone use `PUT /api/v1/copilot/settings`. Conversations are kept per investigation and survive restarts.
+
 ## 9. Hardware
 
 Nothing is required. Simulated and replay devices always work. A real receiver needs an ownership assessment and an acknowledgement

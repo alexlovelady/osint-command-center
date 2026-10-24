@@ -40,12 +40,12 @@ export default function SearchComposer({ caseId }: { caseId: string }) {
   return (
     <section aria-label="Search composer">
       <form className="row" onSubmit={(e) => { e.preventDefault(); setSelected(null); setConfirmed([]); setRunId(null); preview.mutate(); }}>
-        <input aria-label="Target" placeholder="domain, IP, URL, email — or pick 'username' explicitly" value={target}
+        <input data-tour="search-target" aria-label="Target" placeholder="domain, IP, URL, email — or pick 'username' explicitly" value={target}
           onChange={(e) => setTarget(e.target.value)} style={{ flex: 1, minWidth: 260 }} maxLength={2048} />
         <select aria-label="Target type" value={type} onChange={(e) => setType(e.target.value as typeof type)} style={{ width: 150 }}>
           {TYPES.map((t) => <option key={t}>{t}</option>)}
         </select>
-        <button className="primary" disabled={!target.trim() || preview.isPending}>Preview</button>
+        <button data-tour="search-preview" className="primary" disabled={!target.trim() || preview.isPending}>Preview</button>
       </form>
       <p className="muted">Typing sends nothing. Preview shows what would be contacted; you then confirm.</p>
       {preview.isError && <ErrorBox error={preview.error} />}
@@ -56,7 +56,7 @@ export default function SearchComposer({ caseId }: { caseId: string }) {
             {plan.target.ambiguous_with.length > 0 && <span className="badge medium">could also be a {plan.target.ambiguous_with.join(", ")}</span>}
             {plan.offline && <span className="badge failed">offline mode</span>}
           </div>
-          <table aria-label="Planned sources">
+          <table data-tour="search-sources" aria-label="Planned sources">
             <thead><tr><th /><th>Source</th><th>Class</th><th>Will contact</th><th>Notes</th></tr></thead>
             <tbody>
               {plan.steps.map((s) => (
@@ -84,7 +84,7 @@ export default function SearchComposer({ caseId }: { caseId: string }) {
           </table>
           {plan.steps.length === 0 && <div className="banner warn">No sources can run for this target right now.</div>}
           <div className="row" style={{ marginTop: 8 }}>
-            <button className="primary" disabled={launch.isPending || !selected?.length || !!runId} onClick={() => launch.mutate()}>
+            <button data-tour="search-confirm" className="primary" disabled={launch.isPending || !selected?.length || !!runId} onClick={() => launch.mutate()}>
               Confirm and run {selected?.length ?? 0} source(s)
             </button>
             <span className="muted">{plan.note}</span>

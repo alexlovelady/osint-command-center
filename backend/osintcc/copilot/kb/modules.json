@@ -1,0 +1,811 @@
+[
+ {
+  "id": "overview",
+  "title": "Overview page",
+  "kind": "page",
+  "where": {
+   "route": "overview"
+  },
+  "summary": "The landing page: counts of open cases, pending jobs, stored findings, how many sources are available, evidence vault size, source health, and the start-up network self-check result.",
+  "how_to": [
+   "Open it from the left menu: Overview.",
+   "Read the start-up network self-check card: 'clean' means the app's own processes opened no outside connections in the first 90 seconds; 'engine_only' means only the browser engine (WebView2 on Windows) did.",
+   "If there are no cases yet, press Go to Cases."
+  ],
+  "keywords": [
+   "home",
+   "dashboard",
+   "self-check",
+   "egress",
+   "source health"
+  ]
+ },
+ {
+  "id": "cases",
+  "title": "Cases page",
+  "kind": "page",
+  "where": {
+   "route": "cases"
+  },
+  "summary": "Create and open investigations (cases). A case holds targets, evidence, findings, notes, claims, reports and its own Copilot conversation. Entities are never shared between cases.",
+  "how_to": [
+   "Left menu: Cases.",
+   "Type a case title, pick a category (cyber, business, geospatial, media, people, threat), write the purpose or scope, press Create case.",
+   "People cases require a purpose.",
+   "Open a case by clicking its title."
+  ],
+  "notes": [
+   "The purpose is shown on the case, written into reports, and is the first thing a reviewer will ask about."
+  ],
+  "keywords": [
+   "investigation",
+   "new case",
+   "create case",
+   "purpose",
+   "scope"
+  ]
+ },
+ {
+  "id": "tools",
+  "title": "Tool Manager",
+  "kind": "page",
+  "where": {
+   "route": "tools"
+  },
+  "summary": "Lists every collection tool (adapter) with its class, what it contacts, whether it is installed or needs a key, and real health from detection and smoke tests, never an assumption. Also shows system diagnostics (doctor).",
+  "how_to": [
+   "Left menu: Tool Manager.",
+   "A tool marked not_installed can be installed from Setup.",
+   "requires_key means no key is stored: enter it in Setup (API keys)."
+  ],
+  "keywords": [
+   "tools",
+   "adapters",
+   "health",
+   "installed",
+   "doctor",
+   "diagnostics"
+  ]
+ },
+ {
+  "id": "setup",
+  "title": "Setup page",
+  "kind": "page",
+  "where": {
+   "route": "setup"
+  },
+  "summary": "First-run setup. Installs optional tools (Subfinder, Amass, ExifTool, Sherlock, Maigret; theHarvester on Linux) and a local AI model, and has a place to enter API keys and your SEC EDGAR contact. Downloads are pinned to SHA-256 values and nothing starts until you confirm.",
+  "how_to": [
+   "Left menu: Setup (the app opens here on first run).",
+   "Tick the tools you want, expand 'Exact sources that will be contacted' to see the URLs.",
+   "Tick the local model checkbox if you want AI; the recommended size is chosen from your RAM.",
+   "Tick the confirmation box, press Install selected, and watch the progress.",
+   "Enter any API keys you have in the API keys section; leave the rest blank.",
+   "Press Finish setup."
+  ],
+  "notes": [
+   "Everything installs under the app's data folder; no administrator rights are needed (Ollama on Linux must be installed by you).",
+   "The model is a community 'abliterated' build with refusal training removed; the app's own controls still gate every action."
+  ],
+  "related": [
+   "api-keys",
+   "local-ai",
+   "tools"
+  ],
+  "keywords": [
+   "install",
+   "first run",
+   "wizard",
+   "download",
+   "model",
+   "ollama"
+  ]
+ },
+ {
+  "id": "api-keys",
+  "title": "API keys",
+  "kind": "feature",
+  "where": {
+   "route": "setup"
+  },
+  "summary": "A labelled spot for VirusTotal, urlscan, Shodan, Censys (API_ID:API_SECRET) and OpenCorporates keys, plus your SEC EDGAR contact. Keys are stored in the OS credential store (or sealed in the encrypted database if none exists), shown only as set or not set, and never returned or logged.",
+  "how_to": [
+   "Open Setup and scroll to 'API keys and contacts (optional)'.",
+   "Paste a key and press Save; Remove deletes it.",
+   "A source without a key stays unavailable and makes no request."
+  ],
+  "keywords": [
+   "key",
+   "secret",
+   "credentials",
+   "virustotal",
+   "shodan",
+   "censys",
+   "edgar",
+   "opencorporates",
+   "urlscan"
+  ]
+ },
+ {
+  "id": "settings",
+  "title": "Settings page",
+  "kind": "page",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "Offline mode, the data folder, AI profiles and the AI on/off switch, plugin review and enabling, MCP approvals, Encryption and backup (vault status, encrypted backups), the SEC EDGAR contact, Updates, and the session token.",
+  "how_to": [
+   "Left menu: Settings.",
+   "Offline mode pauses every network source; saved cases stay readable.",
+   "Encryption & backup: create an encrypted backup with a passphrase of 8 or more characters.",
+   "Updates: enter your update server address, check, then download and verify."
+  ],
+  "related": [
+   "backups",
+   "updates",
+   "offline-mode",
+   "local-ai",
+   "plugins",
+   "mcp"
+  ],
+  "keywords": [
+   "preferences",
+   "configuration",
+   "offline",
+   "backup",
+   "session token"
+  ]
+ },
+ {
+  "id": "universal-search",
+  "title": "Universal search (Ctrl+K)",
+  "kind": "feature",
+  "where": {
+   "route": "any"
+  },
+  "summary": "A search box across all cases you can access: findings, notes, evidence titles and observations. Open it with the button at the top or Ctrl+K; Escape closes it.",
+  "how_to": [
+   "Press Ctrl+K, type a word, pick a result to jump to its case."
+  ],
+  "keywords": [
+   "find",
+   "search everything",
+   "ctrl+k",
+   "fts"
+  ]
+ },
+ {
+  "id": "copilot",
+  "title": "AI Copilot",
+  "kind": "feature",
+  "where": {
+   "route": "any"
+  },
+  "summary": "The assistant panel available on every page. Three modes: General (OSINT concepts and how the app works), Investigation (works from the open case's stored evidence, with citations), and Tutor (guided walkthroughs and troubleshooting). It uses your local model by default, remembers the conversation per investigation, and can propose actions but never runs one without your approval.",
+  "how_to": [
+   "Press the Copilot button (bottom right) to open or collapse the panel.",
+   "Pick a mode, ask in plain language, or press a suggested prompt.",
+   "Press 'Recommend next steps' inside a case for a prioritised list.",
+   "Approve or reject any proposed action shown as a card; nothing runs before you approve.",
+   "Change the model from the model picker; the active model is always shown."
+  ],
+  "notes": [
+   "It cites documentation and evidence it was shown and says when it has no documentation for something.",
+   "If no model is available it still answers from the built-in documentation and gives deterministic next-step recommendations."
+  ],
+  "keywords": [
+   "assistant",
+   "chat",
+   "ai",
+   "help",
+   "tutor",
+   "ask"
+  ]
+ },
+ {
+  "id": "tab-search",
+  "title": "Search tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Search"
+  },
+  "summary": "Run passive collection against a target (domain, IP, URL, email, or a username if you pick that type). Typing sends nothing. Preview shows exactly which sources would be contacted and why; you tick the sources and confirm.",
+  "how_to": [
+   "Open a case, then the Search tab.",
+   "Type the target; leave type on auto-detect unless it is a username.",
+   "Press Preview. Read the table: source, class, what it will contact, notes.",
+   "Sources that contact many third-party sites (Sherlock, Maigret) need an extra confirmation tick.",
+   "Press 'Confirm and run N source(s)' and watch the run viewer; findings appear in the Findings tab."
+  ],
+  "notes": [
+   "Policy is checked at preview and again at execution; offline mode or a closed case blocks network sources.",
+   "A source showing not_installed or requires_key can be fixed in Setup."
+  ],
+  "related": [
+   "tab-plans",
+   "tab-findings",
+   "setup",
+   "policy-and-approval"
+  ],
+  "keywords": [
+   "scan",
+   "lookup",
+   "preview",
+   "run",
+   "target",
+   "domain",
+   "collect"
+  ]
+ },
+ {
+  "id": "tab-plans",
+  "title": "Plans tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Plans"
+  },
+  "summary": "Collection plans: a saved, reviewable preview of what would be collected and why. You give a target and a reason, preview, save the plan, then approve it to run; policy is re-checked at approval.",
+  "how_to": [
+   "Open the Plans tab, enter target and a reason, press Preview plan.",
+   "Press Save plan, tick any confirmation boxes the plan needs, press Approve and run.",
+   "Cancel a draft plan with Cancel plan."
+  ],
+  "keywords": [
+   "collection plan",
+   "approve",
+   "reason",
+   "budget"
+  ]
+ },
+ {
+  "id": "tab-findings",
+  "title": "Findings tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Findings"
+  },
+  "summary": "Every fact a source reported, with its confidence label, the reason for that label, when it was observed, and the evidence item it came from. A finding is a claim by a source, not a verified fact.",
+  "how_to": [
+   "Filter by text or confidence.",
+   "Click the evidence id to find the stored raw response in the Evidence tab.",
+   "Press 'Promote to claim' to bring a finding into the Analysis workspace where you can verify, dispute or reject it."
+  ],
+  "related": [
+   "confidence",
+   "tab-analysis",
+   "tab-evidence"
+  ],
+  "keywords": [
+   "results",
+   "facts",
+   "confidence",
+   "provenance"
+  ]
+ },
+ {
+  "id": "tab-graph",
+  "title": "Graph tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Graph"
+  },
+  "summary": "Entities (domains, IPs, emails, accounts, organisations) as nodes and source-linked relationships as edges. Dashed edges are unverified. Click an edge to see its confidence, the reason, and the evidence that supports it.",
+  "how_to": [
+   "Open the Graph tab; click an edge for its evidence.",
+   "Tick 'Show analyst merge decisions' to see merges you recorded.",
+   "To say two entities are the same thing, pick both in the Merge decisions form, write why, and press Record merge. You can split it again later."
+  ],
+  "notes": [
+   "Entities are never merged automatically because names and handles collide."
+  ],
+  "related": [
+   "confidence"
+  ],
+  "keywords": [
+   "relationships",
+   "network",
+   "nodes",
+   "edges",
+   "merge",
+   "same entity"
+  ]
+ },
+ {
+  "id": "tab-timeline",
+  "title": "Timeline tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Timeline"
+  },
+  "summary": "Findings in time order with three different times kept apart: when the source published it, when it was observed, and when this app captured it. 'time unknown' means the source gave no event time.",
+  "keywords": [
+   "chronology",
+   "dates",
+   "when",
+   "observed",
+   "published",
+   "captured"
+  ]
+ },
+ {
+  "id": "tab-map",
+  "title": "Map tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Map"
+  },
+  "summary": "Positions from imported files (photo EXIF, GeoTIFF, tracks) as points with their stated accuracy; where accuracy is unknown it says unknown. The basemap uses OpenStreetMap tiles only if you opt in, with attribution; without it you see points only.",
+  "notes": [
+   "A position inside a file is a claim by the file and can be edited by anyone; the app never infers accuracy."
+  ],
+  "keywords": [
+   "location",
+   "gps",
+   "exif",
+   "geoint",
+   "coordinates",
+   "tiles"
+  ]
+ },
+ {
+  "id": "tab-evidence",
+  "title": "Evidence tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Evidence"
+  },
+  "summary": "The stored raw items: source responses and imported files, each with SHA-256, size and retrieval time. Files are stored inert, hashed, never executed or rendered. Download re-verifies the hash first.",
+  "how_to": [
+   "Tick that you own or are authorised to import the file, choose the file, and it is stored.",
+   "Press 'Download (hash-verified)' to get a verified copy back."
+  ],
+  "related": [
+   "provenance"
+  ],
+  "keywords": [
+   "files",
+   "hash",
+   "sha256",
+   "vault",
+   "raw",
+   "import"
+  ]
+ },
+ {
+  "id": "tab-imports",
+  "title": "Imports tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Imports"
+  },
+  "summary": "Import-only analysis of files you own: email (.eml), SigMF radio recordings, sensor CSV, photos (EXIF), GeoTIFF, packet captures, STIX bundles, SBOMs, firmware (static only), EDGAR submissions, sanctions CSV, ADS-B/AIS/NMEA, PDFs, DOCX and SpiderFoot exports. Each becomes observations with an access class and caveats. Nothing is executed or fetched.",
+  "how_to": [
+   "Tick the ownership/authorisation box first (the file picker stays disabled until you do).",
+   "Leave type on auto unless detection fails, choose the file.",
+   "Read the warnings under the card: PDFs with active content, macros, external links that were NOT fetched.",
+   "Use 'Case search' to full-text search observations, notes and findings."
+  ],
+  "related": [
+   "observations",
+   "tab-evidence"
+  ],
+  "keywords": [
+   "upload",
+   "file",
+   "parse",
+   "pdf",
+   "docx",
+   "pcap",
+   "eml",
+   "photo",
+   "spiderfoot"
+  ],
+  "notes": [
+   "Type names the importer recognises (auto-detect picks one): adsb, ais, ccsds, chain_csv, docx, edgar, eml, firmware, geotiff, gps_nmea, jpeg_exif, pcap, pdf, pulses, sanctions_csv, sbom, sensor_csv, sigmf, spiderfoot, stix, telemetry_csv."
+  ]
+ },
+ {
+  "id": "tab-analysis",
+  "title": "Analysis tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Analysis"
+  },
+  "summary": "The fusion workspace: claims with confidence labels from independent sources, contradictions shown side by side, coverage and gaps, intelligence requirements (the questions the case must answer), and hypotheses (tallies of supporting and contradicting claims, never probabilities). Only you can mark a claim verified.",
+  "how_to": [
+   "Read 'Coverage & gaps' for open requirements and stale or unverified claims.",
+   "Add a requirement: the question this case must answer.",
+   "Use Verify / Dispute / Reject on a claim and Provenance to see its evidence chain.",
+   "Add hypotheses and link claims that support or contradict them."
+  ],
+  "related": [
+   "confidence",
+   "claims",
+   "requirements"
+  ],
+  "keywords": [
+   "claims",
+   "hypotheses",
+   "contradictions",
+   "gaps",
+   "requirements",
+   "fusion",
+   "verify"
+  ]
+ },
+ {
+  "id": "tab-cross-links",
+  "title": "Cross-links tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Cross-links"
+  },
+  "summary": "Suggestions that observations from different disciplines coincide in time or place (for example a photo and a network capture within five minutes), and a unified timeline. A coincidence is not a relationship: nothing is linked until you accept it, and you can revoke it.",
+  "how_to": [
+   "Move the time-window and distance sliders.",
+   "Tick 'include RESTRICTED observations' to include positions and private captures.",
+   "Press Accept or Reject on each suggestion; Revoke undoes an acceptance."
+  ],
+  "keywords": [
+   "correlation",
+   "coincidence",
+   "fusion",
+   "time window",
+   "distance",
+   "unified timeline"
+  ]
+ },
+ {
+  "id": "tab-workflows",
+  "title": "Workflows tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Workflows"
+  },
+  "summary": "Repeatable data-only collection recipes (templates) you add to a case, run on a target, and optionally schedule. Schedules are created off, need explicit enabling, back off after failures and alert on changes. Monitoring a person needs a recorded purpose and acknowledgement.",
+  "how_to": [
+   "Add a template to this case, enter a target, run it and read the summary.",
+   "Create a schedule and enable it deliberately; check Alerts for changes."
+  ],
+  "keywords": [
+   "automation",
+   "schedule",
+   "monitor",
+   "template",
+   "alerts"
+  ]
+ },
+ {
+  "id": "tab-humint",
+  "title": "Humint tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Humint"
+  },
+  "summary": "Human sources recorded by alias only (no real-name field exists), with a consent record, statements recorded as the source gave them (not verified fact), analyst-assigned reliability, and a corroboration view. Withdrawing consent blocks reuse; 'Withdraw and delete content' removes the statements and derived claims.",
+  "keywords": [
+   "witness",
+   "source",
+   "consent",
+   "interview",
+   "statement",
+   "reliability",
+   "corroboration"
+  ]
+ },
+ {
+  "id": "tab-ai",
+  "title": "AI tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "AI"
+  },
+  "summary": "The case-scoped question box that answers only from this case's stored evidence and lists which statements are verified against it. Also holds the case's cloud policy: cloud models are blocked unless this case allows them, and each cloud send needs an approval of the exact content.",
+  "related": [
+   "copilot",
+   "local-ai"
+  ],
+  "keywords": [
+   "ask",
+   "ai",
+   "verified",
+   "cloud",
+   "policy"
+  ]
+ },
+ {
+  "id": "tab-hardware",
+  "title": "Hardware tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Hardware"
+  },
+  "summary": "Receive-only radio/GPS devices and capture sessions. Simulated and replay devices always work; a real receiver needs an ownership assessment and an acknowledgement of local law, every capture has a purpose, a time limit and a stop button, and nothing is ever transmitted.",
+  "notes": [
+   "No physical hardware has been tested in this build."
+  ],
+  "keywords": [
+   "sdr",
+   "rtl-sdr",
+   "gps",
+   "receiver",
+   "capture",
+   "radio"
+  ]
+ },
+ {
+  "id": "tab-notes",
+  "title": "Notes tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Notes"
+  },
+  "summary": "Analyst notes in Markdown (HTML is stripped). Notes are searchable and the Copilot can see them as analyst-written text.",
+  "keywords": [
+   "notes",
+   "markdown",
+   "annotate"
+  ]
+ },
+ {
+  "id": "tab-reports",
+  "title": "Reports tab",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Reports"
+  },
+  "summary": "Generate HTML, Markdown, JSON or PDF reports in four profiles (executive, technical, evidence_pack, multi_int). 'Preview what will be included' shows what is included and what is withheld before anything is written. RESTRICTED items and exact coordinates are withheld unless you tick the sensitive box. Reports are stored encrypted.",
+  "how_to": [
+   "Choose profile and format.",
+   "Press 'Preview what will be included' and read Included / Withheld / Coordinates.",
+   "Press Generate, then Download."
+  ],
+  "related": [
+   "sensitivity"
+  ],
+  "keywords": [
+   "report",
+   "export",
+   "pdf",
+   "briefing",
+   "multi_int"
+  ]
+ },
+ {
+  "id": "policy-and-approval",
+  "title": "Policy and approval",
+  "kind": "concept",
+  "where": {
+   "route": "any"
+  },
+  "summary": "Nothing collects, imports or acts without passing checks you can see: targets are parsed strictly, a preview lists exactly what would be contacted, sources that touch many third-party sites need confirmation, active probing needs a scope authorization, and offline mode blocks all network sources. Checks run at preview and again at execution. AI output can propose but never execute.",
+  "keywords": [
+   "permission",
+   "approval",
+   "authorization",
+   "scope",
+   "active",
+   "passive",
+   "confirm"
+  ]
+ },
+ {
+  "id": "confidence",
+  "title": "Confidence labels",
+  "kind": "concept",
+  "where": {
+   "route": "any"
+  },
+  "summary": "high / medium / low / unknown labels are heuristics from the number of independent source groups and the kind of source, with the reason shown next to each. They are not probabilities. Third-party assertions are low or medium; high needs an authoritative source. Only you can mark a claim 'analyst_verified'.",
+  "keywords": [
+   "confidence",
+   "reliability",
+   "score",
+   "independent",
+   "probability"
+  ]
+ },
+ {
+  "id": "sensitivity",
+  "title": "Sensitivity labels",
+  "kind": "concept",
+  "where": {
+   "route": "any"
+  },
+  "summary": "PUBLIC, INTERNAL, RESTRICTED and SECRET travel with evidence and observations. Positions, tracks, private captures and HUMINT default to RESTRICTED and are withheld from reports, MCP and AI unless you opt in.",
+  "keywords": [
+   "restricted",
+   "secret",
+   "withheld",
+   "private"
+  ]
+ },
+ {
+  "id": "provenance",
+  "title": "Evidence and provenance",
+  "kind": "concept",
+  "where": {
+   "route": "any"
+  },
+  "summary": "Every finding points to the stored raw response (SHA-256 verified on every read) and to the tool and time that produced it. Imports keep a custody event. Custody notes in reports are not a legal chain-of-custody certificate.",
+  "keywords": [
+   "hash",
+   "chain of custody",
+   "source",
+   "raw"
+  ]
+ },
+ {
+  "id": "claims",
+  "title": "Claims and hypotheses",
+  "kind": "concept",
+  "where": {
+   "route": "case",
+   "tab": "Analysis"
+  },
+  "summary": "A claim is a statement you stand behind with cited evidence; independent sources raise its label. A contradiction keeps both positions. A hypothesis only tallies supporting and contradicting claims.",
+  "keywords": [
+   "claim",
+   "hypothesis",
+   "contradiction"
+  ]
+ },
+ {
+  "id": "requirements",
+  "title": "Intelligence requirements",
+  "kind": "concept",
+  "where": {
+   "route": "case",
+   "tab": "Analysis"
+  },
+  "summary": "The questions an investigation must answer. Each is open until supporting evidence is attached; unanswered ones are listed as gaps and drive next-step recommendations.",
+  "keywords": [
+   "question",
+   "objective",
+   "gap",
+   "answered"
+  ]
+ },
+ {
+  "id": "observations",
+  "title": "Observations and access classes",
+  "kind": "concept",
+  "where": {
+   "route": "case",
+   "tab": "Imports"
+  },
+  "summary": "Facts a parser extracted from a file you supplied. Access class says how the material was obtained: PUBLIC, OWNED_AUTHORIZED, CONSENTED, IMPORTED or SIMULATION. An observation is never a verified conclusion.",
+  "keywords": [
+   "access class",
+   "imported",
+   "simulation"
+  ]
+ },
+ {
+  "id": "offline-mode",
+  "title": "Offline mode",
+  "kind": "feature",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "Settings switch that denies every network source at plan time and again at run time. Saved cases stay readable. Local AI keeps working because it only talks to loopback.",
+  "keywords": [
+   "no internet",
+   "air gap",
+   "pause network"
+  ]
+ },
+ {
+  "id": "backups",
+  "title": "Backups and encryption",
+  "kind": "feature",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "The database (SQLCipher), evidence vault and reports are encrypted with one master key kept in the OS credential store. Backups are separate encrypted containers protected by your passphrase (8+ characters). A lost master key or passphrase cannot be recovered. Restore always writes into a new folder.",
+  "how_to": [
+   "Settings -> Encryption & backup -> enter a passphrase -> Create encrypted backup.",
+   "Restore by API into a new directory, then start the app with that data folder."
+  ],
+  "keywords": [
+   "backup",
+   "restore",
+   "passphrase",
+   "master key",
+   "vault key",
+   "recovery"
+  ]
+ },
+ {
+  "id": "updates",
+  "title": "Updates",
+  "kind": "feature",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "The app never updates itself. Enter your update server address in Settings -> Updates, press Check (the manifest signature is verified against the key built into the app), then 'Download and verify' (SHA-256 checked); then you run the file yourself. Publishing is done with scripts/update_tool.py.",
+  "keywords": [
+   "update",
+   "upgrade",
+   "version",
+   "manifest",
+   "signed"
+  ]
+ },
+ {
+  "id": "plugins",
+  "title": "Plugins",
+  "kind": "feature",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "Third-party collection plugins run out of process, never touch the network themselves, and stay disabled until an admin reviews the manifest and accepts the exact file hash. Any change disables them again.",
+  "keywords": [
+   "plugin",
+   "extension",
+   "sdk"
+  ]
+ },
+ {
+  "id": "mcp",
+  "title": "MCP server",
+  "kind": "feature",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "An optional read-only server that lets an external AI client read the cases you name when you start it. Anything that would change data appears under Settings -> MCP approvals and waits for you.",
+  "keywords": [
+   "mcp",
+   "claude desktop",
+   "approvals"
+  ]
+ },
+ {
+  "id": "local-ai",
+  "title": "Local AI and models",
+  "kind": "feature",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "AI is off until enabled. Local models run through Ollama or a llama.cpp server on loopback; you can add any installed model as a profile. Cloud profiles need an https URL and a stored key, the case must allow cloud use, and each send needs approval of the exact content. Answers cite stored evidence; citations the model invents are rejected.",
+  "keywords": [
+   "ollama",
+   "llama.cpp",
+   "model",
+   "profile",
+   "cloud",
+   "local"
+  ]
+ },
+ {
+  "id": "egress-selfcheck",
+  "title": "Start-up network self-check",
+  "kind": "feature",
+  "where": {
+   "route": "overview"
+  },
+  "summary": "For 90 seconds after launch the app samples the connections of its own processes and reports whether any went outside this computer. 'engine_only' on Windows is Microsoft's WebView2 browser engine contacting Microsoft by itself. Connections made after you start an action are listed separately.",
+  "keywords": [
+   "network",
+   "privacy",
+   "telemetry",
+   "outbound"
+  ]
+ }
+]

@@ -35,7 +35,7 @@ export default function AdminPanel() {
     <>
       {err && <ErrorBox error={err} />}
       <h3>AI</h3>
-      <div className="card">
+      <div className="card" data-tour="settings-ai">
         <label className="row"><input type="checkbox" style={{ width: "auto" }} checked={!!settings.data?.ai_enabled} onChange={(e) => put.mutate({ ai_enabled: e.target.checked })} /> Enable AI features (off by default; nothing else depends on it)</label>
         <p className="muted">Local models: Ollama or any llama.cpp-compatible server on this machine, any model name you like. Cloud models are optional and need a per-case allowance plus approval of each payload.</p>
         <form className="row" onSubmit={(e) => { e.preventDefault(); addProf.mutate(); }}>
@@ -68,7 +68,7 @@ export default function AdminPanel() {
             <button className="primary" onClick={() => decide.mutate({ id: a.id, ok: true })}>Approve</button><button onClick={() => decide.mutate({ id: a.id, ok: false })}>Deny</button></div>))}
       </div>
       <h3>Encryption &amp; backup</h3>
-      <div className="card">
+      <div className="card" data-tour="settings-backup">
         {vault.data && <p>Evidence vault: <Badge v={vault.data.key_available ? "healthy" : "failed"} /> {vault.data.encrypted_objects}/{vault.data.objects} objects encrypted{vault.data.plaintext_objects > 0 && <> · <button onClick={() => encrypt.mutate()}>Encrypt the {vault.data.plaintext_objects} older object(s)</button></>}
           <br /><span className="muted">{vault.data.note} Key: OS credential store. Losing it makes encrypted evidence unreadable; keep an encrypted backup.</span></p>}
         <div className="row"><input type="password" aria-label="Backup passphrase" placeholder="Backup passphrase (8+ characters)" value={pass} onChange={(e) => setPass(e.target.value)} style={{ maxWidth: 320 }} />

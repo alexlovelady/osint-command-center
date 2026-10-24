@@ -109,6 +109,12 @@ def run_checks(encrypted: bool) -> None:
         kr = data / "kr.py"
         kr.write_text("import keyring, keyring.backends\nprint(type(keyring.get_keyring()).__name__)\n")
         k = subprocess.run([str(EXE), "--run-script", str(kr)], check=False, capture_output=True, text=True, timeout=60, env=env)
+        cop = c.post("/copilot/chat", json={"text": "How do I create a case?", "mode": "tutor", "ctx": {"route": "cases"}})
+        cev = [json.loads(x) for x in cop.text.splitlines() if x.strip()]
+        cfin = next((e for e in cev if e["type"] == "final"), None)
+        check("Copilot answers from the bundled knowledge base", cop.status_code == 200 and bool(cfin) and "Create case" in cfin["text"] and any(x["source"] == "tutorial:create-case" for x in cfin["sources"]), (cfin["text"][:50] if cfin else cop.text[:80]))
+        tut = c.get("/copilot/tutorials/first-search")
+        check("Copilot tutorials ship in the bundle", tut.status_code == 200 and len(tut.json()["steps"]) >= 4, str(tut.status_code))
         check("keyring backend importable in the bundle", k.returncode == 0 and k.stdout.strip() != "", k.stdout.strip() or k.stderr[-200:])
 
         r = c.post("/system/shutdown")

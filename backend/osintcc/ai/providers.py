@@ -9,7 +9,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import re
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
@@ -58,15 +58,20 @@ class Provider:
     async def chat(self, messages: list[Message], max_tokens: int = 1200, temperature: float = 0.1) -> str:
         raise NotImplementedError
 
+    async def chat_stream(self, messages: list[Message], max_tokens: int = 1200, temperature: float = 0.1) -> AsyncIterator[str]:
+        """Yield the answer in pieces as the model produces them. The default yields the whole reply at once."""
+        yield await self.chat(messages, max_tokens, temperature)
+
 
 class OllamaProvider(Provider):
     provider_type = "ollama"
 
-    def __init__(self, model: str, base_url: str = "http://127.0.0.1:11434", transport: httpx.AsyncBaseTransport | None = None):
+    def __init__(self, model: str, base_url: str = "http://127.0.0.1:11434", transport: httpx.AsyncBaseTransport | None = None, num_ctx: int = 8192):
         super().__init__(model)
         if not is_loopback_url(base_url):
             raise ProviderError("local Ollama profiles must use a loopback address")
-        self.base, self.transport = base_url.rstrip("/"), transport
+        # Ollama's default context window is small and silently drops the START of a long prompt (the system rules); ask for a real one
+        self.base, self.transport, self.num_ctx = base_url.rstrip("/"), transport, num_ctx
 
     def _client(self) -> httpx.AsyncClient:
         return httpx.AsyncClient(transport=self.transport, timeout=900, trust_env=False)  # CPU-only machines can be slow
@@ -85,7 +90,7 @@ class OllamaProvider(Provider):
 
     async def chat(self, messages, max_tokens=1200, temperature=0.1) -> str:
         body = {"model": self.model, "stream": False, "think": False, "messages": [m.__dict__ for m in messages],
-                "options": {"num_predict": max_tokens, "temperature": temperature}}
+                "options": {"num_predict": max_tokens, "temperature": temperature, "num_ctx": self.num_ctx}}
         try:
             async with self._client() as c:
                 r = await c.post(f"{self.base}/api/chat", json=body)
@@ -94,6 +99,57 @@ class OllamaProvider(Provider):
             return re.sub(r"<think>.*?</think>\s*", "", r.json()["message"]["content"], flags=re.DOTALL)
         except (httpx.HTTPError, ValueError, KeyError) as exc:
             raise ProviderUnavailable(f"Ollama call failed ({type(exc).__name__})") from exc
+
+
+    async def chat_stream(self, messages, max_tokens=1200, temperature=0.1):
+        body = {"model": self.model, "stream": True, "think": False, "messages": [m.__dict__ for m in messages],
+                "options": {"num_predict": max_tokens, "temperature": temperature, "num_ctx": self.num_ctx}}
+        hide = _ThinkFilter()
+        try:
+            async with self._client() as c:
+                async with c.stream("POST", f"{self.base}/api/chat", json=body) as r:
+                    if r.status_code != 200:
+                        raise ProviderUnavailable(f"Ollama HTTP {r.status_code}")
+                    async for line in r.aiter_lines():
+                        if not line.strip():
+                            continue
+                        try:
+                            piece = json.loads(line).get("message", {}).get("content", "")
+                        except ValueError:
+                            continue
+                        out = hide.feed(piece)
+                        if out:
+                            yield out
+        except (httpx.HTTPError, ValueError, KeyError) as exc:
+            raise ProviderUnavailable(f"Ollama call failed ({type(exc).__name__})") from exc
+
+
+class _ThinkFilter:
+    """Drops <think>…</think> spans from a token stream (some models emit them even when asked not to)."""
+
+    def __init__(self) -> None:
+        self.buf, self.inside = "", False
+
+    def feed(self, piece: str) -> str:
+        self.buf += piece
+        out = ""
+        while True:
+            if self.inside:
+                end = self.buf.find("</think>")
+                if end < 0:
+                    self.buf = self.buf[-8:]  # keep a possible partial closing tag
+                    return out
+                self.buf, self.inside = self.buf[end + 8:].lstrip(), False
+            else:
+                start = self.buf.find("<think>")
+                if start >= 0:
+                    out += self.buf[:start]
+                    self.buf, self.inside = self.buf[start + 7:], True
+                    continue
+                keep = max((i for i in range(1, 7) if self.buf.endswith("<think>"[:i])), default=0)
+                out += self.buf[: len(self.buf) - keep]
+                self.buf = self.buf[len(self.buf) - keep:]
+                return out
 
 
 class OpenAICompatProvider(Provider):
@@ -145,6 +201,29 @@ class OpenAICompatProvider(Provider):
             raise ProviderUnavailable(f"call failed ({type(exc).__name__})") from exc
 
 
+    async def chat_stream(self, messages, max_tokens=1200, temperature=0.1):
+        body = {"model": self.model, "messages": [m.__dict__ for m in messages], "max_tokens": max_tokens, "temperature": temperature, "stream": True}
+        try:
+            async with self._client() as c:
+                async with c.stream("POST", f"{self.base}/v1/chat/completions", json=body, headers=self._headers()) as r:
+                    if r.status_code != 200:
+                        raise ProviderUnavailable(f"endpoint HTTP {r.status_code}")
+                    async for line in r.aiter_lines():
+                        if not line.startswith("data:"):
+                            continue
+                        data = line[5:].strip()
+                        if data == "[DONE]":
+                            return
+                        try:
+                            piece = json.loads(data)["choices"][0].get("delta", {}).get("content") or ""
+                        except (ValueError, KeyError, IndexError):
+                            continue
+                        if piece:
+                            yield piece
+        except (httpx.HTTPError, ValueError) as exc:
+            raise ProviderUnavailable(f"call failed ({type(exc).__name__})") from exc
+
+
 class FixtureProvider(Provider):
     """Deterministic stand-in for tests and demos: no model, no network."""
     provider_type = "fixture"
@@ -170,3 +249,8 @@ class FixtureProvider(Provider):
                            "inferences": ["These records are consistent with routine registration data."],
                            "contradictions": [], "unknowns": ["Nothing here establishes who operates the asset."],
                            "next_steps": ["Review the cited evidence."], "proposed_actions": []})
+
+    async def chat_stream(self, messages, max_tokens=1200, temperature=0.1):
+        text = await self.chat(messages, max_tokens, temperature)
+        for i in range(0, len(text), 16):
+            yield text[i:i + 16]

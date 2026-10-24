@@ -51,7 +51,7 @@ Opt-in live check (real public sources, low volume, reserved domain): `uv run py
   ADS-B/AIS/NMEA, PDF/DOCX, SpiderFoot — each stored inert, parsed offline, with its access class and caveats.
 - AES-256-GCM evidence vault, SQLCipher database, encrypted reports, provenance on every finding, claims with independence-based confidence labels, contradictions,
   hypotheses, requirements, reversible merges, **cross-discipline correlation suggestions** and a unified timeline.
-- Workflows and an off-by-default scheduler; optional local/cloud AI (off by default, cited answers only); read-only MCP server; sandboxed plugins;
+- Workflows and an off-by-default scheduler; optional local/cloud AI (off by default, cited answers only) with an in-app **Copilot & Tutor** (modes, per-case history, next-step recommendations, approval-gated actions, guided walkthroughs; see `docs/copilot.md`); read-only MCP server; sandboxed plugins;
   receive-only hardware layer with simulated devices.
 - Reports (executive / technical / evidence pack / multi-INT; HTML, Markdown, JSON, PDF) with a preview of what is included and withheld;
   passphrase-encrypted backups; tamper-evident audit chain; case purge with preview.
