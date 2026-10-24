@@ -21,6 +21,13 @@ def default_data_dir() -> Path:
     return base / "osintcc"
 
 
+def _builtin_update_key() -> str:
+    try:
+        return (Path(__file__).resolve().parent.parent / "setup" / "update_key.pub").read_text(encoding="utf8").strip()
+    except OSError:
+        return ""
+
+
 @dataclass
 class Settings:
     data_dir: Path = field(default_factory=default_data_dir)
@@ -57,7 +64,7 @@ class Settings:
 
     # Update check: a signed manifest is fetched ONLY when the user presses "check"; nothing is downloaded or installed.
     update_manifest_url: str = field(default_factory=lambda: os.environ.get("OSINTCC_UPDATE_URL", ""))
-    update_public_key: str = field(default_factory=lambda: os.environ.get("OSINTCC_UPDATE_KEY", ""))  # Ed25519 public key, hex
+    update_public_key: str = field(default_factory=lambda: os.environ.get("OSINTCC_UPDATE_KEY") or _builtin_update_key())  # Ed25519 public key, hex
 
     @property
     def tools_state_path(self) -> Path:

@@ -57,8 +57,10 @@ class AppState:
     request_shutdown: Callable[[], None] | None = None  # set by run(): makes uvicorn exit gracefully
     db_key: bytes | None = None  # SQLCipher key when the database is encrypted
     setup_tasks: dict = field(default_factory=dict)  # first-run setup progress (in memory)
+    secrets: Any = None  # SecretStore
     egress: Any = None  # startup egress self-check monitor (see selfcheck/egress.py)
     update_http: Any = None  # test/dev seam: SafeHttp used by the update check
+    update_transport: Any = None  # test/dev seam: httpx transport used by the update download
 
 
 def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAdapter] | None = None,
@@ -87,22 +89,17 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
     adapters = adapters or default_adapters(settings)
     http = SafeHttp(allow_private=settings.allow_private_destinations)
 
-    def _keyring_secret(name: str) -> str | None:
-        try:
-            import keyring
-            return keyring.get_password("osintcc", name)
-        except Exception:
-            return None
-
     def _default_ctx() -> AdapterContext:
         with sm() as db:
             row = db.get(Setting, "edgar_contact")
             cfg = {"edgar_user_agent": row.value_json if row else None, "allow_private": settings.allow_private_destinations}
-        return AdapterContext(http=http, config=cfg, secret=_keyring_secret)
+        return AdapterContext(http=http, config=cfg, secret=state.secrets.get)
 
     ctx_factory = ctx_factory or _default_ctx
     runner = JobRunner(sm, settings, vault, adapters, ctx_factory)
     state = AppState(settings, sm, vault, adapters, runner, tokens={settings.session_token: LOCAL_USER_ID}, db_key=db_key)
+    from .secrets_store import SecretStore
+    state.secrets = SecretStore(sm, vault)
     from .workflows import Scheduler
     scheduler = Scheduler(state)
     state.scheduler = scheduler

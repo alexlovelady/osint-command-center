@@ -16,6 +16,7 @@ recorded/synthetic responses or a fake binary, never against the real thing. **A
 | `lookalike` | local | nothing | Local, deterministic, tested |
 | `subfinder` | external CLI | Setup installs it | **Live**: real v2.17.0 run on example.com returned 25 517 names; the adapter now caps at 2000 and says so |
 | `sherlock`, `maigret` | external CLI | Setup installs them | **Output format verified** against the real tools (one known public account on one/few sites); never run across their full site lists |
+| `sherlock`, `maigret` (full default runs) | external CLI | Setup installs them | **Live**: `octocat` → 102 and 147 candidates, parsers match the tools' own counts |
 | `amass` | external CLI | Setup installs it | v5.1.1 **starts and accepts the flags**; a passive run for example.com produced no output within its time limit, so name parsing is **unverified**. The run exposed an orphaned-helper-process bug (fixed, with a regression test) |
 | `theharvester` | external CLI | Linux only | v4.11.1 installs and starts on Linux (container); see `docs/progress.md` for the real run |
 | `tcp_connect` | active | `OSINTCC_ENABLE_ACTIVE=1` + scope authorization | Local loopback tests only; not in the default registry |
@@ -43,6 +44,9 @@ real files to be rejected with a clear error rather than half-parsed.
 | NSIS/MSI installer, code signing | **Not built** (see `docs/packaging.md`) |
 | Clean-VM install test | **Not possible here** (Windows 11 Home has no Hyper-V/Sandbox) — unverified |
 | Browser E2E + axe (Edge, mocked network) | **Live**: `pnpm e2e` |
+| Windows installer (NSIS) | **Built and install/launch/close/uninstall tested** on this machine; not on a clean PC |
+| Update server (signed manifest + verified download) | **Live** on loopback with the real installer; not over a LAN/internet host |
+| GitHub Actions | **Ran**: all jobs green except the desktop job (fixed afterwards; re-run pending) |
 | Packet capture of app launch | **Linux: done** (container, nothing from the app). **Windows: connection attribution done** (nothing from our code; WebView2 talks to Microsoft); real `pktmon` capture done: the only app-tree traffic is WebView2 → `substrate.office.com` |
 | Screen readers (NVDA/Narrator) | Not tested; only automated axe checks |
 

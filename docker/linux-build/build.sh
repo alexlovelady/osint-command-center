@@ -19,6 +19,7 @@ echo "=== sidecar (PyInstaller)"
 uv run python scripts/build_sidecar.py 2>&1 | tail -2
 echo "=== desktop shell (cargo test + release build)"
 cd apps/desktop/src-tauri
+mkdir -p binaries && cp /work/dist/sidecar/osintcc-backend-x86_64-unknown-linux-gnu binaries/   # tauri.conf lists it as externalBin
 cargo test 2>&1 | grep "test result"
 cargo build --release --features tauri/custom-protocol 2>&1 | tail -2
 cd /work

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ErrorBox, Loading } from "../components/ui";
 import { api, getToken, setToken } from "../lib/api";
 import AdminPanel from "./AdminPanel";
+import UpdatesCard from "./UpdatesCard";
 
 interface S { offline: boolean; max_concurrency: number; data_dir: string }
 
@@ -26,6 +27,7 @@ export default function Settings() {
         </div>
       )}
       <AdminPanel />
+      <UpdatesCard />
       <h3>Session</h3>
       <div className="card row">
         <input type="password" aria-label="Session token" placeholder={getToken() ? "token set for this tab" : "paste session token"} value={tok} onChange={(e) => setTok(e.target.value)} style={{ maxWidth: 360 }} />

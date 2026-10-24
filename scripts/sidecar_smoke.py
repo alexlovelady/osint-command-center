@@ -46,7 +46,7 @@ def docx() -> bytes:
 def run_checks(encrypted: bool) -> None:
     """One full pass. encrypted=True uses a key from the environment (never the OS credential store) and checks the files on disk."""
     data = Path(tempfile.mkdtemp(prefix="osintcc-frozen-"))
-    env = {**os.environ, "OSINTCC_DATA_DIR": str(data), "OSINTCC_EGRESS_WINDOW_S": "4"}
+    env = {**os.environ, "OSINTCC_DATA_DIR": str(data), "OSINTCC_EGRESS_WINDOW_S": "4", "OSINTCC_UPDATE_URL": "http://127.0.0.1:9/manifest.json"}
     if encrypted:
         env.update(OSINTCC_VAULT_ENCRYPTION="required", OSINTCC_VAULT_KEY=base64.b64encode(os.urandom(32)).decode())
     else:
@@ -69,6 +69,8 @@ def run_checks(encrypted: bool) -> None:
         c = httpx.Client(base_url=f"http://127.0.0.1:{kv['port']}/api/v1", headers={"Authorization": "Bearer " + kv["token"]}, timeout=60)
         r = c.get("/health/ready")
         check("health ready (migrations ran from bundled files)", r.status_code == 200 and r.json()["status"] == "ready", json.dumps(r.json())[:120])
+        up = c.post("/updates/check")  # points at a closed port: getting a network error (not "not configured") proves the signing key is bundled
+        check("built-in update public key is bundled (check reaches the network step)", up.status_code == 502 and up.json().get("code") == "network_error", f"{up.status_code} {up.text[:80]}")
         eg = {}
         for _ in range(30):  # the start-up egress self-check runs with a short window here (OSINTCC_EGRESS_WINDOW_S)
             eg = c.get("/system/egress-check").json()

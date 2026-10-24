@@ -8,15 +8,15 @@ the command shown on this machine; anything not run is listed under *Not verifie
 
 | Check | Result |
 |---|---|
-| `uv run pytest -q`, Windows, Python 3.14 | **440 passed, 0 failed, 0 warnings** (offline) |
-| Same suite on Python **3.12.14** and **3.13.15** (Windows) | **433 passed** on each when last run (before the self-check tests were added); `mypy` clean |
-| Same suite on Linux (Ubuntu 22.04 container, Python 3.12.15) | **439 passed, 1 skipped** (the real-ExifTool test: not installed in that container); `ruff` and `mypy` clean |
+| `uv run pytest -q`, Windows, Python 3.14 | **460 passed, 0 failed, 0 warnings** (offline) |
+| Same suite on Python **3.12.14** and **3.13.15** (Windows) | **460 passed** on each; `mypy` clean |
+| Same suite on Linux (Ubuntu 22.04 container, Python 3.12.15) | **459 passed, 1 skipped** (the real-ExifTool test: not installed in that container); `ruff` and `mypy` clean |
 | Backend coverage (`--cov=osintcc`) | **89%** overall (9772 statements). db/encrypt 95%, reporting/store 86%, ingest/exiftool 91%, vault 95%, policy 82–97%. Lowest: `setup/installer.py` 67% (the real download/extract/venv paths are exercised by real installs, not unit tests), `server.py` 0% (covered by the frozen smoke test) |
 | `ruff check backend tests scripts`, `mypy` (96 files) | clean / `no issues found` |
-| Web: `tsc`, `eslint`, `vitest`, `vite build` | clean · **19 tests** · build OK |
+| Web: `tsc`, `eslint`, `vitest`, `vite build` | clean · **22 tests** · build OK |
 | Browser E2E (`pnpm e2e`, Playwright 1.60 + system Edge, mocked network) | **7 passed**, including axe WCAG 2.0/2.1 A+AA with no serious/critical violations on every page (now incl. Setup) and all 16 case tabs, light and dark |
 | `cargo test` (shell) | 2 passed on Windows and in the Linux container |
-| Frozen backend, `scripts/sidecar_smoke.py` | **30/30 on Windows and 30/30 on Linux** (includes the start-up egress self-check): each run does a plain pass and an **encrypted** pass (database file is ciphertext, report stored as `.enc` yet downloadable, MCP `initialize`, plugin runner, keyring backend, graceful exit) plus the `setup status` subcommand |
+| Frozen backend, `scripts/sidecar_smoke.py` | **32/32 on Windows and 32/32 on Linux** (includes the start-up egress self-check and the built-in update key): each run does a plain pass and an **encrypted** pass (database file is ciphertext, report stored as `.enc` yet downloadable, MCP `initialize`, plugin runner, keyring backend, graceful exit) plus the `setup status` subcommand |
 | Linux desktop shell (container, Xvfb) | Built (4 MB) and **run**: the real window renders the first-run Setup page (`docs/evidence/linux-egress/shell.png`), starts the bundled backend, and `kill -9` of the shell left **0** backend processes |
 | **Real local model** (`scripts/ai_live_check.py`) | `huihui_ai/qwen3-abliterated:8b` (5.0 GB) answered through the app's retrieval → prompt → model → citation-verification pipeline: grounded answer with a verified evidence id, in **17 s**; CPU-only generation **5.9 tokens/s** |
 | **Real tool installs** (Setup code, Windows) | Subfinder 2.17.0, Amass 5.1.1, ExifTool 13.59, Sherlock 0.16.2, Maigret 0.6.6 installed under `%APPDATA%\osintcc\tools`; every download matched the publisher's SHA-256 and each reports its version |
@@ -28,6 +28,20 @@ the command shown on this machine; anything not run is listed under *Not verifie
 | Secret scan (`scripts/secret_scan.py --dist`) | 269 files + shipped binaries: 0 findings |
 | Benchmarks | `docs/benchmarks.md`: **no measurable overhead from SQLCipher/encrypted vault** at 3000 rows |
 | Generated docs | `scripts/gen_docs.py --check` current; `tests/integration/test_api_examples.py` replays the API examples |
+
+## This round (installer, keys, updates, tool runs, capture, CI)
+
+| Item | Result |
+|---|---|
+| **Windows installer** (NSIS, per-user, unsigned) | Built (58 MB). Silent install to a test folder, launch (bundled backend started, DB created), clean close, silent uninstall: all worked. Not tested on a clean PC |
+| **API-key spot in Setup** | Keys (VirusTotal, urlscan, Shodan, Censys, OpenCorporates) + EDGAR contact entered in Setup/Settings; stored in the OS credential store or, with none, sealed in the encrypted DB; never returned or logged. 4 backend + 1 UI test |
+| **Update server** | `scripts/update_tool.py` (keygen/publish/serve/verify), signed per-platform manifests, verified download, Settings → Updates UI. Real flow with the packaged backend + the real installer: check → verified signature → 58 MB download → hash matched. A bug found by this run: the public key had not been bundled into the frozen app (the smoke test now catches it). Private key is at `%APPDATA%\osintcc-release\update-signing.key` (back it up) |
+| **Sherlock, real full run** (`octocat`, default flags) | success, **102 profile candidates in 30 s**; the count equals the tool's own "Search completed with 102 results" |
+| **Maigret, real full run** (`octocat`) | success, **147 candidates in 19 s**; one is a site's front page ("Discord: https://discord.com"): a false positive the tool itself reports, kept as a low-confidence lead |
+| **Amass 5.1.1, real run** (iana.org) | The adapter now does `enum` + `subs -names` and returns success with 0 names and an explicit warning. Amass v5 stores results in its own database and its passive mode finds nothing without API-keyed data sources (all are commented out in its default config); enabling the keyless ones I could find still produced nothing and `-timeout` was not honoured. **Real names were never obtained, so name parsing is verified only with fixtures** |
+| **pktmon parser** | Windows pktmon writes Wi-Fi (802.11) frames under the Ethernet link type, which hid every TCP flow. `net.py` now reads 802.11 data frames: the same capture went from 16 UDP flows to **251 flows incl. TLS server names** (`substrate.office.com` among them; the two flows from `10.5.1.226:61136/61137` match the ports `netstat` attributed to WebView2). 2 new tests |
+| **CI on GitHub** | First runs: backend (Windows+Linux × Python 3.12/3.13/3.14) green, web incl. E2E green, supply-chain green, Linux container build + egress green; **desktop `cargo test` failed** (the shell embeds the built UI and CI had not built it) → fixed; actions now pinned to commit SHAs |
+| **WebView2 firewall script** | `scripts/windows/block-webview2-egress.ps1` (`-Mode Substrate` default / `All`, `-WhatIf`, `-Remove`, admin required). Dry-run tested; **not applied** to this machine. Caveat in its header: every WebView2 app shares `msedgewebview2.exe`, so any rule also affects them |
 
 ## Network egress ("packet capture")
 
@@ -87,13 +101,13 @@ process, endpoint + audit event, opt-out), 3 UI tests, frozen-build smoke on Win
 ## Not verified / not built (read this)
 
 1. **WebView2's connection to `substrate.office.com`** (Microsoft 365) on Windows is not stopped by any browser switch I tried (background-networking/sync/component-update off, a black-hole proxy, and blocking all non-local name resolution all left it unchanged). It is made by Microsoft's runtime, not our code. Remedies: a Windows Firewall rule for `msedgewebview2.exe` under `%LOCALAPPDATA%\local.osintcc.desktop\EBWebView`, or use the Linux build.
-2. **Installer and code signing.** Portable zip (Windows) and tarball (Linux) only; unsigned. NSIS/MSI would need a toolchain download that was not approved.
+2. **Code signing.** The Windows installer, zip and Linux tarball are unsigned (you chose that); SmartScreen will warn.
 3. **Clean-machine installs** (either OS). The Linux shell has only run in a container under a virtual display.
-4. **Amass 5.1.1** produced no output within 5.5 minutes for example.com; its parsing of real names is unverified. Sherlock/Maigret were checked on one well-known public account, not across their full site lists.
+4. **Amass 5.1.1** found no names without API-keyed data sources, so its name parsing was exercised only with fixtures.
 5. **Services tested only with mocks**: EDGAR, Overpass, VirusTotal, urlscan, Shodan, Censys, OpenCorporates, GDELT (no keys supplied).
 6. **Real MCP client** never connected. **Real hardware** never attached (you confirmed this is expected). Ollama's own Windows installer path was not exercised (Ollama was already installed).
 7. **Keyring on a desktop Linux session** (Secret Service) was not exercised; Linux checks used `OSINTCC_VAULT_KEY`. A headless Linux box without it will refuse to start by design.
-8. **Update flow**: signed-manifest check only; no server, key or installer.
+8. **Update flow** was tested against a local server only (loopback), never over a LAN/internet host; there is exactly one signing key.
 9. **CI** (`.github/workflows/ci.yml`): the repository was pushed (private, `github.com/alexlovelady/osint-command-center`) after everything else was verified, so the workflow's first GitHub run had not been seen when this was written; its Python 3.12–3.14 × Windows/Linux matrix and Linux container job are untested there.
 10. **Screen readers**, low-spec hardware performance and UI frame rates were not tested. The model is slow on weak CPUs (5.9 tok/s here).
 11. The model is a community "abliterated" Qwen3 fine-tune, not a vendor release; its outputs are never treated as evidence and the app's own controls are the safety boundary.
@@ -119,7 +133,7 @@ This session:
 
 ## Next actions (if you continue)
 
-1. Decide what to do about WebView2's `substrate.office.com` traffic (firewall rule, or ship the UI in a different engine).
-2. Decide on an installer (NSIS download) and a signing certificate; test the portable builds on a clean Windows PC and a stock Ubuntu desktop.
-3. Give the keyed services real API keys and run them once; connect a real MCP client.
-4. Let `ci.yml` run and pin its actions to commit SHAs.
+1. Decide about WebView2's `substrate.office.com` traffic (the firewall script, or a bundled fixed-version runtime so a firewall rule can be app-specific).
+2. Test the installer and the Linux tarball on a clean PC and a stock Ubuntu desktop.
+3. Enter real API keys in Setup and run the keyed services once; connect a real MCP client later.
+4. Back up the update-signing private key.

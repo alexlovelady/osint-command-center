@@ -1,6 +1,6 @@
 # This workflow had NOT run on GitHub when it was written (the repository was created afterwards). Every command below was run locally on
 # Windows and, for the backend, in an Ubuntu 22.04 container; see docs/progress.md for what was and was not verified.
-# Actions are pinned to major tags; pin to commit SHAs before relying on this for releases.
+# Every third-party action is pinned to a commit SHA (the tag it came from is in the trailing comment).
 name: ci
 on:
   push:
@@ -17,8 +17,8 @@ jobs:
         python: ["3.12", "3.13", "3.14"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
       - run: uv sync --locked --python ${{ matrix.python }}
       - run: uv run ruff check backend tests scripts
       - run: uv run mypy
@@ -30,12 +30,12 @@ jobs:
   web:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11 }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24 }
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
       - run: uv sync --locked
       - run: pnpm install --frozen-lockfile
         working-directory: apps/web
@@ -55,8 +55,17 @@ jobs:
   desktop:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with: { version: 11 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24 }
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - run: pnpm install --frozen-lockfile && pnpm build   # the shell embeds the built UI at compile time
+        working-directory: apps/web
+      - run: New-Item -ItemType Directory -Force binaries | Out-Null; New-Item -ItemType File -Force binaries/osintcc-backend-x86_64-pc-windows-msvc.exe | Out-Null   # tauri.conf lists the sidecar as externalBin; tests do not run it
+        shell: pwsh
+        working-directory: apps/desktop/src-tauri
       - run: cargo test --locked
         working-directory: apps/desktop/src-tauri
       - run: cargo install cargo-audit --locked
@@ -66,8 +75,8 @@ jobs:
   supply-chain:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
       - run: uv sync --locked
       - run: uv export --no-dev --no-hashes --format requirements-txt -o req.txt
       - run: uv tool run pip-audit -r req.txt --no-deps --disable-pip
@@ -76,22 +85,26 @@ jobs:
     needs: [backend, web, desktop]
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11 }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24 }
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
       - run: uv sync --locked
       - run: pnpm install --frozen-lockfile && pnpm build
         working-directory: apps/web
       - run: uv run python scripts/build_sidecar.py
-      - run: ../web/node_modules/.bin/tauri build --no-bundle
+      - run: |
+          New-Item -ItemType Directory -Force apps/desktop/src-tauri/binaries | Out-Null
+          Copy-Item dist/sidecar/osintcc-backend-x86_64-pc-windows-msvc.exe apps/desktop/src-tauri/binaries/
+        shell: pwsh
+      - run: ../web/node_modules/.bin/tauri build --bundles nsis
         working-directory: apps/desktop
       - run: uv run python scripts/sidecar_smoke.py
       - run: uv run python scripts/release.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: portable-windows-unsigned
           path: dist/release/*
@@ -100,17 +113,17 @@ jobs:
     needs: [backend]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with: { version: 11 }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 24 }
       - run: pnpm install --frozen-lockfile && pnpm build
         working-directory: apps/web
       - run: docker build -t osintcc-linux-build docker/linux-build
       - run: mkdir -p dist/linux && docker run --rm -v "$PWD:/src:ro" -v "$PWD/dist/linux:/out" osintcc-linux-build bash /src/docker/linux-build/build.sh
       - run: docker run --rm --cap-add NET_RAW --cap-add NET_ADMIN -v "$PWD:/src:ro" -v "$PWD/dist/linux:/out" osintcc-linux-build bash /src/docker/linux-build/egress.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: linux-portable-unsigned
           path: dist/linux/linux/*

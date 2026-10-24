@@ -9,6 +9,7 @@ What exists, how it was verified, and what is deliberately not done.
 | Web UI | `pnpm --dir apps/web build` | `apps/web/dist` (≈590 kB JS, not code-split) |
 | Backend sidecar | `uv run python scripts/build_sidecar.py` | `dist/sidecar/osintcc-backend.exe`, single file, ≈54 MB (PyInstaller 6, Python 3.14); also copied as `osintcc-backend-x86_64-pc-windows-msvc.exe` (Tauri `externalBin` naming) |
 | Desktop shell | `cd apps/desktop && ../web/node_modules/.bin/tauri build --no-bundle` | `src-tauri/target/release/osintcc-desktop.exe`, ≈3.3 MB, Tauri 2.12 |
+| **Windows installer** | copy `dist/sidecar/osintcc-backend-x86_64-pc-windows-msvc.exe` to `apps/desktop/src-tauri/binaries/`, then `cd apps/desktop && ../web/node_modules/.bin/tauri build --bundles nsis` | `bundle/nsis/OSINT Command Center_0.1.0_x64-setup.exe`, 58 MB, per-user (no admin), unsigned; `release.py` copies it to `dist/release/` with its SHA-256 |
 | Portable release | `uv run python scripts/release.py` | `dist/release/OSINT-Command-Center-<version>-win32-amd64/` + `.zip` + `SHA256SUMS.txt` (shell + sidecar + README + SECURITY) |
 
 The shell prefers `osintcc-backend.exe` next to itself and falls back to the repository `.venv` for development.
@@ -30,12 +31,25 @@ shell (4 MB) and `sidecar_smoke.py` (28/28). `scripts/release.py --linux` makes 
 (run with `--cap-add NET_RAW --cap-add NET_ADMIN`) starts the real shell under Xvfb, drives the backend, captures every packet with `tcpdump`,
 checks that SIGKILL of the shell leaves no backend process, and saves a screenshot.
 
+## Installer test (this machine)
+
+`OSINT Command Center_0.1.0_x64-setup.exe /S /D=C:\OSINT\install-test` installed silently without admin rights (app, bundled backend, uninstaller). The installed
+`osintcc-desktop.exe` started the bundled backend from the install folder, created its database, closed cleanly with 0 backend processes left, and
+`uninstall.exe /S` removed the folder. Building it made Tauri's bundler download NSIS 3 and `nsis_tauri_utils.dll` from github.com/tauri-apps (it validates their hashes).
+Not tested: a machine without the WebView2 runtime (the installer is set to download Microsoft's bootstrapper then), an upgrade over an existing install, and any other
+Windows version.
+
+## Updates
+
+`scripts/update_tool.py` is the publisher: `keygen` (once; the private key lives in `%APPDATA%\osintcc-release\update-signing.key`, never in the repo; the matching public key is
+`backend/osintcc/setup/update_key.pub` and is built into the app), `publish --version X --base-url URL FILE…` (signs a manifest with each file's SHA-256), `serve` (a plain
+static file server) and `verify`. In the app: Settings → Updates → address of `manifest.json` → *Check* → *Download and verify*. The app never installs anything; it saves
+the verified file under `<data dir>/updates/` and tells you to run it. Tested end to end with the real installer through the packaged backend (check → signed hash → 58 MB download → hash
+matches). Back up before running an update. **Back up the private key**: if it is lost, already-installed apps cannot be sent updates they will accept (they must be reinstalled with a new key).
+
 ## Not done, and why
 
-- **Installer (NSIS/MSI).** `tauri build` with bundling downloads its installer toolchain (NSIS or WiX) from the internet at build time.
-  That is a binary download that needs your approval, so the release is a portable zip. To build one: set `"bundle": {"active": true,
-  "targets": ["nsis"], "externalBin": ["../../../dist/sidecar/osintcc-backend"]}` in `tauri.conf.json`, then run
-  `tauri build --bundles nsis`. Not attempted, so its behaviour is **unverified**.
+- **MSI and Linux packages (.deb/.AppImage).** Only the NSIS installer exists; Linux ships as a tarball.
 - **Code signing.** No certificate. Binaries are unsigned: expect SmartScreen warnings. Do not tell users to disable it; give them the
   SHA-256 and sign when a certificate exists.
 - **Clean-machine test.** Windows 11 Home has no Hyper-V or Windows Sandbox here, and no VM was available. The portable build has only

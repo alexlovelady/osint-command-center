@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-150 operations in 34 groups.
+153 operations in 34 groups.
 
 ## ai
 
@@ -270,6 +270,8 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 
 | Method | Path | Summary |
 |---|---|---|
+| GET | `/api/v1/secrets` | List Secrets |
+| DELETE | `/api/v1/secrets/{provider}` | Delete Secret |
 | POST | `/api/v1/secrets/{provider}` | Save Secret |
 
 ## settings
@@ -314,6 +316,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | Method | Path | Summary |
 |---|---|---|
 | POST | `/api/v1/updates/check` | Check |
+| POST | `/api/v1/updates/download` | Download |
 
 ## workflow-templates
 

@@ -845,7 +845,7 @@ async def tool_health(request: Request, tool_id: str):
     return await ad.health()
 
 
-ALLOWED_SETTINGS = {"offline": bool, "theme": str, "max_concurrency": int, "edgar_contact": str, "ai_enabled": bool}
+ALLOWED_SETTINGS = {"offline": bool, "theme": str, "max_concurrency": int, "edgar_contact": str, "ai_enabled": bool, "update_manifest_url": str}
 
 
 class SettingsIn(BaseModel):
@@ -859,7 +859,8 @@ async def get_settings(request: Request):
         saved = {s.key: s.value_json for s in db.scalars(select(Setting))}
     return {"offline": st.settings.offline, "max_concurrency": st.settings.max_concurrency,
             "theme": saved.get("theme", "dark"), "data_dir": str(st.settings.data_dir),
-            "ai_enabled": saved.get("ai_enabled", False), "edgar_contact": saved.get("edgar_contact")}
+            "ai_enabled": saved.get("ai_enabled", False), "edgar_contact": saved.get("edgar_contact"),
+            "update_manifest_url": saved.get("update_manifest_url") or st.settings.update_manifest_url or ""}
 
 
 @router.put("/settings", dependencies=[Depends(require_admin)])
@@ -868,6 +869,9 @@ async def put_settings(request: Request, body: SettingsIn):
     for k, v in body.values.items():
         if k not in ALLOWED_SETTINGS or not isinstance(v, ALLOWED_SETTINGS[k]) or isinstance(v, bool) != (k in ("offline", "ai_enabled")):
             raise ApiError(422, "invalid_setting", f"unsupported setting or value: {k}")
+    um = body.values.get("update_manifest_url")
+    if um is not None and um != "" and not re.fullmatch(r"https?://[^\s]{3,500}", um):
+        raise ApiError(422, "invalid_setting", "update_manifest_url must be an http(s) URL (or empty to clear it)")
     with st.sm() as db:
         for k, v in body.values.items():
             db.merge(Setting(key=k, value_json=v))
@@ -882,20 +886,54 @@ class SecretIn(BaseModel):
     value: str = Field(min_length=1, max_length=4096)
 
 
+# What each key is for, so Setup can show a labelled spot for it. The value is never returned by any endpoint.
+SECRET_CATALOG = {
+    "virustotal": {"label": "VirusTotal API key", "format": "a 64-character key", "get": "https://www.virustotal.com/gui/my-apikey"},
+    "urlscan": {"label": "urlscan.io API key (optional: raises rate limits)", "format": "a UUID", "get": "https://urlscan.io/user/profile/"},
+    "shodan": {"label": "Shodan API key", "format": "a 32-character key", "get": "https://account.shodan.io/"},
+    "censys": {"label": "Censys credentials", "format": "API_ID:API_SECRET (joined by a colon)", "get": "https://search.censys.io/account/api"},
+    "opencorporates": {"label": "OpenCorporates API token", "format": "a token", "get": "https://opencorporates.com/api_accounts/new"},
+}
+
+
+@router.get("/secrets", dependencies=[Depends(require_admin)])
+async def list_secrets(request: Request):
+    store = S(request).secrets
+    used: dict[str, list[str]] = {}
+    for aid, ad in S(request).adapters.items():
+        if ad.manifest.api_key_name:
+            used.setdefault(ad.manifest.api_key_name, []).append(aid)
+    names = sorted(set(SECRET_CATALOG) | set(used))
+    return {"items": [{"provider": n, **SECRET_CATALOG.get(n, {"label": f"{n} key", "format": "", "get": ""}), "set": store.exists(n),
+                       "used_by": used.get(n, [])} for n in names],
+            "note": "Keys are stored in the OS credential store (or, without one, sealed in the encrypted database). They are never shown again."}
+
+
 @router.post("/secrets/{provider}", dependencies=[Depends(require_admin)])
 async def save_secret(request: Request, provider: str, body: SecretIn):
-    if not re.fullmatch(r"[a-z0-9_\-]{2,40}", provider):
+    from ...secrets_store import NAME, SecretStoreError
+    if not NAME.fullmatch(provider):
         raise ApiError(422, "invalid_provider", "invalid provider name")
     try:
-        import keyring
-        keyring.set_password("osintcc", provider, body.value)
-    except Exception as exc:
-        raise ApiError(503, "secret_store_unavailable",
-                       "OS credential store is not available; nothing was saved", True) from exc
+        where = S(request).secrets.set(provider, body.value.strip())
+    except SecretStoreError as exc:
+        raise ApiError(503, "secret_store_unavailable", str(exc), True) from exc
     with S(request).sm() as db:
-        audit.record(db, "secret.save", actor=actor(request), metadata={"provider": provider})
+        audit.record(db, "secret.save", actor=actor(request), metadata={"provider": provider, "store": where})
         db.commit()
-    return {"provider": provider, "stored": True}  # the value is never echoed or logged
+    return {"provider": provider, "stored": True, "store": where}  # the value is never echoed or logged
+
+
+@router.delete("/secrets/{provider}", dependencies=[Depends(require_admin)])
+async def delete_secret(request: Request, provider: str):
+    from ...secrets_store import NAME
+    if not NAME.fullmatch(provider):
+        raise ApiError(422, "invalid_provider", "invalid provider name")
+    gone = S(request).secrets.delete(provider)
+    with S(request).sm() as db:
+        audit.record(db, "secret.delete", actor=actor(request), metadata={"provider": provider, "existed": gone})
+        db.commit()
+    return {"provider": provider, "removed": gone}
 
 
 # ---- backups / vault ------------------------------------------------------------------------------------------------------------------------------

@@ -39,7 +39,7 @@ def test_new_adapters_registered_off_by_default_with_honest_labels():
     reg = default_adapters()
     for aid in ("gdelt", "opencorporates", "censys", "amass", "theharvester"):
         assert aid in reg and reg[aid].manifest.default_selected is False
-    assert "unverified" in reg["amass"].manifest.version and "NOT verified" in reg["amass"].manifest.description
+    assert "no names" in reg["amass"].manifest.description and "API keys" in reg["amass"].manifest.description
 
 
 GDELT = {"articles": [{"url": "https://news.example.com/a", "title": "Example expands", "seendate": "20250102T030405Z", "language": "English",
@@ -115,8 +115,27 @@ def test_cli_parsers_keep_only_hosts_under_the_target_and_are_argv_safe():
     f, rels = am.parse(t, b"www.example.com (FQDN) --> a_record --> 1.2.3.4\nevil.test --> x\nmail.example.com\nexample.com\n")
     assert {x.value for x in f} == {"www.example.com", "mail.example.com", "example.com"} and len(rels) == 2
     argv = am.build_argv("/bin/amass", t)
-    assert argv[:7] == ["/bin/amass", "enum", "-passive", "-nocolor", "-silent", "-timeout", "4"] and argv[-2:] == ["-d", "example.com"] and argv[7] == "-dir"
+    assert argv[:7] == ["/bin/amass", "enum", "-passive", "-nocolor", "-silent", "-timeout", "3"] and argv[-2:] == ["-d", "example.com"] and argv[7] == "-dir"
     th = TheHarvesterAdapter()
     f, rels = th.parse(t, b"[*] Emails found:\nbob@example.com\nspam@other.org\n[*] Hosts found:\napi.example.com\n")
     assert {x.predicate for x in f} == {"theharvester.email", "theharvester.host"} and [x.value for x in f if x.predicate == "theharvester.email"] == ["bob@example.com"]
     assert len(rels) == 1
+
+
+async def test_amass_runs_enum_then_subs_and_explains_an_empty_result(tmp_path, monkeypatch):
+    from osintcc.adapters import cli as cli_mod
+    calls = []
+
+    async def fake(argv, timeout, max_output=0, **kw):
+        calls.append(argv[1])
+        return cli_mod.ProcResult(0, b"" if argv[1] == "enum" else b"www.example.com\napi.example.com\nother.test\n", b"")
+    monkeypatch.setattr(cli_mod, "run_argv", fake)
+    ad = AmassAdapter(binary_path=__file__, state_path=tmp_path / "tools" / "installed.json")
+    res = await ad.run(T("domain", "example.com"), ctx_with(lambda r: httpx.Response(404))[0])
+    assert calls == ["enum", "subs"] and res.status == "success" and {f.value for f in res.findings} == {"www.example.com", "api.example.com"}
+
+    async def empty(argv, timeout, max_output=0, **kw):
+        return cli_mod.ProcResult(0, b"No names were discovered\n", b"")
+    monkeypatch.setattr(cli_mod, "run_argv", empty)
+    res = await ad.run(T("domain", "example.com"), ctx_with(lambda r: httpx.Response(404))[0])
+    assert res.status == "success" and not res.findings and "not evidence" in res.warnings[0]

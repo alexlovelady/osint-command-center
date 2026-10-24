@@ -27,6 +27,28 @@ const status = {
     { id: "theharvester", name: "theHarvester", version: "4", license: "GPL", homepage: "", installed: false, managed: false, path: null, installable: false, reason: "does not support native Windows", download_mb: null }],
 };
 
+describe("Setup keys", () => {
+  it("shows a spot per key, never shows a stored value, and sends only what you type", async () => {
+    const calls = mockApi({
+      "/setup/status": status, "/setup/plan": { items: [] },
+      "/secrets/shodan": { provider: "shodan", stored: true, store: "os-keyring" },
+      "/secrets": { note: "Keys are stored in the OS credential store.", items: [
+        { provider: "shodan", label: "Shodan API key", format: "a 32-character key", get: "https://account.shodan.io/", set: false, used_by: ["shodan"] },
+        { provider: "virustotal", label: "VirusTotal API key", format: "a 64-character key", get: "https://www.virustotal.com/", set: true, used_by: ["virustotal"] }] },
+    });
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><Setup /></QueryClientProvider>);
+    await waitFor(() => screen.getByLabelText(/Shodan API key/));
+    expect(screen.getByPlaceholderText("stored (enter a new value to replace)")).toHaveValue("");   // a stored key is never echoed
+    expect(screen.getByText("Remove")).toBeInTheDocument();
+    const input = screen.getAllByPlaceholderText("paste key")[0];
+    expect(input).toHaveAttribute("type", "password");
+    fireEvent.change(input, { target: { value: "  K123  " } });
+    fireEvent.click(screen.getAllByText("Save")[0]);
+    await waitFor(() => expect(calls.some((c) => c.url === "/secrets/shodan")).toBe(true));
+    expect(JSON.parse(String(calls.find((c) => c.url === "/secrets/shodan")!.init!.body))).toEqual({ value: "  K123  " });
+  });
+});
+
 describe("Setup", () => {
   it("shows exact sources, refuses to start until confirmed, then sends confirm=true for tools and model", async () => {
     const calls = mockApi({

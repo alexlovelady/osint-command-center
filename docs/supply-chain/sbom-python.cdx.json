@@ -2,9 +2,9 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
   "version": 1,
-  "serialNumber": "urn:uuid:ff799e4e-088e-4b82-b65e-c8007c051691",
+  "serialNumber": "urn:uuid:7ba73435-7821-429c-a5b7-4c4521c1b4a8",
   "metadata": {
-    "timestamp": "2026-10-24T12:40:34.608191000Z",
+    "timestamp": "2026-10-24T14:46:51.545123600Z",
     "tools": [
       {
         "vendor": "Astral Software Inc.",
@@ -243,7 +243,14 @@
     },
     {
       "type": "library",
-      "bom-ref": "pycparser-31@3.12",
+      "bom-ref": "psutil-31@7.2.2",
+      "name": "psutil",
+      "version": "7.2.2",
+      "purl": "pkg:pypi/psutil@7.2.2"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pycparser-32@3.12",
       "name": "pycparser",
       "version": "3.12",
       "purl": "pkg:pypi/pycparser@3.12",
@@ -256,21 +263,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pydantic-32@2.14.1",
+      "bom-ref": "pydantic-33@2.14.1",
       "name": "pydantic",
       "version": "2.14.1",
       "purl": "pkg:pypi/pydantic@2.14.1"
     },
     {
       "type": "library",
-      "bom-ref": "pydantic-core-33@2.50.1",
+      "bom-ref": "pydantic-core-34@2.50.1",
       "name": "pydantic-core",
       "version": "2.50.1",
       "purl": "pkg:pypi/pydantic-core@2.50.1"
     },
     {
       "type": "library",
-      "bom-ref": "pywin32-ctypes-34@0.2.3",
+      "bom-ref": "pywin32-ctypes-35@0.2.3",
       "name": "pywin32-ctypes",
       "version": "0.2.3",
       "purl": "pkg:pypi/pywin32-ctypes@0.2.3",
@@ -283,21 +290,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pyyaml-35@6.0.3",
+      "bom-ref": "pyyaml-36@6.0.3",
       "name": "pyyaml",
       "version": "6.0.3",
       "purl": "pkg:pypi/pyyaml@6.0.3"
     },
     {
       "type": "library",
-      "bom-ref": "reportlab-36@5.1.0",
+      "bom-ref": "reportlab-37@5.1.0",
       "name": "reportlab",
       "version": "5.1.0",
       "purl": "pkg:pypi/reportlab@5.1.0"
     },
     {
       "type": "library",
-      "bom-ref": "secretstorage-37@3.5.0",
+      "bom-ref": "secretstorage-38@3.5.0",
       "name": "secretstorage",
       "version": "3.5.0",
       "purl": "pkg:pypi/secretstorage@3.5.0",
@@ -310,42 +317,42 @@
     },
     {
       "type": "library",
-      "bom-ref": "sqlalchemy-38@2.1.6",
+      "bom-ref": "sqlalchemy-39@2.1.6",
       "name": "sqlalchemy",
       "version": "2.1.6",
       "purl": "pkg:pypi/sqlalchemy@2.1.6"
     },
     {
       "type": "library",
-      "bom-ref": "sqlcipher3-wheels-39@0.5.7",
+      "bom-ref": "sqlcipher3-wheels-40@0.5.7",
       "name": "sqlcipher3-wheels",
       "version": "0.5.7",
       "purl": "pkg:pypi/sqlcipher3-wheels@0.5.7"
     },
     {
       "type": "library",
-      "bom-ref": "starlette-40@1.9.0",
+      "bom-ref": "starlette-41@1.9.0",
       "name": "starlette",
       "version": "1.9.0",
       "purl": "pkg:pypi/starlette@1.9.0"
     },
     {
       "type": "library",
-      "bom-ref": "typing-extensions-41@4.16.0",
+      "bom-ref": "typing-extensions-42@4.16.0",
       "name": "typing-extensions",
       "version": "4.16.0",
       "purl": "pkg:pypi/typing-extensions@4.16.0"
     },
     {
       "type": "library",
-      "bom-ref": "typing-inspection-42@0.4.4",
+      "bom-ref": "typing-inspection-43@0.4.4",
       "name": "typing-inspection",
       "version": "0.4.4",
       "purl": "pkg:pypi/typing-inspection@0.4.4"
     },
     {
       "type": "library",
-      "bom-ref": "uvicorn-43@0.54.0",
+      "bom-ref": "uvicorn-44@0.54.0",
       "name": "uvicorn",
       "version": "0.54.0",
       "purl": "pkg:pypi/uvicorn@0.54.0"
@@ -356,8 +363,8 @@
       "ref": "alembic-2@1.20.1",
       "dependsOn": [
         "mako-22@1.4.3",
-        "sqlalchemy-38@2.1.6",
-        "typing-extensions-41@4.16.0"
+        "sqlalchemy-39@2.1.6",
+        "typing-extensions-42@4.16.0"
       ]
     },
     {
@@ -370,7 +377,7 @@
       "ref": "anyio-5@4.15.1",
       "dependsOn": [
         "idna-16@3.20",
-        "typing-extensions-41@4.16.0"
+        "typing-extensions-42@4.16.0"
       ]
     },
     {
@@ -379,7 +386,7 @@
     {
       "ref": "cffi-7@2.1.1",
       "dependsOn": [
-        "pycparser-31@3.12"
+        "pycparser-32@3.12"
       ]
     },
     {
@@ -402,10 +409,10 @@
       "dependsOn": [
         "annotated-doc-3@0.0.5",
         "opentelemetry-api-29@1.45.1",
-        "pydantic-32@2.14.1",
-        "starlette-40@1.9.0",
-        "typing-extensions-41@4.16.0",
-        "typing-inspection-42@0.4.4"
+        "pydantic-33@2.14.1",
+        "starlette-41@1.9.0",
+        "typing-extensions-42@4.16.0",
+        "typing-inspection-43@0.4.4"
       ]
     },
     {
@@ -455,8 +462,8 @@
         "jaraco-context-18@6.1.2",
         "jaraco-functools-19@4.6.0",
         "jeepney-20@0.9.0",
-        "pywin32-ctypes-34@0.2.3",
-        "secretstorage-37@3.5.0"
+        "pywin32-ctypes-35@0.2.3",
+        "secretstorage-38@3.5.0"
       ]
     },
     {
@@ -489,7 +496,7 @@
     {
       "ref": "opentelemetry-api-29@1.45.1",
       "dependsOn": [
-        "typing-extensions-41@4.16.0"
+        "typing-extensions-42@4.16.0"
       ]
     },
     {
@@ -505,82 +512,86 @@
         "markdown-it-py-23@4.2.0",
         "nh3-27@0.3.7",
         "numpy-28@2.5.4",
-        "pydantic-32@2.14.1",
-        "pyyaml-35@6.0.3",
-        "reportlab-36@5.1.0",
-        "sqlalchemy-38@2.1.6",
-        "sqlcipher3-wheels-39@0.5.7",
-        "uvicorn-43@0.54.0"
+        "psutil-31@7.2.2",
+        "pydantic-33@2.14.1",
+        "pyyaml-36@6.0.3",
+        "reportlab-37@5.1.0",
+        "sqlalchemy-39@2.1.6",
+        "sqlcipher3-wheels-40@0.5.7",
+        "uvicorn-44@0.54.0"
       ]
     },
     {
       "ref": "pillow-30@13.0.0"
     },
     {
-      "ref": "pycparser-31@3.12"
+      "ref": "psutil-31@7.2.2"
     },
     {
-      "ref": "pydantic-32@2.14.1",
+      "ref": "pycparser-32@3.12"
+    },
+    {
+      "ref": "pydantic-33@2.14.1",
       "dependsOn": [
         "annotated-types-4@0.8.0",
-        "pydantic-core-33@2.50.1",
-        "typing-extensions-41@4.16.0",
-        "typing-inspection-42@0.4.4"
+        "pydantic-core-34@2.50.1",
+        "typing-extensions-42@4.16.0",
+        "typing-inspection-43@0.4.4"
       ]
     },
     {
-      "ref": "pydantic-core-33@2.50.1",
+      "ref": "pydantic-core-34@2.50.1",
       "dependsOn": [
-        "typing-extensions-41@4.16.0"
+        "typing-extensions-42@4.16.0"
       ]
     },
     {
-      "ref": "pywin32-ctypes-34@0.2.3"
+      "ref": "pywin32-ctypes-35@0.2.3"
     },
     {
-      "ref": "pyyaml-35@6.0.3"
+      "ref": "pyyaml-36@6.0.3"
     },
     {
-      "ref": "reportlab-36@5.1.0",
+      "ref": "reportlab-37@5.1.0",
       "dependsOn": [
         "charset-normalizer-8@3.5.2",
         "pillow-30@13.0.0"
       ]
     },
     {
-      "ref": "secretstorage-37@3.5.0",
+      "ref": "secretstorage-38@3.5.0",
       "dependsOn": [
         "cryptography-10@50.0.2",
         "jeepney-20@0.9.0"
       ]
     },
     {
-      "ref": "sqlalchemy-38@2.1.6",
+      "ref": "sqlalchemy-39@2.1.6",
       "dependsOn": [
-        "typing-extensions-41@4.16.0"
+        "typing-extensions-42@4.16.0"
       ]
     },
     {
-      "ref": "sqlcipher3-wheels-39@0.5.7"
+      "ref": "sqlcipher3-wheels-40@0.5.7"
     },
     {
-      "ref": "starlette-40@1.9.0",
+      "ref": "starlette-41@1.9.0",
       "dependsOn": [
         "anyio-5@4.15.1",
-        "typing-extensions-41@4.16.0"
+        "typing-extensions-42@4.16.0"
       ]
     },
     {
-      "ref": "typing-extensions-41@4.16.0"
+      "ref": "typing-extensions-42@4.16.0"
     },
     {
-      "ref": "typing-inspection-42@0.4.4",
+      "ref": "typing-inspection-43@0.4.4",
       "dependsOn": [
-        "typing-extensions-41@4.16.0"
+        "typing-extensions-42@4.16.0"
       ]
     },
     {
-      "ref": "uvicorn-43@0.54.0",
+      "ref": "uvicorn-44@0.54.0",
       "dependsOn": [
         "click-9@8.5.0",
         "h11-13@0.16.0"

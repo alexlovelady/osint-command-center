@@ -14,6 +14,42 @@ interface PlanItem { id: string; name: string; version: string; urls: string[]; 
 
 const mb = (n?: number) => ((n ?? 0) / 1e6).toFixed(0);
 
+interface SecretItem { provider: string; label: string; format: string; get: string; set: boolean; used_by: string[] }
+
+function Keys() {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["secrets"], queryFn: () => api<{ items: SecretItem[]; note: string }>("/secrets"), retry: false });
+  const [vals, setVals] = useState<Record<string, string>>({});
+  const [contact, setContact] = useState("");
+  const save = useMutation({ mutationFn: (p: string) => api(`/secrets/${p}`, { method: "POST", json: { value: vals[p] } }),
+    onSuccess: (_d, p) => { setVals((v) => ({ ...v, [p]: "" })); qc.invalidateQueries({ queryKey: ["secrets"] }); } });
+  const del = useMutation({ mutationFn: (p: string) => api(`/secrets/${p}`, { method: "DELETE" }), onSuccess: () => qc.invalidateQueries({ queryKey: ["secrets"] }) });
+  const edgar = useMutation({ mutationFn: () => api("/settings", { method: "PUT", json: { values: { edgar_contact: contact } } }), onSuccess: () => setContact("") });
+  if (q.isError || !q.data) return null;
+  return (
+    <>
+      <h3>API keys and contacts (optional)</h3>
+      <div className="card">
+        <p className="muted">{q.data.note} Leave anything you do not have blank: that source simply stays unavailable and makes no request.</p>
+        {q.data.items.map((k) => (
+          <div key={k.provider} className="row" style={{ marginBottom: 6 }}>
+            <label style={{ minWidth: 300 }} htmlFor={`key-${k.provider}`}>{k.label} {k.set ? <Badge v="healthy" /> : <span className="muted">not set</span>}
+              <div className="muted">{k.format}{k.used_by.length ? ` · used by ${k.used_by.join(", ")}` : ""} · get one at {k.get}</div></label>
+            <input id={`key-${k.provider}`} type="password" autoComplete="off" placeholder={k.set ? "stored (enter a new value to replace)" : "paste key"} value={vals[k.provider] ?? ""}
+              onChange={(e) => setVals({ ...vals, [k.provider]: e.target.value })} style={{ maxWidth: 360 }} />
+            <button disabled={!(vals[k.provider] ?? "").trim() || save.isPending} onClick={() => save.mutate(k.provider)}>Save</button>
+            {k.set && <button onClick={() => del.mutate(k.provider)}>Remove</button>}
+          </div>))}
+        <div className="row"><label style={{ minWidth: 300 }} htmlFor="edgar-contact">SEC EDGAR contact (required by the SEC for any EDGAR request)
+          <div className="muted">Your name and email, sent as the User-Agent.</div></label>
+          <input id="edgar-contact" placeholder="Your Name you@example.org" value={contact} onChange={(e) => setContact(e.target.value)} style={{ maxWidth: 360 }} />
+          <button disabled={!contact.includes("@") || edgar.isPending} onClick={() => edgar.mutate()}>Save</button></div>
+        {(save.isError || del.isError || edgar.isError) && <ErrorBox error={save.error ?? del.error ?? edgar.error} />}
+      </div>
+    </>
+  );
+}
+
 /** First-run setup: install the optional tools and a local model. Nothing is downloaded until the exact sources are shown and confirmed. */
 export default function Setup() {
   const qc = useQueryClient();
@@ -92,6 +128,7 @@ export default function Setup() {
         </p>
         <label className="row"><input type="checkbox" style={{ width: "auto" }} checked={enableAi} onChange={(e) => setEnableAi(e.target.checked)} disabled={!wantModel} /> Turn AI features on afterwards (otherwise AI stays off until you enable it in Settings)</label>
       </div>
+      <Keys />
       <div className="card">
         <label className="row"><input type="checkbox" style={{ width: "auto" }} checked={confirm} onChange={(e) => setConfirm(e.target.checked)} /> I have reviewed the sources above and want to download and install the selected items</label>
         <div className="row" style={{ marginTop: 8 }}>

@@ -41,11 +41,16 @@ Settings → *Encryption & backup* → *Create encrypted backup* needs a passphr
 restore; restoring always writes into a **new** directory under `data/restores/<name>`. To switch, close the app and start it with
 `OSINTCC_DATA_DIR` pointing there. See `docs/recovery.md`.
 
+## 4b. API keys
+
+Setup (and Settings) has a labelled spot for each key: VirusTotal, urlscan, Shodan, Censys (`API_ID:API_SECRET`), OpenCorporates, plus your SEC EDGAR contact string. They are
+stored in the OS credential store (or, on a machine without one, sealed in the encrypted database), shown only as "set / not set", and can be replaced or removed. Nothing is
+hard-coded or shipped. A source without a key stays unavailable and makes no request.
+
 ## 5. Updating
 
-The app never updates itself. If an update source is configured (`OSINTCC_UPDATE_URL`, `OSINTCC_UPDATE_KEY`), *Check for updates*
-(`POST /api/v1/updates/check`) verifies a signed manifest and shows the version, notes, URL and SHA-256. Download it yourself and
-compare the hash. Installing an update never touches the data directory; schema migrations run on next start and keep a
+The app never updates itself. Publish a build with `scripts/update_tool.py publish` and serve the folder (`update_tool.py serve`, any web server, or a NAS). In Settings → Updates enter the
+manifest address, *Check for updates* (signature verified against the key built into the app), then *Download and verify* (SHA-256 checked against the signed manifest). Run the saved file yourself. Installing an update never touches the data directory; schema migrations run on next start and keep a
 `osintcc.pre-<rev>.bak` copy.
 
 ## 6. Optional tools

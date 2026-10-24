@@ -34,7 +34,7 @@ pnpm --dir apps/web build
 cargo run --manifest-path apps/desktop/src-tauri/Cargo.toml
 ```
 
-Portable builds (unsigned): Windows via `scripts/build_sidecar.py`, `tauri build --no-bundle`, `scripts/release.py`; Linux via `docker/linux-build` — see
+Windows installer (NSIS, per-user, unsigned): see `docs/packaging.md`. Updates: `scripts/update_tool.py` + Settings → Updates. Portable builds (unsigned): Windows via `scripts/build_sidecar.py`, `tauri build --no-bundle`, `scripts/release.py`; Linux via `docker/linux-build` — see
 [`docs/packaging.md`](docs/packaging.md). Headless Linux without a Secret Service needs `OSINTCC_VAULT_KEY` (base64 of 32 random bytes).
 
 **First run:** the app opens on **Setup** (also `python -m osintcc.setup status|install all --yes|model --yes`, or `osintcc-backend setup …` in a packaged build). It

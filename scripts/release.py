@@ -79,6 +79,12 @@ def main() -> int:
         with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
             for p in sorted(folder.iterdir()):
                 z.write(p, f"{name}/{p.name}")
+    inst = sorted((ROOT / "apps/desktop/src-tauri/target/release/bundle/nsis").glob("*-setup.exe")) if plat_name != "linux" else []
+    extra = {}
+    if inst:  # the per-user NSIS installer built by `tauri build --bundles nsis`
+        dest = out / f"OSINT-Command-Center-{__version__}-x64-setup.exe"
+        shutil.copy2(inst[-1], dest)
+        extra[dest.name] = sha256(dest)
     sums_file = out / "SHA256SUMS.txt"
     known: dict[str, str] = {}
     if sums_file.exists():
@@ -87,6 +93,7 @@ def main() -> int:
             if n:
                 known[n] = h
     known[zpath.name] = sha256(zpath)
+    known.update(extra)
     sums_file.write_text("".join(f"{h}  {n}\n" for n, h in sorted(known.items())), encoding="utf8")
     print(f"folder: {folder}\nzip:    {zpath} ({zpath.stat().st_size / 1e6:.1f} MB)\nsha256: {sha256(zpath)}")
     for n, h in sums.items():

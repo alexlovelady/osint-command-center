@@ -573,6 +573,17 @@
     "title": "ConsentIn",
     "type": "object"
    },
+   "DownloadIn": {
+    "properties": {
+     "confirm": {
+      "default": false,
+      "title": "Confirm",
+      "type": "boolean"
+     }
+    },
+    "title": "DownloadIn",
+    "type": "object"
+   },
    "FromFinding": {
     "properties": {
      "finding_id": {
@@ -7513,7 +7524,58 @@
     "summary": "Run Events"
    }
   },
+  "/api/v1/secrets": {
+   "get": {
+    "operationId": "list_secrets_api_v1_secrets_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "List Secrets"
+   }
+  },
   "/api/v1/secrets/{provider}": {
+   "delete": {
+    "operationId": "delete_secret_api_v1_secrets__provider__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "provider",
+      "required": true,
+      "schema": {
+       "title": "Provider",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Delete Secret"
+   },
    "post": {
     "operationId": "save_secret_api_v1_secrets__provider__post",
     "parameters": [
@@ -7970,6 +8032,42 @@
      }
     },
     "summary": "Check"
+   }
+  },
+  "/api/v1/updates/download": {
+   "post": {
+    "operationId": "download_api_v1_updates_download_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DownloadIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Download"
    }
   },
   "/api/v1/workflow-templates": {

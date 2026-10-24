@@ -77,7 +77,23 @@ def _iter_pcapng(data: bytes):
         pos += blen
 
 
+def _dot11(pkt: bytes) -> tuple[int, bytes] | None:
+    """IEEE 802.11 data frame -> (ethertype, L3). Windows `pktmon` labels Wi-Fi captures as Ethernet, so this is also tried on link type 1;
+    the LLC/SNAP signature (aa aa 03 00 00 00) at the computed offset keeps a false positive on real Ethernet vanishingly unlikely."""
+    if len(pkt) < 32 or (pkt[0] >> 2) & 3 != 2 or pkt[0] & 3:  # not a data frame (or a protocol version we do not know)
+        return None
+    qos = bool(pkt[0] & 0x80)
+    hdr = 24 + (6 if pkt[1] & 3 == 3 else 0) + (2 if qos else 0) + (4 if qos and pkt[1] & 0x80 else 0)
+    if len(pkt) < hdr + 8 or pkt[hdr:hdr + 6] != b"\xaa\xaa\x03\x00\x00\x00":
+        return None
+    return struct.unpack(">H", pkt[hdr + 6:hdr + 8])[0], pkt[hdr + 8:]
+
+
 def _l3(link: int, pkt: bytes):
+    if link in (1, 105):
+        d = _dot11(pkt)
+        if d is not None:
+            return d
     if link == 1 and len(pkt) >= 14:
         et, off = struct.unpack(">H", pkt[12:14])[0], 14
         while et in (0x8100, 0x88A8) and len(pkt) >= off + 4:

@@ -23,3 +23,4 @@ docs/egress-capture.pcapng
 *.plaintext.bak
 *.enc-tmp
 %SystemDrive%/
+binaries/

@@ -34,6 +34,7 @@ def main() -> int:
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'db' / 'migrations'}{SEP}osintcc/db/migrations",
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'catalog.json'}{SEP}osintcc/setup",
         "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'requirements'}{SEP}osintcc/setup/requirements",
+        "--add-data", f"{ROOT / 'backend' / 'osintcc' / 'setup' / 'update_key.pub'}{SEP}osintcc/setup",
         "--collect-submodules", "osintcc", "--collect-all", "alembic", "--collect-all", "sqlcipher3",
         "--collect-submodules", "uvicorn", "--collect-submodules", "keyring.backends",
         "--hidden-import", "sqlalchemy.dialects.sqlite", "--collect-data", "reportlab",

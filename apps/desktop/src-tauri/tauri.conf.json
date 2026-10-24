@@ -24,6 +24,30 @@
     }
   },
   "bundle": {
-    "active": false
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/osintcc-backend"
+    ],
+    "publisher": "OSINT Command Center (unsigned local build)",
+    "shortDescription": "Local-first OSINT workstation",
+    "longDescription": "Local-first, evidence-grounded OSINT and multi-INT workstation. Unsigned build.",
+    "category": "Utility",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
   }
 }

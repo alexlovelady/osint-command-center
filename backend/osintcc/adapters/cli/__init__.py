@@ -277,21 +277,48 @@ def _hosts_under(target: Target, text: str) -> list[str]:
 
 
 class AmassAdapter(CliAdapter):
-    """OWASP Amass v5 passive enumeration."""
+    """OWASP Amass v5 passive enumeration. v5 stores what it finds in its own asset database and `enum` prints no names, so this adapter runs
+    `enum -passive` and then `subs -names` to read them back. With no API-keyed data sources configured in Amass's own config, it finds nothing."""
     extra_env_keys = ("APPDATA", "LOCALAPPDATA", "XDG_CONFIG_HOME")
     binary_names = ("amass",)
     version_args = ("-version",)
     manifest = AdapterManifest(
-        id="amass", default_selected=False, name="OWASP Amass (passive enumeration)", version="0.1.0-unverified",
-        supported_target_types=["domain"], operation_class="passive", needs_network=True, timeout_seconds=300, license="Apache-2.0",
+        id="amass", default_selected=False, name="OWASP Amass (passive enumeration)", version="0.2.0",
+        supported_target_types=["domain"], operation_class="passive", needs_network=True, timeout_seconds=240, license="Apache-2.0",
         endpoints=["passive third-party data sources chosen by amass"],
         install_hint="Run first-run Setup, or install an OWASP Amass v5 release from https://github.com/owasp-amass/amass.",
-        description="Runs `amass enum -passive -d <domain>` (v5.1.1 accepts these flags). Name parsing is generic (hostnames under the target) and was NOT verified: the real passive run returned nothing within its time limit.")
+        description="Runs `amass enum -passive` then `amass subs -names`. Verified to start and accept these flags (v5.1.1); with no data-source API keys "
+                    "in Amass's own config it returns no names (tested on iana.org), and the name-list parsing was only exercised with fixtures.")
+
+    def _workdir(self) -> Path:
+        d = (self._state.parent / "amass-data") if self._state else (Path(tempfile.gettempdir()) / "osintcc-amass")
+        d.mkdir(parents=True, exist_ok=True)  # amass v5 refuses to start without a writable output directory
+        return d
 
     def build_argv(self, binary: str, target: Target) -> list[str]:
-        workdir = (self._state.parent / "amass-data") if self._state else (Path(tempfile.gettempdir()) / "osintcc-amass")
-        workdir.mkdir(parents=True, exist_ok=True)  # amass v5 refuses to start without a writable output directory
-        return [binary, "enum", "-passive", "-nocolor", "-silent", "-timeout", "4", "-dir", str(workdir), "-d", target.canonical]
+        return [binary, "enum", "-passive", "-nocolor", "-silent", "-timeout", "3", "-dir", str(self._workdir()), "-d", target.canonical]
+
+    async def run(self, target: Target, ctx: AdapterContext) -> AdapterResult:
+        aid = self.manifest.id
+        binary = self.locate()
+        if not binary:
+            return skipped(aid, "not_installed", f"{self.manifest.name} is not installed. {self.manifest.install_hint or ''}".strip())
+        env = {k: os.environ[k] for k in self.extra_env_keys if k in os.environ}
+        with tempfile.TemporaryDirectory(prefix="osintcc-cli-") as scratch:
+            enum = await run_argv(self.build_argv(binary, target), self.manifest.timeout_seconds, cwd=scratch, extra_env=env)
+            if enum.timed_out:
+                return AdapterResult(adapter_id=aid, status="error", error_code="timeout", retryable=True,
+                                     warnings=[f"timed out after {self.manifest.timeout_seconds}s; process tree killed"])
+            subs = await run_argv([binary, "subs", "-names", "-nocolor", "-silent", "-dir", str(self._workdir()), "-d", target.canonical], 60, cwd=scratch, extra_env=env)
+        out = subs.stdout
+        art = RawArtifact(name="amass-names.txt", content=out, mime_type="text/plain", note=f"enum exit={enum.returncode}, subs exit={subs.returncode}")
+        if enum.returncode not in (0, None):
+            return AdapterResult(adapter_id=aid, status="error", error_code=f"exit_{enum.returncode}", artifacts=[art], warnings=[enum.stderr.decode(errors="replace")[:500]])
+        findings, rels = self.parse(target, out)
+        warns = []
+        if not findings:
+            warns.append("Amass returned no names. Amass v5 passive mode needs API-keyed data sources in its own configuration; none were used, so this is not evidence the domain has no subdomains.")
+        return AdapterResult(adapter_id=aid, status="success", artifacts=[art], findings=findings, relationships=rels, warnings=warns)
 
     def parse(self, target, stdout):
         subject = EntityRef(type="domain", key=target.canonical, display=target.canonical)
@@ -301,8 +328,7 @@ class AmassAdapter(CliAdapter):
             sub = EntityRef(type="domain", key=host, display=host)
             findings.append(FindingDraft(subject=sub, predicate="amass.discovered", value=host, confidence="low", confidence_reason=reason))
             if host != target.canonical:
-                rels.append(RelationshipDraft(from_entity=sub, to_entity=subject, relation_type="subdomain_of", confidence="low",
-                                              confidence_reason=reason))
+                rels.append(RelationshipDraft(from_entity=sub, to_entity=subject, relation_type="subdomain_of", confidence="low", confidence_reason=reason))
         return findings, rels
 
 

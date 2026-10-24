@@ -47,3 +47,5 @@ Libraries and their licences are inventoried mechanically in `docs/license-audit
 | Model `huihui_ai/qwen3-abliterated` | 8b / 4b / 1.7b | ollama.com registry through your local Ollama | Ollama verifies each blob's digest |
 
 Regenerate with `scripts/build_catalog.py`; review the diff before shipping a new catalog.
+
+Build-time only: `tauri build --bundles nsis` downloads NSIS 3 (`github.com/tauri-apps/binary-releases`) and `nsis_tauri_utils.dll` (`github.com/tauri-apps/nsis-tauri-utils`); the Tauri bundler validates their hashes. Neither ships inside the installer's payload beyond the generated setup stub.
