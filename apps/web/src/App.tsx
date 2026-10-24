@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ErrorBox } from "./components/ui";
 import CopilotPanel from "./components/CopilotPanel";
+import NavIcon from "./components/NavIcon";
 import { api, getToken } from "./lib/api";
 import { setAppCtx } from "./lib/appContext";
 import CaseView from "./pages/CaseView";
@@ -63,8 +64,9 @@ export default function App() {
     <div className="app">
       <nav className="side" aria-label="Primary">
         <h1>OSINT Command Center</h1>
+        <div className="brand-sub">Open source · Lawful · Cited</div>
         {NAV.map(([k, label]) => (
-          <a key={k} href={`#/${k}`} data-tour={`nav-${k}`} aria-current={section === k || (k === "cases" && section === "case") ? "page" : undefined}>{label}</a>
+          <a key={k} href={`#/${k}`} data-tour={`nav-${k}`} aria-current={section === k || (k === "cases" && section === "case") ? "page" : undefined}><NavIcon name={k} />{label}</a>
         ))}
         <p className="muted" style={{ margin: "18px 8px", fontSize: 12 }}>
           Public-source, lawful research only. Results are leads with cited evidence, not conclusions.

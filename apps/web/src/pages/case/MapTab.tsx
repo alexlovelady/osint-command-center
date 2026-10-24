@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
+import { chart } from "../../lib/theme";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import { Empty, ErrorBox, Loading, fmt } from "../../components/ui";
@@ -21,8 +22,8 @@ export default function MapTab({ id }: { id: string }) {
     const group = L.featureGroup();
     for (const p of pts.data.items) {
       // Dashed ring = accuracy radius when the file states one; no ring means the accuracy is UNKNOWN, never "exact".
-      if (p.accuracy_m) L.circle([p.lat, p.lon], { radius: p.accuracy_m, dashArray: "4", color: "#f0b429", weight: 1, fillOpacity: 0.05 }).addTo(group);
-      L.circleMarker([p.lat, p.lon], { radius: 7, color: "#2ec4b6", fillColor: "#2ec4b6", fillOpacity: 0.8 }).on("click", () => setSel(p)).addTo(group);
+      if (p.accuracy_m) L.circle([p.lat, p.lon], { radius: p.accuracy_m, dashArray: "4", color: chart().primary, weight: 1, fillOpacity: 0.05 }).addTo(group);
+      L.circleMarker([p.lat, p.lon], { radius: 7, color: chart().tech, fillColor: chart().tech, fillOpacity: 0.8 }).on("click", () => setSel(p)).addTo(group);
     }
     group.addTo(map);
     map.fitBounds(group.getBounds().pad(0.4), { maxZoom: 12 });

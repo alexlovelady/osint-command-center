@@ -56,6 +56,10 @@ the command shown on this machine; anything not run is listed under *Not verifie
 
 Not verified: llama.cpp and cloud providers against real servers (mocks only); models other than the one above; hardware actions are deliberately not exposed to the Copilot.
 
+## UI theme (ops-hybrid)
+
+Hybrid "Blacksite Redline + Ghost Grid" theme implemented as a token system (`docs/theme.md`): new `theme.css`, `lib/theme.ts`, `NavIcon.tsx`; graph and map colours follow the tokens; Copilot restyled. Verified: tsc/eslint/28 unit tests clean, 11 browser tests including axe in light and dark pass, screenshots checked (dark and light). The reference image is matched in tone (amber/red/teal on near-black, grid texture), not pixel for pixel: the dashboard widgets in it (global map, signal spectrum, target summary) are product features this app does not have.
+
 ## Network egress ("packet capture")
 
 | Platform | Method | Result |

@@ -13,6 +13,7 @@ import WorkflowsTab from "./case/WorkflowsTab";
 import { Badge, Empty, ErrorBox, Loading, fmt, val } from "../components/ui";
 import { api, apiUrl, authHeader, type CaseT, type FindingT, type GraphT } from "../lib/api";
 import { setAppCtx } from "../lib/appContext";
+import { chart } from "../lib/theme";
 
 const TABS = ["Search", "Plans", "Findings", "Graph", "Timeline", "Map", "Evidence", "Imports", "Analysis", "Cross-links", "Workflows", "Humint", "AI", "Hardware", "Notes", "Reports"] as const;
 type Tab = (typeof TABS)[number];
@@ -116,6 +117,7 @@ function Graph({ id }: { id: string }) {
   const [sel, setSel] = useState<GraphT["edges"][number] | null>(null);
   useEffect(() => {
     if (!q.data || !el.current || q.data.nodes.length === 0) return;
+    const C = chart();
     const cy = cytoscape({
       container: el.current,
       elements: [
@@ -124,10 +126,11 @@ function Graph({ id }: { id: string }) {
       ],
       layout: { name: "cose", animate: false },
       style: [
-        { selector: "node", style: { label: "data(label)", "font-size": 6, color: "#8fa6bb", "text-valign": "bottom", "text-margin-y": 3, "min-zoomed-font-size": 4, "background-color": "#2ec4b6", width: 14, height: 14 } },
-        { selector: 'node[type = "ip"]', style: { "background-color": "#f0b429", shape: "diamond" } },
-        { selector: "edge", style: { width: 1.2, "line-color": "#4a6a85", "target-arrow-shape": "triangle", "target-arrow-color": "#4a6a85", "curve-style": "bezier", label: "data(label)", "font-size": 5, color: "#6d8499", "text-opacity": 0 } },
-        { selector: "edge:selected, edge:active", style: { "text-opacity": 1, "line-color": "#2ec4b6", width: 2 } },
+        { selector: "node", style: { label: "data(label)", "font-size": 6, color: C.label, "text-valign": "bottom", "text-margin-y": 3, "min-zoomed-font-size": 4, "background-color": C.tech, width: 14, height: 14 } },
+        { selector: 'node[type = "ip"]', style: { "background-color": C.primary, shape: "diamond" } },
+        { selector: 'node[type = "email"], node[type = "person"], node[type = "account"]', style: { "background-color": C.alert } },
+        { selector: "edge", style: { width: 1.2, "line-color": C.edge, "target-arrow-shape": "triangle", "target-arrow-color": C.edge, "curve-style": "bezier", label: "data(label)", "font-size": 5, color: C.label, "text-opacity": 0 } },
+        { selector: "edge:selected, edge:active", style: { "text-opacity": 1, "line-color": C.primary, width: 2 } },
         { selector: 'edge[status = "unverified"]', style: { "line-style": "dashed" } },
       ],
     });

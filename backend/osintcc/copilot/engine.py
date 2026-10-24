@@ -492,7 +492,7 @@ class Engine:
                 warnings.append("The reply has no inline citations. The sources listed are what the model was shown, not proof it used them; treat the reply as unverified.")
                 meta["uncited"] = True
         # deterministic sources are always real chunks, list them even when the model cited nothing
-        if det_text is not None and not used:
+        if det_text is not None and not used and (supported or mode == "investigation"):   # an honest "not documented" answer cites nothing
             used = [s for s in dsrc[:3]] if mode != "investigation" else [s for s in csrc[:5]]
         steps = next((r["steps"] for n, r in results if n == "recommend_next_steps"), None)
         meta.update(sources=used, proposals=[p["id"] for p in proposals], warnings=warnings, withheld_restricted=withheld)
