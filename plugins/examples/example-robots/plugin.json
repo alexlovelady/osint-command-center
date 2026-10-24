@@ -1,0 +1,23 @@
+{
+  "id": "example-robots",
+  "version": "1.0.0",
+  "name": "robots.txt summary (example)",
+  "maintainer": "OSINT Command Center project",
+  "license": "MIT",
+  "entrypoint": "main.py",
+  "platforms": ["windows", "linux", "macos"],
+  "capabilities": ["web_metadata"],
+  "input_types": ["domain"],
+  "output_schema_version": 1,
+  "active_network_access": false,
+  "minimum_permissions": {"network_domains": ["{target}"], "max_requests": 1, "filesystem": "none"},
+  "required_secrets": [],
+  "rate_limits": {"per_minute": 6},
+  "dependencies": [],
+  "healthcheck": {"phase": "plan"},
+  "fixture_path": "fixtures/robots.json",
+  "uninstall_cleanup": [],
+  "min_host_api": 1,
+  "timeout_seconds": 20,
+  "description": "Reads the target's own /robots.txt and reports how many Disallow rules it contains. Passive, one request."
+}

@@ -1,0 +1,5 @@
+{
+  "target": {"type": "domain", "raw": "example.com", "canonical": "example.com"},
+  "responses": {"https://example.com/robots.txt": {"status": 200, "body": "User-agent: *\nDisallow: /admin\nDisallow: /tmp/\nDisallow:\nSitemap: https://example.com/sitemap.xml\n"}},
+  "expected": {"status": "success", "predicates": ["robots.disallow_rule_count", "robots.sitemaps"], "values": {"robots.disallow_rule_count": 2}}
+}

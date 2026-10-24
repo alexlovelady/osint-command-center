@@ -1,0 +1,8 @@
+{"schema_version": 1, "id": "domain-reputation", "name": "Domain Reputation (needs API keys for some steps)",
+ "nodes": [
+  {"id": "dns", "adapter": "dns", "input": "target", "depends_on": []},
+  {"id": "vt", "adapter": "virustotal", "input": "target", "depends_on": ["dns"]},
+  {"id": "urlscan", "adapter": "urlscan", "input": "target", "depends_on": ["dns"]},
+  {"id": "report", "task": "summarize", "input": "target", "depends_on": ["vt", "urlscan"]}
+ ],
+ "policy": {"active_allowed": false, "max_concurrency": 2, "max_depth": 3}}

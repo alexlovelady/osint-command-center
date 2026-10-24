@@ -1,0 +1,2 @@
+API statuses: [200, 200, 200, 200, 200, 200, 200, 200, 200, 409]
+offline search outcome: {"code": "plan_refused", "message": "no runnable adapters in this plan", "request_id": "6ca455b1879b", "retryable": false, "details_safe": {}}

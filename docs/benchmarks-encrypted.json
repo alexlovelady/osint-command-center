@@ -1,0 +1,96 @@
+{
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.6",
+    "processor": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+    "size": 3000,
+    "encrypted": true
+  },
+  "results": [
+    {
+      "name": "app startup (create_app + lifespan, migrations applied)",
+      "seconds": 0.3735
+    },
+    {
+      "name": "passive search, 4 sources, mocked network",
+      "seconds": 0.0889,
+      "status": "succeeded"
+    },
+    {
+      "name": "bulk insert 3000 entities, 3000 relationships, 3000 findings, 3000 observations",
+      "seconds": 0.5275
+    },
+    {
+      "name": "GET findings page (limit 100) of 3000",
+      "seconds": 0,
+      "n": 15,
+      "median_ms": 11.9,
+      "p95_ms": 13.3
+    },
+    {
+      "name": "full-text search over ~6000 indexed rows",
+      "seconds": 0,
+      "n": 15,
+      "median_ms": 1.8,
+      "p95_ms": 2.0
+    },
+    {
+      "name": "graph payload (3000 nodes available, capped by the server)",
+      "seconds": 0,
+      "n": 5,
+      "median_ms": 53.1,
+      "p95_ms": 53.6
+    },
+    {
+      "name": "observations page (limit 100)",
+      "seconds": 0,
+      "n": 15,
+      "median_ms": 4.5,
+      "p95_ms": 5.4
+    },
+    {
+      "name": "unified timeline over 3000 observations (limit 500)",
+      "seconds": 0,
+      "n": 5,
+      "median_ms": 55.4,
+      "p95_ms": 84.0
+    },
+    {
+      "name": "cross-link suggestions over 3000 observations (window 5 min)",
+      "seconds": 0,
+      "n": 3,
+      "median_ms": 95.0,
+      "p95_ms": 95.0
+    },
+    {
+      "name": "report technical/html with 3000 findings",
+      "seconds": 0.5778,
+      "status": 201
+    },
+    {
+      "name": "report multi_int/json with 3000 findings",
+      "seconds": 0.5036,
+      "status": 201
+    },
+    {
+      "name": "report technical/pdf with 3000 findings",
+      "seconds": 2.1853,
+      "status": 201
+    },
+    {
+      "name": "ingest 100 small JPEGs sequentially",
+      "seconds": 1.3119,
+      "per_file_ms": 13.1
+    },
+    {
+      "name": "vault store 10 MiB (AES-256-GCM + SHA-256/512)",
+      "seconds": 0.0273,
+      "mib_per_s": 365.8
+    },
+    {
+      "name": "vault read + integrity verify 10 MiB",
+      "seconds": 0.0209,
+      "ok": true
+    }
+  ]
+}

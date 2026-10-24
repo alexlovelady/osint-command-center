@@ -1,0 +1,238 @@
+{
+ "schema": 1,
+ "generated": "2026-10-24T12:04:56+00:00",
+ "tools": {
+  "subfinder": {
+   "kind": "archive",
+   "name": "Subfinder",
+   "version": "2.17.0",
+   "license": "MIT",
+   "homepage": "https://github.com/projectdiscovery/subfinder",
+   "platforms": {
+    "win32-x86_64": {
+     "url": "https://github.com/projectdiscovery/subfinder/releases/download/v2.17.0/subfinder_2.17.0_windows_amd64.zip",
+     "sha256": "a3fd612928d591fb31c1e59a2e06055e364421ba32251e553073f5673a2d3103",
+     "size": 10578907,
+     "format": "zip",
+     "main": "subfinder.exe",
+     "members": [
+      "subfinder.exe"
+     ]
+    },
+    "linux-x86_64": {
+     "url": "https://github.com/projectdiscovery/subfinder/releases/download/v2.17.0/subfinder_2.17.0_linux_amd64.zip",
+     "sha256": "a39c3e5c7a26ef3c430915c4d6cbf7716a00f26769a75e9405aba796142eba37",
+     "size": 10308162,
+     "format": "zip",
+     "main": "subfinder",
+     "members": [
+      "subfinder"
+     ]
+    }
+   }
+  },
+  "amass": {
+   "kind": "archive",
+   "name": "OWASP Amass",
+   "version": "5.1.1",
+   "license": "Apache-2.0",
+   "homepage": "https://github.com/owasp-amass/amass",
+   "platforms": {
+    "win32-x86_64": {
+     "url": "https://github.com/owasp-amass/amass/releases/download/v5.1.1/amass_windows_amd64.tar.gz",
+     "sha256": "734aee6ce014c246e21f682bd49a42739e8c5feae32f6ec8a13fa2b8dc547b9f",
+     "size": 17422251,
+     "format": "tar.gz",
+     "main": "amass.exe",
+     "members": [
+      "amass_windows_amd64/amass.exe"
+     ],
+     "strip": 1
+    },
+    "linux-x86_64": {
+     "url": "https://github.com/owasp-amass/amass/releases/download/v5.1.1/amass_linux_amd64.tar.gz",
+     "sha256": "5e22b5f0239e7eb79439d60d43d3cd20dca2478588bc2242e91ab0c4f8fa40dd",
+     "size": 17107726,
+     "format": "tar.gz",
+     "main": "amass",
+     "members": [
+      "amass_linux_amd64/amass"
+     ],
+     "strip": 1
+    }
+   }
+  },
+  "exiftool": {
+   "kind": "archive",
+   "name": "ExifTool",
+   "version": "13.59",
+   "license": "Artistic-1.0-Perl OR GPL-1.0-or-later",
+   "homepage": "https://exiftool.org/",
+   "platforms": {
+    "win32-x86_64": {
+     "url": "https://sourceforge.net/projects/exiftool/files/exiftool-13.59_64.zip/download",
+     "sha256": "44b512b25af500724ba579d0a53c8fc5851628b692dd5e5d94ae4a15c2cba9ec",
+     "size": 11183675,
+     "format": "zip",
+     "main": "exiftool.exe",
+     "whole": true,
+     "strip": 1,
+     "rename": {
+      "exiftool(-k).exe": "exiftool.exe"
+     }
+    },
+    "linux-x86_64": {
+     "url": "https://sourceforge.net/projects/exiftool/files/Image-ExifTool-13.59.tar.gz/download",
+     "sha256": "668ea3acececb7235fbd0f4900e72d5f12c9b07e5c778fd36cb1e9b5828fd65a",
+     "size": 7916358,
+     "format": "tar.gz",
+     "main": "exiftool",
+     "whole": true,
+     "strip": 1,
+     "needs": [
+      "perl"
+     ]
+    }
+   }
+  },
+  "uv": {
+   "kind": "archive",
+   "name": "uv (Python tool installer)",
+   "version": "0.13.5",
+   "license": "MIT OR Apache-2.0",
+   "homepage": "https://github.com/astral-sh/uv",
+   "platforms": {
+    "win32-x86_64": {
+     "url": "https://github.com/astral-sh/uv/releases/download/0.13.5/uv-x86_64-pc-windows-msvc.zip",
+     "sha256": "a38b8d1902b7cfbc76b423ba1bb456f623f42064cdc72628b6075b89afd1019a",
+     "size": 15264056,
+     "format": "zip",
+     "main": "uv.exe",
+     "members": [
+      "uv.exe"
+     ],
+     "strip": 0
+    },
+    "linux-x86_64": {
+     "url": "https://github.com/astral-sh/uv/releases/download/0.13.5/uv-x86_64-unknown-linux-gnu.tar.gz",
+     "sha256": "f68d291c75783122dad58ab77def0e13f3233f358731db5d6d7e8715603b928f",
+     "size": 16682639,
+     "format": "tar.gz",
+     "main": "uv",
+     "members": [
+      "uv-x86_64-unknown-linux-gnu/uv"
+     ],
+     "strip": 1
+    }
+   },
+   "hidden": true
+  },
+  "sherlock": {
+   "kind": "pypi",
+   "name": "Sherlock",
+   "version": "0.16.2",
+   "license": "MIT",
+   "homepage": "https://pypi.org/project/sherlock-project/",
+   "python": "3.12",
+   "script": "sherlock",
+   "platforms": {
+    "win32-x86_64": {
+     "requirements": "sherlock-win32-x86_64.txt"
+    },
+    "linux-x86_64": {
+     "requirements": "sherlock-linux-x86_64.txt"
+    }
+   },
+   "needs": [
+    "uv"
+   ]
+  },
+  "maigret": {
+   "kind": "pypi",
+   "name": "Maigret",
+   "version": "0.6.6",
+   "license": "MIT",
+   "homepage": "https://pypi.org/project/maigret/",
+   "python": "3.12",
+   "script": "maigret",
+   "platforms": {
+    "win32-x86_64": {
+     "requirements": "maigret-win32-x86_64.txt"
+    },
+    "linux-x86_64": {
+     "requirements": "maigret-linux-x86_64.txt"
+    }
+   },
+   "needs": [
+    "uv"
+   ]
+  },
+  "theharvester": {
+   "kind": "pysrc",
+   "name": "theHarvester",
+   "version": "4.11.1",
+   "license": "GPL-2.0-only (separate process, not linked)",
+   "homepage": "https://github.com/laramies/theHarvester",
+   "python": "3.12",
+   "needs": [
+    "uv"
+   ],
+   "platforms": {
+    "linux-x86_64": {
+     "url": "https://github.com/laramies/theHarvester/archive/refs/tags/4.11.1.tar.gz",
+     "sha256": "73a931f6e346972939203a82ae38fed24570b3137bfce5d1ae5517e8284df6df",
+     "size": 1064259,
+     "requirements": "theharvester-linux-x86_64.txt",
+     "entry": "theHarvester.theHarvester:main"
+    }
+   },
+   "unsupported": {
+    "win32-x86_64": "theHarvester does not support native Windows; use WSL or Linux"
+   }
+  },
+  "ollama": {
+   "kind": "ollama",
+   "name": "Ollama (local model runtime)",
+   "version": "0.40.10",
+   "license": "MIT",
+   "homepage": "https://ollama.com",
+   "platforms": {
+    "win32-x86_64": {
+     "url": "https://github.com/ollama/ollama/releases/download/v0.40.10/OllamaSetup.exe",
+     "sha256": "051556bec8d51d65a5e81e46aa9c238fff4fff0d47ce164fb25203ae48ed1c99",
+     "size": 1661645848,
+     "silent_args": [
+      "/VERYSILENT",
+      "/NORESTART"
+     ]
+    }
+   },
+   "unsupported": {
+    "linux-x86_64": "Install Ollama with your package manager or https://ollama.com/download (needs administrator rights); then re-run setup"
+   }
+  }
+ },
+ "models": [
+  {
+   "id": "huihui_ai/qwen3-abliterated:8b",
+   "label": "Qwen3 8B abliterated (uncensored), Q4",
+   "download_gb": 5.0,
+   "min_ram_gb": 12,
+   "think": false
+  },
+  {
+   "id": "huihui_ai/qwen3-abliterated:4b",
+   "label": "Qwen3 4B abliterated (uncensored), Q4",
+   "download_gb": 2.5,
+   "min_ram_gb": 6,
+   "think": false
+  },
+  {
+   "id": "huihui_ai/qwen3-abliterated:1.7b",
+   "label": "Qwen3 1.7B abliterated (uncensored), Q4",
+   "download_gb": 1.1,
+   "min_ram_gb": 3,
+   "think": false
+  }
+ ]
+}

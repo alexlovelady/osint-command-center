@@ -1,0 +1,62 @@
+# Privacy and data handling
+
+What the application stores, where it can go, and what it does not do. Written from the code and tests, not from intentions.
+
+## Network behaviour
+
+- **No telemetry, analytics, crash reporting, update pings or "phone home".** The only outbound requests are the ones in a plan you
+  previewed and confirmed (and workflow/schedule steps you explicitly enabled), the optional map tiles you opt into, the AI endpoint
+  you configure, the update check you press, and the downloads you confirm on the Setup page. Tests assert zero HTTP calls for
+  previews, offline mode, unconfigured updates and a Setup plan. **Packet capture:** on Linux (container, so every packet is the
+  app's) the packaged shell idling for 60 s plus a scripted pass through the no-network API paths produced no DNS, TCP or UDP
+  packets at all (only kernel ARP/IPv6 neighbour chatter in the first two seconds); the Windows capture needs your UAC approval and
+  its status is in `docs/progress.md`. **Windows caveat:** the UI is rendered by Microsoft's WebView2 runtime, which on every observed
+  launch opened two TLS connections to Microsoft-owned addresses by itself (the app's shell and backend opened none). Browser switches did not stop
+  it; see `docs/progress.md` for how to block it with a firewall rule or use the Linux build. Third-party CLIs are run with their own phone-home disabled where they have one (Maigret's
+  automatic database update is switched off).
+- Offline mode denies every network adapter at plan time and again at run time.
+- Every request an adapter makes goes through the SSRF-safe client, so a target cannot steer the app into your own network.
+- Active probing (a TCP connect check) is not in the default registry; it needs `OSINTCC_ENABLE_ACTIVE=1` **and** an unexpired
+  scope authorization covering the exact target **and** per-run confirmation.
+
+## What is stored (in `OSINTCC_DATA_DIR`)
+
+| Item | Where | At rest |
+|---|---|---|
+| Evidence (responses, imports, captures, HUMINT reports) | `vault/` content-addressed files | **AES-256-GCM**, key in the OS credential store; each object's tag is bound to its SHA-256 (swapping files is detected). Objects written before encryption was enabled stay plaintext until you run *Encrypt the N older objects* |
+| Cases, findings, entities, claims, notes, audit log, settings, full-text index | `osintcc.sqlite` | **SQLCipher 4 (AES-256, per-page HMAC)**, key = HKDF subkey of the master key in the OS credential store. A plaintext database from an older version is migrated on first start (verified table-by-table); the plaintext original is kept as `osintcc.sqlite.plaintext.bak` until you remove it (Settings → Encryption & backup, which overwrites then deletes it). If the key is unavailable the app **refuses to start** rather than open or recreate the database |
+| Secrets (API keys, vault key) | OS credential store | Never in the database, files, audit metadata or artifacts |
+| Backups | `backups/*.zip.enc` | AES-256-GCM with your passphrase (scrypt-derived key). The database snapshot and vault objects are plaintext *inside* the encrypted container on purpose, so a backup restores on a machine with a different master key (the restored database is re-encrypted on first start). An explicitly "unencrypted" backup is possible and labelled |
+| Reports | `exports/*.enc` | **AES-256-GCM** with the vault key (tag bound to the report id); the plaintext file is removed. Downloads decrypt for the authenticated caller. What you download or copy out is plaintext, so treat it accordingly. With encryption explicitly off, reports are ordinary files |
+| Tools and models installed by Setup | `tools/` and the Ollama model store | Public binaries, not secret. Each download is SHA-256-pinned; Python tools live in their own virtual environments |
+
+The local case search does **not** hide RESTRICTED rows (they are your own case's data); the MCP search and AI retrieval do hide them unless you opt in.
+
+## Sensitive categories
+
+- **Sensitivity labels** (`PUBLIC`, `INTERNAL`, `RESTRICTED`, `SECRET`) travel with evidence and observations. Positions, GPS tracks,
+  private captures and HUMINT material default to `RESTRICTED`. Reports, search, MCP and AI withhold restricted items by default and
+  round exported coordinates to ~1 km unless you tick the sensitive-export box.
+- **HUMINT** stores aliases only (no real-name fields exist), requires a consent record, never computes a trust score, supports
+  withdrawal with deletion of content, claims and index rows, and lists items due for retention without deleting them.
+- **People**: no facial recognition, no automatic identity merging, no scraping behind logins, no use of leaked credentials.
+  Username matches are leads. Monitoring an individual needs a recorded purpose and acknowledgement.
+- **Hardware**: receive-only; no decoding of encrypted or private communications; GPS/NMEA positions are restricted; ADS-B/AIS
+  identifiers are reported as received and never resolved to an owner.
+
+## AI
+
+Off by default; the app is fully functional without it. A local model receives only case-scoped retrieved snippets. A cloud model
+additionally needs (1) the case to allow cloud use, (2) a preview of the exact payload, destination and an estimate, and (3) your
+approval of a one-time token bound to that payload. Restricted material is never sent to the cloud when the case forbids it. Each
+transfer is logged. Model output is never evidence: citations to evidence the model was not given are rejected and shown as rejected.
+
+## Deleting data
+
+Case purge shows what will go and needs confirmation; it deletes that case's rows, vault objects and index entries and records an
+audit event. Deleting a plugin never deletes evidence it produced. Backups are separate files you manage.
+
+## Export and sharing
+
+Nothing leaves the machine except by an action of yours (report download, backup file, copied text). The MCP server serves only the
+cases you name when you start it, to the local client that launched it.

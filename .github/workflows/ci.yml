@@ -1,0 +1,116 @@
+# This workflow had NOT run on GitHub when it was written (the repository was created afterwards). Every command below was run locally on
+# Windows and, for the backend, in an Ubuntu 22.04 container; see docs/progress.md for what was and was not verified.
+# Actions are pinned to major tags; pin to commit SHAs before relying on this for releases.
+name: ci
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked --python ${{ matrix.python }}
+      - run: uv run ruff check backend tests scripts
+      - run: uv run mypy
+      - run: uv run pytest -q
+        env:
+          OSINTCC_RETRY_SCALE: "0.001"
+      - run: uv run python scripts/secret_scan.py
+
+  web:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked
+      - run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+      - run: pnpm typecheck
+        working-directory: apps/web
+      - run: pnpm lint
+        working-directory: apps/web
+      - run: pnpm test
+        working-directory: apps/web
+      - run: pnpm build
+        working-directory: apps/web
+      - run: pnpm audit
+        working-directory: apps/web
+      - run: pnpm e2e   # uses the Microsoft Edge preinstalled on windows-latest runners
+        working-directory: apps/web
+
+  desktop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --locked
+        working-directory: apps/desktop/src-tauri
+      - run: cargo install cargo-audit --locked
+      - run: cargo audit
+        working-directory: apps/desktop/src-tauri
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked
+      - run: uv export --no-dev --no-hashes --format requirements-txt -o req.txt
+      - run: uv tool run pip-audit -r req.txt --no-deps --disable-pip
+
+  package-windows:
+    needs: [backend, web, desktop]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - uses: dtolnay/rust-toolchain@stable
+      - run: uv sync --locked
+      - run: pnpm install --frozen-lockfile && pnpm build
+        working-directory: apps/web
+      - run: uv run python scripts/build_sidecar.py
+      - run: ../web/node_modules/.bin/tauri build --no-bundle
+        working-directory: apps/desktop
+      - run: uv run python scripts/sidecar_smoke.py
+      - run: uv run python scripts/release.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: portable-windows-unsigned
+          path: dist/release/*
+
+  linux-package:
+    needs: [backend]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: pnpm install --frozen-lockfile && pnpm build
+        working-directory: apps/web
+      - run: docker build -t osintcc-linux-build docker/linux-build
+      - run: mkdir -p dist/linux && docker run --rm -v "$PWD:/src:ro" -v "$PWD/dist/linux:/out" osintcc-linux-build bash /src/docker/linux-build/build.sh
+      - run: docker run --rm --cap-add NET_RAW --cap-add NET_ADMIN -v "$PWD:/src:ro" -v "$PWD/dist/linux:/out" osintcc-linux-build bash /src/docker/linux-build/egress.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-portable-unsigned
+          path: dist/linux/linux/*

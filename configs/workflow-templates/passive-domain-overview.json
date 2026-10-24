@@ -1,0 +1,10 @@
+{"schema_version": 1, "id": "passive-domain-overview", "name": "Passive Domain Overview",
+ "nodes": [
+  {"id": "rdap", "adapter": "rdap", "input": "target", "depends_on": []},
+  {"id": "dns", "adapter": "dns", "input": "target", "depends_on": []},
+  {"id": "ct", "adapter": "crtsh", "input": "target", "depends_on": []},
+  {"id": "archive", "adapter": "wayback", "input": "target", "depends_on": ["rdap", "dns", "ct"]},
+  {"id": "changes", "task": "diff", "input": "target", "depends_on": ["archive"]},
+  {"id": "report", "task": "summarize", "input": "target", "depends_on": ["changes"]}
+ ],
+ "policy": {"active_allowed": false, "max_concurrency": 3, "max_depth": 4}}

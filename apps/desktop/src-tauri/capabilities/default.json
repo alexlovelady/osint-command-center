@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Least privilege: the local UI may call the app's own commands only. No shell, fs, http or opener plugins are installed.",
+  "windows": ["main"],
+  "permissions": []
+}

@@ -1,0 +1,462 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "serialNumber": "urn:uuid:3e1efbfd-9c04-494d-863c-407a7891ce07",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-24T05:18:53.038Z",
+    "lifecycles": [
+      {
+        "phase": "build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "pnpm",
+          "version": "11.18.0"
+        }
+      ]
+    },
+    "component": {
+      "type": "library",
+      "name": "osintcc-web",
+      "version": "0.1.0",
+      "purl": "pkg:npm/osintcc-web@0.1.0",
+      "bom-ref": "pkg:npm/osintcc-web@0.1.0"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "react",
+      "version": "18.3.1",
+      "purl": "pkg:npm/react@18.3.1",
+      "bom-ref": "pkg:npm/react@18.3.1",
+      "description": "React is a JavaScript library for building user interfaces.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "c12fa1020252851d0a844bcf240adfb8f54dd7e1f3d6dd18ea7e632eb1906e46f8bab80f13fd11bdefb590c075bffa16807826e1621c57e8bb176a53563fb689"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://reactjs.org/"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/facebook/react.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/facebook/react/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "react-query",
+      "version": "5.59.0",
+      "purl": "pkg:npm/%40tanstack/react-query@5.59.0",
+      "bom-ref": "pkg:npm/%40tanstack/react-query@5.59.0",
+      "group": "@tanstack",
+      "description": "Hooks for managing, caching and syncing asynchronous and remote data in React",
+      "authors": [
+        {
+          "name": "tannerlinsley"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.59.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "6035e9dce3916d847ef07350c7e95fe05ef7368882982712bd9be0c44dbd3a27e6405934b0194edba3562c7a5c344468f76b55937c3e250e77fef91c45463584"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://tanstack.com/query"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/TanStack/query.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/TanStack/query/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "cytoscape",
+      "version": "3.30.2",
+      "purl": "pkg:npm/cytoscape@3.30.2",
+      "bom-ref": "pkg:npm/cytoscape@3.30.2",
+      "description": "Graph theory (a.k.a. network) library for analysis and visualisation",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/cytoscape/-/cytoscape-3.30.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "a080b142c8d6f2e49a4669f850afe391ccca3aa4eb56ab79ff558bd0f3a22544f610a35cf524cce216051eff75ef2bb9e5a4c1305351cf29a52615408963c2c7"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "http://js.cytoscape.org"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/cytoscape/cytoscape.js.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/cytoscape/cytoscape.js/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "leaflet",
+      "version": "1.9.4",
+      "purl": "pkg:npm/leaflet@1.9.4",
+      "bom-ref": "pkg:npm/leaflet@1.9.4",
+      "description": "JavaScript library for mobile-friendly interactive maps",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/leaflet/-/leaflet-1.9.4.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "9f14b5ca7cc93a63a51e9fa22f71725aa2bcf46b4d2fc53caef94c3ac41d4d3b2cc59c025e1f0dd8d07718340e2fe611dd79d6c99031c108b15116fe140ef83c"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://leafletjs.com/"
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/Leaflet/Leaflet.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/Leaflet/Leaflet/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "loose-envify",
+      "version": "1.4.0",
+      "purl": "pkg:npm/loose-envify@1.4.0",
+      "bom-ref": "pkg:npm/loose-envify@1.4.0",
+      "description": "Fast (and loose) selective `process.env` replacer using js-tokens instead of an AST",
+      "authors": [
+        {
+          "name": "Andres Suarez"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/loose-envify/-/loose-envify-1.4.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "972bb13c6aff59f86b95e9b608bfd472751cd7372a280226043cee918ed8e45ff242235d928ebe7d12debe5c351e03324b0edfeb5d54218e34f04b71452a0add"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/zertosh/loose-envify"
+        },
+        {
+          "type": "vcs",
+          "url": "git://github.com/zertosh/loose-envify.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/zertosh/loose-envify/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "query-core",
+      "version": "5.59.0",
+      "purl": "pkg:npm/%40tanstack/query-core@5.59.0",
+      "bom-ref": "pkg:npm/%40tanstack/query-core@5.59.0",
+      "group": "@tanstack",
+      "description": "The framework agnostic core that powers TanStack Query",
+      "authors": [
+        {
+          "name": "tannerlinsley"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.59.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "5860fcb88857ebf75e1ffb6466a3cd711c8084352ab3bdbd6d62a80726074a881cb215df15ba6939d4c4479faa63b985beef0a1052704f49f1afc45f3d3561d1"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://tanstack.com/query"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/TanStack/query.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/TanStack/query/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "react-dom",
+      "version": "18.3.1",
+      "purl": "pkg:npm/react-dom@18.3.1",
+      "bom-ref": "pkg:npm/react-dom@18.3.1",
+      "description": "React package for working with the DOM.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "e66e2740aa7ead945bd3d2cd1f9f463380714e1f76e75ff295b2886e97bb4e91b17c9fbd92fe812e42c15c88e3b296e06e720136a948db7b519d3593d2c9d423"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://reactjs.org/"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/facebook/react.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/facebook/react/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "js-tokens",
+      "version": "4.0.0",
+      "purl": "pkg:npm/js-tokens@4.0.0",
+      "bom-ref": "pkg:npm/js-tokens@4.0.0",
+      "description": "A regex that tokenizes JavaScript.",
+      "authors": [
+        {
+          "name": "Simon Lydell"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "45d2547e5704ddc5332a232a420b02bb4e853eef5474824ed1b7986cf84737893a6a9809b627dca02b53f5b7313a9601b690f690233a49bce0e026aeb16fcf29"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/lydell/js-tokens#readme"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/lydell/js-tokens.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/lydell/js-tokens/issues"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "scheduler",
+      "version": "0.23.2",
+      "purl": "pkg:npm/scheduler@0.23.2",
+      "bom-ref": "pkg:npm/scheduler@0.23.2",
+      "description": "Cooperative scheduler for the browser environment.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/scheduler/-/scheduler-0.23.2.tgz",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "50e4a1b0fc33ecdacc52a851eadd215a315dbaf3b36edbfbb680c7d7f848adf44d2030679c159dd02c094c6bd3a67815966c0609d3fdfd997fb55ac3a9cb98cd"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://reactjs.org/"
+        },
+        {
+          "type": "vcs",
+          "url": "git+https://github.com/facebook/react.git"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/facebook/react/issues"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:npm/osintcc-web@0.1.0",
+      "dependsOn": [
+        "pkg:npm/%40tanstack/react-query@5.59.0",
+        "pkg:npm/cytoscape@3.30.2",
+        "pkg:npm/leaflet@1.9.4",
+        "pkg:npm/react@18.3.1",
+        "pkg:npm/react-dom@18.3.1"
+      ]
+    },
+    {
+      "ref": "pkg:npm/react@18.3.1",
+      "dependsOn": [
+        "pkg:npm/loose-envify@1.4.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40tanstack/react-query@5.59.0",
+      "dependsOn": [
+        "pkg:npm/%40tanstack/query-core@5.59.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/cytoscape@3.30.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/leaflet@1.9.4",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/loose-envify@1.4.0",
+      "dependsOn": [
+        "pkg:npm/js-tokens@4.0.0"
+      ]
+    },
+    {
+      "ref": "pkg:npm/%40tanstack/query-core@5.59.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/react-dom@18.3.1",
+      "dependsOn": [
+        "pkg:npm/scheduler@0.23.2"
+      ]
+    },
+    {
+      "ref": "pkg:npm/js-tokens@4.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:npm/scheduler@0.23.2",
+      "dependsOn": []
+    }
+  ]
+}
