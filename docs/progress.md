@@ -87,7 +87,7 @@ or use the Linux build (WebKitGTK) where the capture shows nothing.
 6. **Real MCP client** never connected. **Real hardware** never attached (you confirmed this is expected). Ollama's own Windows installer path was not exercised (Ollama was already installed).
 7. **Keyring on a desktop Linux session** (Secret Service) was not exercised; Linux checks used `OSINTCC_VAULT_KEY`. A headless Linux box without it will refuse to start by design.
 8. **Update flow**: signed-manifest check only; no server, key or installer.
-9. **CI** (`.github/workflows/ci.yml`) had never run when this was written; Python 3.12–3.14 × Windows/Linux matrix and the Linux container job are untested there.
+9. **CI** (`.github/workflows/ci.yml`): the repository was pushed (private, `github.com/alexlovelady/osint-command-center`) after everything else was verified, so the workflow's first GitHub run had not been seen when this was written; its Python 3.12–3.14 × Windows/Linux matrix and Linux container job are untested there.
 10. **Screen readers**, low-spec hardware performance and UI frame rates were not tested. The model is slow on weak CPUs (5.9 tok/s here).
 11. The model is a community "abliterated" Qwen3 fine-tune, not a vendor release; its outputs are never treated as evidence and the app's own controls are the safety boundary.
 12. macOS not attempted.
