@@ -2,7 +2,7 @@
 
 Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mode with foreign keys on; schema changes only through Alembic migrations (`backend/osintcc/db/migrations`). FTS5 `search_index` is maintained by triggers and is not an ORM table.
 
-60 tables.
+73 tables.
 
 ## ai_calls
 
@@ -473,6 +473,27 @@ Reversible analyst merge decision: `entity_id` is treated as `canonical_entity_i
 | chain_of_custody_json | JSON | no |  |
 | created_at | DATETIME | no |  |
 
+## exposure_indicators
+
+Status, class, provider and a masked descriptor. There is intentionally no field that could hold a secret or raw dump.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| cls | VARCHAR(32) | no |  |
+| provider | VARCHAR(60) | no |  |
+| exposure_date | DATETIME | yes |  |
+| last_checked | DATETIME | no |  |
+| status | VARCHAR(32) | no |  |
+| risk | VARCHAR(12) | no |  |
+| masked_descriptor | VARCHAR(200) | no |  |
+| verification_basis | VARCHAR(80) | no |  |
+| remediation_state | VARCHAR(16) | no |  |
+| evidence_id | VARCHAR(36) | yes | FK → evidence |
+| created_at | DATETIME | no |  |
+
 ## findings
 
 | Column | Type | Null | Key |
@@ -577,6 +598,47 @@ A source known to the case ONLY by alias. Reliability/credibility are analyst ju
 | hypothesis_id | VARCHAR(36) | no | PK |
 | claim_id | VARCHAR(36) | no | PK |
 | stance | VARCHAR(12) | no |  |
+
+## image_assets
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| evidence_id | VARCHAR(36) | no | FK → evidence |
+| sha256 | VARCHAR(64) | no |  |
+| phash | VARCHAR(16) | no |  |
+| dhash | VARCHAR(16) | no |  |
+| ahash | VARCHAR(16) | no |  |
+| width | INTEGER | no |  |
+| height | INTEGER | no |  |
+| format | VARCHAR(12) | no |  |
+| ownership | VARCHAR(16) | no |  |
+| source_url | TEXT | yes |  |
+| metadata_json | JSON | no |  |
+| has_gps | BOOLEAN | no |  |
+| created_at | DATETIME | no |  |
+
+## image_matches
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| asset_id | VARCHAR(36) | no | FK → image_assets |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| other_asset_id | VARCHAR(36) | yes | FK → image_assets |
+| match_type | VARCHAR(24) | no |  |
+| provider | VARCHAR(40) | yes |  |
+| matched_url | TEXT | yes |  |
+| distance | FLOAT | yes |  |
+| score | FLOAT | yes |  |
+| review_state | VARCHAR(16) | no |  |
+| reviewer | VARCHAR(80) | yes |  |
+| note | TEXT | no |  |
+| evidence_ids | JSON | no |  |
+| observed_at | DATETIME | no |  |
 
 ## intelligence_requirements
 
@@ -699,6 +761,74 @@ Canonical multi-INT observation envelope (spec 21.3). Facts from a parser; never
 | reviewed_at | DATETIME | yes |  |
 | installed_at | DATETIME | no |  |
 
+## profile_candidate_links
+
+A hypothesis that a public account/page belongs to the subject. Never a fact until a person decides.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| from_identifier_id | VARCHAR(36) | yes | FK → subject_identifiers |
+| to_entity_id | VARCHAR(36) | yes | FK → entities |
+| cluster_key | VARCHAR(64) | no |  |
+| canonical_url | TEXT | no |  |
+| site | VARCHAR(120) | no |  |
+| hypothesis | TEXT | no |  |
+| adapters | JSON | no |  |
+| source_independence | INTEGER | no |  |
+| evidence_ids | JSON | no |  |
+| finding_ids | JSON | no |  |
+| first_seen_at | DATETIME | no |  |
+| last_seen_at | DATETIME | no |  |
+| state | VARCHAR(12) | no |  |
+| reviewed_by | VARCHAR(80) | yes |  |
+| reviewed_at | DATETIME | yes |  |
+| review_basis | TEXT | no |  |
+
+## profile_claims
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| field | VARCHAR(40) | no |  |
+| structured_value | JSON | no |  |
+| sensitivity | VARCHAR(12) | no |  |
+| validation_state | VARCHAR(20) | no |  |
+| observed_from | DATETIME | yes |  |
+| observed_to | DATETIME | yes |  |
+| evidence_ids | JSON | no |  |
+| assertion_source | VARCHAR(20) | no |  |
+| reviewer | VARCHAR(80) | yes |  |
+| reviewed_at | DATETIME | yes |  |
+| reason | TEXT | no |  |
+| created_at | DATETIME | no |  |
+| updated_at | DATETIME | no |  |
+
+## profile_review_events
+
+Append-only history of ownership/validation decisions; reversal writes a new event that restores `from_state`.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| target_type | VARCHAR(12) | no |  |
+| target_id | VARCHAR(36) | no |  |
+| from_state | VARCHAR(20) | no |  |
+| to_state | VARCHAR(20) | no |  |
+| reviewer | VARCHAR(80) | no |  |
+| basis | TEXT | no |  |
+| attestation | VARCHAR(12) | no |  |
+| evidence_ids | JSON | no |  |
+| bulk_id | VARCHAR(36) | yes |  |
+| reverts_event_id | VARCHAR(36) | yes |  |
+| created_at | DATETIME | no |  |
+
 ## relationship_evidence
 
 | Column | Type | Null | Key |
@@ -719,6 +849,25 @@ Canonical multi-INT observation envelope (spec 21.3). Facts from a parser; never
 | confidence_reason | TEXT | no |  |
 | status | VARCHAR(20) | no |  |
 | asserted_by | VARCHAR(80) | no |  |
+| created_at | DATETIME | no |  |
+| updated_at | DATETIME | no |  |
+
+## remediation_tasks
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| indicator_id | VARCHAR(36) | yes | FK → exposure_indicators |
+| issue | TEXT | no |  |
+| priority | VARCHAR(8) | no |  |
+| guidance | TEXT | no |  |
+| owner | VARCHAR(80) | yes |  |
+| due_at | DATETIME | yes |  |
+| recheck_at | DATETIME | yes |  |
+| state | VARCHAR(12) | no |  |
+| resolution_evidence_id | VARCHAR(36) | yes | FK → evidence |
 | created_at | DATETIME | no |  |
 | updated_at | DATETIME | no |  |
 
@@ -744,6 +893,40 @@ Canonical multi-INT observation envelope (spec 21.3). Facts from a parser; never
 | evidence_id | VARCHAR(36) | no | PK |
 | claim_id | VARCHAR(36) | yes | FK → claims |
 | relevance_note | TEXT | no |  |
+
+## research_tasks
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| category | VARCHAR(40) | no |  |
+| source_id | VARCHAR(80) | no |  |
+| identifier_id | VARCHAR(36) | yes | FK → subject_identifiers |
+| workflow_id | VARCHAR(36) | yes |  |
+| run_id | VARCHAR(36) | yes |  |
+| status | VARCHAR(16) | no |  |
+| last_attempt | DATETIME | yes |  |
+| last_success | DATETIME | yes |  |
+| limitations | TEXT | no |  |
+| approval_reference | VARCHAR(80) | yes |  |
+| result_count | INTEGER | no |  |
+| created_at | DATETIME | no |  |
+
+## retention_actions
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no |  |
+| case_id | VARCHAR(36) | no | FK → cases |
+| action | VARCHAR(20) | no |  |
+| status | VARCHAR(12) | no |  |
+| summary_json | JSON | no |  |
+| performed_by | VARCHAR(80) | no |  |
+| event_time | DATETIME | no |  |
+| audit_seq | INTEGER | yes |  |
 
 ## roles
 
@@ -839,6 +1022,76 @@ Canonical multi-INT observation envelope (spec 21.3). Facts from a parser; never
 | license_notes | TEXT | yes |  |
 | rate_class | VARCHAR(40) | yes |  |
 | metadata_json | JSON | no |  |
+
+## subject_consents
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| mode | VARCHAR(16) | no |  |
+| verification_method | VARCHAR(40) | no |  |
+| verifier | VARCHAR(200) | no |  |
+| scope_json | JSON | no |  |
+| source_classes | JSON | no |  |
+| permitted_purposes | JSON | no |  |
+| obtained_at | DATETIME | no |  |
+| expires_at | DATETIME | yes |  |
+| revoked_at | DATETIME | yes |  |
+| revoked_reason | TEXT | no |  |
+| proof_evidence_id | VARCHAR(36) | yes | FK → evidence |
+| retention_policy | JSON | no |  |
+| created_by | VARCHAR(80) | no |  |
+| created_at | DATETIME | no |  |
+
+## subject_corrections
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| target_type | VARCHAR(16) | no |  |
+| target_id | VARCHAR(36) | yes |  |
+| request_text | TEXT | no |  |
+| justification | TEXT | no |  |
+| requested_by | VARCHAR(200) | no |  |
+| status | VARCHAR(12) | no |  |
+| resolution | TEXT | no |  |
+| event_time | DATETIME | no |  |
+| audit_seq | INTEGER | yes |  |
+
+## subject_identifiers
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| kind | VARCHAR(16) | no |  |
+| value | TEXT | no |  |
+| value_hash | VARCHAR(64) | no |  |
+| status | VARCHAR(12) | no |  |
+| source_evidence_id | VARCHAR(36) | yes | FK → evidence |
+| recorded_at | DATETIME | no |  |
+
+## subjects
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | no | FK → cases |
+| type | VARCHAR(24) | no |  |
+| display_name | VARCHAR(300) | no |  |
+| mode | VARCHAR(16) | no |  |
+| purpose | TEXT | no |  |
+| status | VARCHAR(16) | no |  |
+| owner | VARCHAR(80) | yes |  |
+| sensitivity | VARCHAR(12) | no |  |
+| retention_days | INTEGER | yes |  |
+| created_at | DATETIME | no |  |
+| updated_at | DATETIME | no |  |
 
 ## targets
 

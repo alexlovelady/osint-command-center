@@ -182,3 +182,9 @@ button.linklike { background: none; border: none; padding: 0; color: var(--c-acc
 .cv-bad { fill: var(--c-danger); } .cv-warn { fill: var(--c-warn); } .cv-badn { fill: #fff; font: 700 10px var(--font); }
 .minimap { position: absolute; right: 8px; bottom: 8px; border: 1px solid var(--c-border-strong); background: var(--c-panel); opacity: .92; }
 .mm-bg { fill: var(--c-sunken); } .mm-node { fill: var(--c-border-strong); } .mm-node.sel { fill: var(--c-accent); } .mm-view { fill: none; stroke: var(--c-tech); stroke-width: 1.5; }
+
+/* Target profile validation states (addendum TP-1.0): text label always accompanies the colour */
+.badge.st-ok { color: var(--c-ok-text); border-color: var(--c-ok); }
+.badge.st-warn { color: var(--c-warn-text); border-color: var(--c-warn); }
+.badge.st-bad { color: var(--c-danger-text); border-color: var(--c-danger); background: var(--c-danger-wash); }
+.badge.st-mute { color: var(--c-text-2); }

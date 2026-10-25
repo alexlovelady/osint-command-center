@@ -6,6 +6,7 @@ import AiTab from "./case/AiTab";
 import AnalysisTab from "./case/AnalysisTab";
 import CrossLinksTab from "./case/CrossLinksTab";
 import PlansTab from "./case/PlansTab";
+import TargetProfile from "./case/profile/TargetProfile";
 import HardwareTab from "./case/HardwareTab";
 import HumintTab from "./case/HumintTab";
 import MapTab from "./case/MapTab";
@@ -20,9 +21,10 @@ type Tab = (typeof TABS)[number];
 
 export default function CaseView({ id }: { id: string }) {
   const [tab, setTab] = useState<Tab>("Search");
-  useEffect(() => { setAppCtx({ route: "case", case_id: id, tab }); }, [id, tab]);
+  const [view, setView] = useState<"profile" | "workbench">("profile");   // person cases open on the Target Profile
+  useEffect(() => { setAppCtx({ route: "case", case_id: id, tab: view === "profile" ? "Profile" : tab }); }, [id, tab, view]);
   useEffect(() => {  // the Copilot / tutorials switch tabs with an event; unknown names are ignored
-    const on = (e: Event) => { const t = (e as CustomEvent<string>).detail; if ((TABS as readonly string[]).includes(t)) setTab(t as Tab); };
+    const on = (e: Event) => { const t = (e as CustomEvent<string>).detail; if ((TABS as readonly string[]).includes(t)) { setTab(t as Tab); setView("workbench"); } };
     window.addEventListener("osintcc:tab", on);
     return () => window.removeEventListener("osintcc:tab", on);
   }, []);
@@ -30,6 +32,8 @@ export default function CaseView({ id }: { id: string }) {
   if (c.isLoading) return <Loading what="case" />;
   if (c.isError) return <ErrorBox error={c.error} />;
   const cs = c.data!;
+  const person = cs.category === "people";
+  const showProfile = person && view === "profile";
   return (
     <>
       <div className="muted"><a href="#/cases">Cases</a> / {cs.title}</div>
@@ -38,9 +42,16 @@ export default function CaseView({ id }: { id: string }) {
         <b>Scope &amp; purpose:</b> {cs.purpose || <span className="muted">not stated — add one before sharing results</span>} · category <b>{cs.category}</b> ·
         passive sources only unless a scope authorization exists.
       </div>
-      <div className="tabs" role="tablist">
+      {person && (
+        <div className="tabs" role="tablist" aria-label="Case view">
+          <button role="tab" aria-selected={view === "profile"} onClick={() => setView("profile")}>Target profile</button>
+          <button role="tab" aria-selected={view === "workbench"} onClick={() => setView("workbench")}>Advanced workbench</button>
+        </div>)}
+      {showProfile && <TargetProfile caseId={id} />}
+      {!showProfile && <div className="tabs" role="tablist">
         {TABS.map((t) => <button key={t} role="tab" data-tour={`tab-${t}`} aria-selected={tab === t} onClick={() => setTab(t)}>{t}</button>)}
-      </div>
+      </div>}
+      {!showProfile && <>
       {tab === "Search" && <SearchComposer caseId={id} />}
       {tab === "Plans" && <PlansTab id={id} />}
       {tab === "Cross-links" && <CrossLinksTab id={id} />}
@@ -57,6 +68,7 @@ export default function CaseView({ id }: { id: string }) {
       {tab === "Hardware" && <HardwareTab id={id} />}
       {tab === "Notes" && <Notes id={id} />}
       {tab === "Reports" && <Reports id={id} />}
+      </>}
     </>
   );
 }

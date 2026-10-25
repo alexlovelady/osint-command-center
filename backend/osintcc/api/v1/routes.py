@@ -1296,3 +1296,6 @@ router.include_router(_copilot.router)
 from . import automations as _automations
 
 router.include_router(_automations.router)
+from . import profile as _profile
+
+router.include_router(_profile.router)

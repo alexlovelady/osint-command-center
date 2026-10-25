@@ -886,3 +886,20 @@ class AutomationSuggestion(Base):
     snooze_until: Mapped[datetime | None] = ts(nullable=True, default=False)
     created_at: Mapped[datetime] = ts()
     dismissed_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+
+
+from .profile import (  # noqa: F401  (target-profile tables, addendum TP-1.0)
+    ExposureIndicator,
+    ImageAsset,
+    ImageMatch,
+    ProfileCandidateLink,
+    ProfileClaim,
+    ProfileReviewEvent,
+    RemediationTask,
+    ResearchTask,
+    RetentionAction,
+    Subject,
+    SubjectConsent,
+    SubjectCorrection,
+    SubjectIdentifier,
+)

@@ -273,6 +273,59 @@
     "title": "BackupPathIn",
     "type": "object"
    },
+   "BulkReviewIn": {
+    "properties": {
+     "attestation": {
+      "default": "none",
+      "enum": [
+       "none",
+       "subject"
+      ],
+      "title": "Attestation",
+      "type": "string"
+     },
+     "basis": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Basis",
+      "type": "string"
+     },
+     "candidate_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "title": "Candidate Ids",
+      "type": "array"
+     },
+     "evidence_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Evidence Ids",
+      "type": "array"
+     },
+     "state": {
+      "enum": [
+       "confirmed",
+       "rejected",
+       "unsure",
+       "candidate"
+      ],
+      "title": "State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "candidate_ids",
+     "state",
+     "basis"
+    ],
+    "title": "BulkReviewIn",
+    "type": "object"
+   },
    "CaptureIn": {
     "properties": {
      "case_id": {
@@ -543,76 +596,6 @@
     "title": "ChatIn",
     "type": "object"
    },
-   "ClaimIn": {
-    "properties": {
-     "case_id": {
-      "title": "Case Id",
-      "type": "string"
-     },
-     "epistemic_status": {
-      "default": "reported",
-      "enum": [
-       "observed",
-       "reported",
-       "inferred"
-      ],
-      "title": "Epistemic Status",
-      "type": "string"
-     },
-     "object_entity_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Object Entity Id"
-     },
-     "observed_at": {
-      "anyOf": [
-       {
-        "format": "date-time",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Observed At"
-     },
-     "predicate": {
-      "maxLength": 120,
-      "minLength": 1,
-      "title": "Predicate",
-      "type": "string"
-     },
-     "sources": {
-      "items": {
-       "$ref": "#/components/schemas/osintcc__api__v1__fusion__SourceIn"
-      },
-      "minItems": 1,
-      "title": "Sources",
-      "type": "array"
-     },
-     "subject_entity_id": {
-      "title": "Subject Entity Id",
-      "type": "string"
-     },
-     "value": {
-      "title": "Value"
-     }
-    },
-    "required": [
-     "case_id",
-     "subject_entity_id",
-     "predicate",
-     "sources"
-    ],
-    "title": "ClaimIn",
-    "type": "object"
-   },
    "Confirm": {
     "properties": {
      "confirm": {
@@ -622,65 +605,6 @@
      }
     },
     "title": "Confirm",
-    "type": "object"
-   },
-   "ConsentIn": {
-    "properties": {
-     "authorizing_party": {
-      "maxLength": 200,
-      "minLength": 2,
-      "title": "Authorizing Party",
-      "type": "string"
-     },
-     "basis": {
-      "enum": [
-       "informed_consent",
-       "contract",
-       "public_interview",
-       "legal_duty"
-      ],
-      "title": "Basis",
-      "type": "string"
-     },
-     "expires_at": {
-      "anyOf": [
-       {
-        "format": "date-time",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Expires At"
-     },
-     "scope": {
-      "items": {
-       "type": "string"
-      },
-      "maxItems": 20,
-      "minItems": 1,
-      "title": "Scope",
-      "type": "array"
-     },
-     "supporting_evidence_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Supporting Evidence Id"
-     }
-    },
-    "required": [
-     "basis",
-     "authorizing_party",
-     "scope"
-    ],
-    "title": "ConsentIn",
     "type": "object"
    },
    "DecideIn": {
@@ -967,6 +891,46 @@
      "status"
     ],
     "title": "HypStatusIn",
+    "type": "object"
+   },
+   "IdentifierIn": {
+    "properties": {
+     "kind": {
+      "enum": [
+       "name",
+       "alias",
+       "username",
+       "email",
+       "domain",
+       "url",
+       "organization"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "source_evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Evidence Id"
+     },
+     "value": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "value"
+    ],
+    "title": "IdentifierIn",
     "type": "object"
    },
    "ImportIn": {
@@ -1634,6 +1598,34 @@
     "title": "RestoreIn",
     "type": "object"
    },
+   "ReverseIn": {
+    "properties": {
+     "bulk_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bulk Id"
+     },
+     "event_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Event Id"
+     }
+    },
+    "title": "ReverseIn",
+    "type": "object"
+   },
    "ReviewIn": {
     "properties": {
      "approve": {
@@ -1650,28 +1642,6 @@
      "approve"
     ],
     "title": "ReviewIn",
-    "type": "object"
-   },
-   "RevokeIn": {
-    "properties": {
-     "confirm": {
-      "default": false,
-      "title": "Confirm",
-      "type": "boolean"
-     },
-     "delete_content": {
-      "default": false,
-      "title": "Delete Content",
-      "type": "boolean"
-     },
-     "reason": {
-      "default": "",
-      "maxLength": 1000,
-      "title": "Reason",
-      "type": "string"
-     }
-    },
-    "title": "RevokeIn",
     "type": "object"
    },
    "SchedIn": {
@@ -1962,6 +1932,126 @@
     "title": "SpecIn",
     "type": "object"
    },
+   "SubjectIn": {
+    "properties": {
+     "display_name": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Display Name",
+      "type": "string"
+     },
+     "mode": {
+      "default": "self",
+      "enum": [
+       "self",
+       "client",
+       "organization"
+      ],
+      "title": "Mode",
+      "type": "string"
+     },
+     "purpose": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Purpose",
+      "type": "string"
+     },
+     "retention_days": {
+      "anyOf": [
+       {
+        "maximum": 3650.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retention Days"
+     },
+     "type": {
+      "default": "person",
+      "enum": [
+       "person",
+       "organization",
+       "domain",
+       "email",
+       "username",
+       "business_record",
+       "image",
+       "document",
+       "imported"
+      ],
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "display_name"
+    ],
+    "title": "SubjectIn",
+    "type": "object"
+   },
+   "SubjectPatch": {
+    "properties": {
+     "display_name": {
+      "anyOf": [
+       {
+        "maxLength": 300,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "purpose": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Purpose"
+     },
+     "retention_days": {
+      "anyOf": [
+       {
+        "maximum": 3650.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retention Days"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "enum": [
+         "active",
+         "paused",
+         "closed"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "SubjectPatch",
+    "type": "object"
+   },
    "UninstallIn": {
     "properties": {
      "confirm": {
@@ -2011,31 +2101,6 @@
      "type"
     ],
     "title": "ValidationError",
-    "type": "object"
-   },
-   "VerifyIn": {
-    "properties": {
-     "note": {
-      "default": "",
-      "maxLength": 2000,
-      "title": "Note",
-      "type": "string"
-     },
-     "status": {
-      "enum": [
-       "unverified",
-       "analyst_verified",
-       "disputed",
-       "rejected"
-      ],
-      "title": "Status",
-      "type": "string"
-     }
-    },
-    "required": [
-     "status"
-    ],
-    "title": "VerifyIn",
     "type": "object"
    },
    "osintcc__api__v1__automations__RunIn": {
@@ -2229,6 +2294,76 @@
     "title": "ApproveIn",
     "type": "object"
    },
+   "osintcc__api__v1__fusion__ClaimIn": {
+    "properties": {
+     "case_id": {
+      "title": "Case Id",
+      "type": "string"
+     },
+     "epistemic_status": {
+      "default": "reported",
+      "enum": [
+       "observed",
+       "reported",
+       "inferred"
+      ],
+      "title": "Epistemic Status",
+      "type": "string"
+     },
+     "object_entity_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Object Entity Id"
+     },
+     "observed_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Observed At"
+     },
+     "predicate": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Predicate",
+      "type": "string"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/osintcc__api__v1__fusion__SourceIn"
+      },
+      "minItems": 1,
+      "title": "Sources",
+      "type": "array"
+     },
+     "subject_entity_id": {
+      "title": "Subject Entity Id",
+      "type": "string"
+     },
+     "value": {
+      "title": "Value"
+     }
+    },
+    "required": [
+     "case_id",
+     "subject_entity_id",
+     "predicate",
+     "sources"
+    ],
+    "title": "ClaimIn",
+    "type": "object"
+   },
    "osintcc__api__v1__fusion__ReqIn": {
     "properties": {
      "assigned_actor": {
@@ -2325,6 +2460,90 @@
     "title": "SourceIn",
     "type": "object"
    },
+   "osintcc__api__v1__fusion__VerifyIn": {
+    "properties": {
+     "note": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Note",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "unverified",
+       "analyst_verified",
+       "disputed",
+       "rejected"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status"
+    ],
+    "title": "VerifyIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__humint__ConsentIn": {
+    "properties": {
+     "authorizing_party": {
+      "maxLength": 200,
+      "minLength": 2,
+      "title": "Authorizing Party",
+      "type": "string"
+     },
+     "basis": {
+      "enum": [
+       "informed_consent",
+       "contract",
+       "public_interview",
+       "legal_duty"
+      ],
+      "title": "Basis",
+      "type": "string"
+     },
+     "expires_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expires At"
+     },
+     "scope": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Scope",
+      "type": "array"
+     },
+     "supporting_evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supporting Evidence Id"
+     }
+    },
+    "required": [
+     "basis",
+     "authorizing_party",
+     "scope"
+    ],
+    "title": "ConsentIn",
+    "type": "object"
+   },
    "osintcc__api__v1__humint__ReportIn": {
     "properties": {
      "claims": {
@@ -2379,6 +2598,28 @@
     "title": "ReportIn",
     "type": "object"
    },
+   "osintcc__api__v1__humint__RevokeIn": {
+    "properties": {
+     "confirm": {
+      "default": false,
+      "title": "Confirm",
+      "type": "boolean"
+     },
+     "delete_content": {
+      "default": false,
+      "title": "Delete Content",
+      "type": "boolean"
+     },
+     "reason": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "title": "RevokeIn",
+    "type": "object"
+   },
    "osintcc__api__v1__humint__SourceIn": {
     "properties": {
      "alias": {
@@ -2389,7 +2630,7 @@
       "type": "string"
      },
      "consent": {
-      "$ref": "#/components/schemas/ConsentIn"
+      "$ref": "#/components/schemas/osintcc__api__v1__humint__ConsentIn"
      },
      "retention_days": {
       "anyOf": [
@@ -2440,6 +2681,209 @@
      "path"
     ],
     "title": "InstallIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile__ClaimIn": {
+    "properties": {
+     "assertion_source": {
+      "default": "analyst",
+      "enum": [
+       "analyst",
+       "import",
+       "subject"
+      ],
+      "title": "Assertion Source",
+      "type": "string"
+     },
+     "evidence_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Evidence Ids",
+      "type": "array"
+     },
+     "field": {
+      "title": "Field",
+      "type": "string"
+     },
+     "observed_from": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Observed From"
+     },
+     "observed_to": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Observed To"
+     },
+     "value": {
+      "title": "Value"
+     }
+    },
+    "required": [
+     "field",
+     "value"
+    ],
+    "title": "ClaimIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile__ConsentIn": {
+    "properties": {
+     "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+     },
+     "identifier_ids": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Identifier Ids",
+      "type": "array"
+     },
+     "permitted_purposes": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Permitted Purposes",
+      "type": "array"
+     },
+     "proof_evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proof Evidence Id"
+     },
+     "retention_days": {
+      "anyOf": [
+       {
+        "maximum": 3650.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retention Days"
+     },
+     "source_classes": {
+      "items": {
+       "type": "string"
+      },
+      "minItems": 1,
+      "title": "Source Classes",
+      "type": "array"
+     },
+     "verification_method": {
+      "enum": [
+       "self_attestation",
+       "email_confirmation",
+       "provider_verification",
+       "signed_document",
+       "in_person"
+      ],
+      "title": "Verification Method",
+      "type": "string"
+     },
+     "verifier": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Verifier",
+      "type": "string"
+     }
+    },
+    "required": [
+     "verification_method",
+     "verifier",
+     "source_classes",
+     "expires_at"
+    ],
+    "title": "ConsentIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile__RevokeIn": {
+    "properties": {
+     "consent_id": {
+      "title": "Consent Id",
+      "type": "string"
+     },
+     "reason": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "consent_id"
+    ],
+    "title": "RevokeIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile__VerifyIn": {
+    "properties": {
+     "attestation": {
+      "default": "none",
+      "enum": [
+       "none",
+       "subject"
+      ],
+      "title": "Attestation",
+      "type": "string"
+     },
+     "basis": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Basis",
+      "type": "string"
+     },
+     "evidence_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Evidence Ids",
+      "type": "array"
+     },
+     "state": {
+      "enum": [
+       "verified",
+       "subject_confirmed",
+       "candidate",
+       "conflicting",
+       "rejected",
+       "not_assessed"
+      ],
+      "title": "State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "state",
+     "basis"
+    ],
+    "title": "VerifyIn",
     "type": "object"
    },
    "osintcc__api__v1__routes__DecisionIn": {
@@ -7871,6 +8315,89 @@
     "summary": "Spectrogram"
    }
   },
+  "/api/v1/cases/{case_id}/subjects": {
+   "get": {
+    "description": "For a people case this lazily upgrades an existing case (idempotent, read-only on old tables) and returns its subject(s).",
+    "operationId": "list_subjects_api_v1_cases__case_id__subjects_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Subjects"
+   },
+   "post": {
+    "operationId": "create_subject_api_v1_cases__case_id__subjects_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SubjectIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Subject"
+   }
+  },
   "/api/v1/cases/{case_id}/targets": {
    "get": {
     "operationId": "list_targets_api_v1_cases__case_id__targets_get",
@@ -8170,7 +8697,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/ClaimIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__fusion__ClaimIn"
        }
       }
      },
@@ -8340,7 +8867,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/VerifyIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__fusion__VerifyIn"
        }
       }
      },
@@ -9669,7 +10196,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/RevokeIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__humint__RevokeIn"
        }
       }
      },
@@ -11194,6 +11721,722 @@
      }
     },
     "summary": "Setup Task"
+   }
+  },
+  "/api/v1/subjects/{subject_id}": {
+   "get": {
+    "operationId": "get_subject_api_v1_subjects__subject_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Subject"
+   },
+   "patch": {
+    "operationId": "patch_subject_api_v1_subjects__subject_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SubjectPatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Patch Subject"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/candidates": {
+   "get": {
+    "operationId": "list_candidates_api_v1_subjects__subject_id__candidates_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "state",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "State"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Candidates"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/candidates/bulk-review": {
+   "post": {
+    "operationId": "bulk_review_api_v1_subjects__subject_id__candidates_bulk_review_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BulkReviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Bulk Review"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/candidates/reverse": {
+   "post": {
+    "operationId": "reverse_review_api_v1_subjects__subject_id__candidates_reverse_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReverseIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reverse Review"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/claims": {
+   "post": {
+    "operationId": "add_claim_api_v1_subjects__subject_id__claims_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile__ClaimIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Claim"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/claims/{claim_id}/verify": {
+   "post": {
+    "operationId": "verify_claim_api_v1_subjects__subject_id__claims__claim_id__verify_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "claim_id",
+      "required": true,
+      "schema": {
+       "title": "Claim Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile__VerifyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Verify Claim"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/consent": {
+   "get": {
+    "operationId": "get_consent_api_v1_subjects__subject_id__consent_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Consent"
+   },
+   "post": {
+    "operationId": "add_consent_api_v1_subjects__subject_id__consent_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile__ConsentIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Consent"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/consent/revoke": {
+   "post": {
+    "operationId": "revoke_consent_api_v1_subjects__subject_id__consent_revoke_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile__RevokeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Revoke Consent"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/identifiers": {
+   "get": {
+    "operationId": "list_identifiers_api_v1_subjects__subject_id__identifiers_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Identifiers"
+   },
+   "post": {
+    "operationId": "add_identifier_api_v1_subjects__subject_id__identifiers_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IdentifierIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Identifier"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/identifiers/{identifier_id}": {
+   "delete": {
+    "operationId": "remove_identifier_api_v1_subjects__subject_id__identifiers__identifier_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "identifier_id",
+      "required": true,
+      "schema": {
+       "title": "Identifier Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Remove Identifier"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/profile": {
+   "get": {
+    "operationId": "get_profile_api_v1_subjects__subject_id__profile_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Profile"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/review-history": {
+   "get": {
+    "operationId": "review_history_api_v1_subjects__subject_id__review_history_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "target_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Target Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Review History"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/timeline": {
+   "get": {
+    "operationId": "get_timeline_api_v1_subjects__subject_id__timeline_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Timeline"
    }
   },
   "/api/v1/system/database/remove-plaintext-leftovers": {

@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-213 operations in 36 groups.
+231 operations in 37 groups.
 
 ## ai
 
@@ -161,6 +161,8 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | POST | `/api/v1/cases/{case_id}/searches/preview` | Search Preview |
 | POST | `/api/v1/cases/{case_id}/sensor/series/analyze` | Sensor Series |
 | POST | `/api/v1/cases/{case_id}/signal/spectrogram` | Offline: recompute the spectrum of a stored SigMF archive with bounded FFT parameters. Stores nothing. |
+| GET | `/api/v1/cases/{case_id}/subjects` | For a people case this lazily upgrades an existing case (idempotent, read-only on old tables) and returns its subject(s). |
+| POST | `/api/v1/cases/{case_id}/subjects` | Create Subject |
 | GET | `/api/v1/cases/{case_id}/targets` | List Targets |
 | GET | `/api/v1/cases/{case_id}/timeline` | Three distinct times per item; `time_unknown` is explicit rather than silently substituted. |
 | GET | `/api/v1/cases/{case_id}/timeline/unified` | Unified |
@@ -361,6 +363,27 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | POST | `/api/v1/setup/plan` | Setup Plan |
 | GET | `/api/v1/setup/status` | Setup Status |
 | GET | `/api/v1/setup/tasks/{task_id}` | Setup Task |
+
+## subjects
+
+| Method | Path | Summary |
+|---|---|---|
+| GET | `/api/v1/subjects/{subject_id}` | Get Subject |
+| PATCH | `/api/v1/subjects/{subject_id}` | Patch Subject |
+| GET | `/api/v1/subjects/{subject_id}/candidates` | List Candidates |
+| POST | `/api/v1/subjects/{subject_id}/candidates/bulk-review` | Bulk Review |
+| POST | `/api/v1/subjects/{subject_id}/candidates/reverse` | Reverse Review |
+| POST | `/api/v1/subjects/{subject_id}/claims` | Add Claim |
+| POST | `/api/v1/subjects/{subject_id}/claims/{claim_id}/verify` | Verify Claim |
+| GET | `/api/v1/subjects/{subject_id}/consent` | Get Consent |
+| POST | `/api/v1/subjects/{subject_id}/consent` | Add Consent |
+| POST | `/api/v1/subjects/{subject_id}/consent/revoke` | Revoke Consent |
+| GET | `/api/v1/subjects/{subject_id}/identifiers` | List Identifiers |
+| POST | `/api/v1/subjects/{subject_id}/identifiers` | Add Identifier |
+| DELETE | `/api/v1/subjects/{subject_id}/identifiers/{identifier_id}` | Remove Identifier |
+| GET | `/api/v1/subjects/{subject_id}/profile` | Get Profile |
+| GET | `/api/v1/subjects/{subject_id}/review-history` | Review History |
+| GET | `/api/v1/subjects/{subject_id}/timeline` | Get Timeline |
 
 ## system
 
