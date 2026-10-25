@@ -27,7 +27,7 @@ The shell prefers `osintcc-backend.exe` next to itself and falls back to the rep
 `docker build -t osintcc-linux-build docker/linux-build`, then
 `docker run --rm -v <repo>:/src:ro -v <repo>/dist/linux:/out osintcc-linux-build bash /src/docker/linux-build/build.sh` runs, inside Ubuntu 22.04
 (glibc 2.35, pinned uv, rustup): `uv sync --locked`, ruff, mypy, the full pytest suite (Python 3.12), the PyInstaller sidecar (70 MB), `cargo test`, the release
-shell (4 MB) and `sidecar_smoke.py` (28/28). `scripts/release.py --linux` makes the `.tar.gz` with checksums. `docker/linux-build/egress.sh`
+shell (4 MB) and `sidecar_smoke.py` (48/48 as of the Target Profile addendum). `scripts/release.py --linux` makes the `.tar.gz` with checksums. `docker/linux-build/egress.sh`
 (run with `--cap-add NET_RAW --cap-add NET_ADMIN`) starts the real shell under Xvfb, drives the backend, captures every packet with `tcpdump`,
 checks that SIGKILL of the shell leaves no backend process, and saves a screenshot.
 
