@@ -105,6 +105,11 @@
   "fix": "Write why you made this decision; it is stored with your name and the time."
  },
  {
+  "code": "budget_exceeded",
+  "meaning": "More sources were selected than one approval allows.",
+  "fix": "Approve fewer sources at a time; each approval is capped to keep research bounded."
+ },
+ {
   "code": "cannot_apply",
   "meaning": "This kind of correction cannot be applied automatically.",
   "fix": "Choose 'accepted', then make the change yourself."
@@ -118,6 +123,11 @@
   "code": "changed_since",
   "meaning": "That candidate was reviewed again after the decision you tried to undo.",
   "fix": "Undo the later decision first, then the earlier one."
+ },
+ {
+  "code": "citation_check_failed",
+  "meaning": "The report was not created because a verified statement does not resolve to intact case evidence.",
+  "fix": "Open the preview, read the listed problems (missing, redacted or altered evidence) and fix or remove those statements."
  },
  {
   "code": "claim_empty",
@@ -215,6 +225,11 @@
   "fix": "Write the case purpose and tick the acknowledgement when creating the schedule."
  },
  {
+  "code": "invalid_audience",
+  "meaning": "The report audience must be 'subject' or 'analyst'.",
+  "fix": "Pick one of the two."
+ },
+ {
   "code": "invalid_citation",
   "meaning": "A cited evidence item does not belong to this case.",
   "fix": "Cite evidence from the same case."
@@ -310,6 +325,11 @@
   "fix": "Wait until its start time or record a new one."
  },
  {
+  "code": "nothing_selected",
+  "meaning": "Nothing was selected.",
+  "fix": "Select at least one item and try again."
+ },
+ {
   "code": "offline",
   "meaning": "Offline mode is on, so network sources and downloads are denied.",
   "fix": "Settings -> turn Offline mode off. Local AI and stored cases keep working in offline mode."
@@ -400,6 +420,11 @@
   "fix": "Tick the confirmation on the import form."
  },
  {
+  "code": "role_required",
+  "meaning": "That report or view needs the editor or owner role.",
+  "fix": "Ask a case owner to raise your role on this case."
+ },
+ {
   "code": "scope_required",
   "meaning": "Client authorizations must name the identities they cover.",
   "fix": "Tick the identities this consent applies to."
@@ -448,6 +473,11 @@
   "code": "unknown_model",
   "meaning": "The model is not in the setup catalog.",
   "fix": "Pick a model listed in Setup, or add your own profile in Settings -> AI."
+ },
+ {
+  "code": "unknown_selection",
+  "meaning": "A selected source or input is not part of this target's plan.",
+  "fix": "Preview the plan again and select from the list shown."
  },
  {
   "code": "unmasked_identifier",

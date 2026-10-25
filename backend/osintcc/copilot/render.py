@@ -24,8 +24,8 @@ INTENTS: list[tuple[str, re.Pattern[str]]] = [
 ]
 APP_QUESTION = re.compile(r"\b(does|do|can|could) (the |this )?(app|application|it|tool|copilot|software)\b|\bis there (a|an)\b|\bwhere (is|do|can)\b|\bhow (do|can) i\b|\bbutton\b|\bfeature\b|\bsetting\b|\btab\b|\bpage\b|\bsupport", _I)
 ACTION_CLAIM = re.compile(
-    r"\b(i|we)(?:'ve| have|'ll have)?\s+(?:just\s+|already\s+|now\s+|successfully\s+)?(started|launched|created|added|saved|generated|installed|deleted|removed|updated|submitted|sent|ran|executed|scanned|enabled|disabled|configured|imported|exported|applied|changed)\b"
-    r"|\b(has|have) been\s+(started|launched|created|added|saved|generated|installed|deleted|removed|updated|submitted|sent|run|executed|enabled|disabled|configured|imported|exported)\b"
+    r"\b(i|we)(?:'ve| have|'ll have)?\s+(?:just\s+|already\s+|now\s+|successfully\s+)?(started|launched|created|added|saved|generated|installed|deleted|removed|updated|submitted|sent|ran|executed|scanned|enabled|disabled|configured|imported|exported|applied|changed|verified|confirmed|merged|promoted|marked|linked|approved|rejected|attested)\b"
+    r"|\b(has|have) been\s+(started|launched|created|added|saved|generated|installed|deleted|removed|updated|submitted|sent|run|executed|enabled|disabled|configured|imported|exported|verified|confirmed|merged|promoted|marked|linked|approved|rejected)\b"
     r"|\b(search|run|scan|report|note|workflow)\s+(is|was)\s+(now\s+)?(running|started|launched|created|complete|completed|done)\b", _I)
 
 

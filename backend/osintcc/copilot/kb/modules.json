@@ -954,5 +954,46 @@
    "coalesce",
    "schedule"
   ]
+ },
+ {
+  "id": "tab-profile",
+  "title": "Target Profile (people cases)",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Profile"
+  },
+  "summary": "The landing screen of a people case: who the case is about, what is verified (with evidence), what is only a lead, what has been researched, what is publicly exposed and what to fix. The older tabs are under Advanced workbench.",
+  "how_to": [
+   "Profile: sections for identity, handles, professional history, domains, documents and locations. Every item says verified, subject-confirmed, candidate, conflicting, rejected or not assessed and links to its evidence.",
+   "Authorization: record who verified consent, which source classes and identities it covers, and when it ends. Expired or revoked authorization blocks collection immediately.",
+   "Research: preview exactly what each source would contact, approve a bounded plan, and read the coverage grid (completed methods against the approved plan, not a percentage of everything that exists).",
+   "Review queue: username matches from Sherlock and Maigret are leads. Mark them Mine, Not mine or Unsure with a reason; confirming needs the subject's attestation or independent evidence. Every decision can be undone.",
+   "Images: import an image you own, see metadata and local duplicate matches, and use the manual reverse-image search steps. Nothing identifies people from faces.",
+   "Exposure: record the status, category and date of an exposure. Passwords, hashes, tokens and government identifiers are never stored. The password check hashes in your browser and sends only five characters.",
+   "Remediation, Reports and Privacy & data: fix tasks need evidence to close; reports are drafted, citation-checked and sealed before export; corrections and purges are recorded and reversible only where stated."
+  ],
+  "keywords": [
+   "target profile",
+   "subject",
+   "person",
+   "people case",
+   "consent",
+   "authorization",
+   "coverage",
+   "review queue",
+   "candidate",
+   "exposure",
+   "breach",
+   "remediation",
+   "image",
+   "reverse image",
+   "subject report",
+   "purge",
+   "retention",
+   "verified",
+   "lead"
+  ],
+  "related": []
  }
 ]

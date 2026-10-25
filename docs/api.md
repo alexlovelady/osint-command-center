@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-263 operations in 38 groups.
+266 operations in 38 groups.
 
 ## ai
 
@@ -411,6 +411,9 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/subjects/{subject_id}/remediations` | List Remediations |
 | POST | `/api/v1/subjects/{subject_id}/remediations` | Create Remediation |
 | PATCH | `/api/v1/subjects/{subject_id}/remediations/{task_id}` | Update Remediation |
+| POST | `/api/v1/subjects/{subject_id}/report/create` | Report Create |
+| POST | `/api/v1/subjects/{subject_id}/report/preview` | Report Preview |
+| GET | `/api/v1/subjects/{subject_id}/reports` | List Reports |
 | POST | `/api/v1/subjects/{subject_id}/research/approve` | Research Approve |
 | POST | `/api/v1/subjects/{subject_id}/research/preview` | Research Preview |
 | GET | `/api/v1/subjects/{subject_id}/research/runs` | Research Runs |

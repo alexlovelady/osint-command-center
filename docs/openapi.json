@@ -3406,6 +3406,31 @@
     "title": "ReviewIn",
     "type": "object"
    },
+   "osintcc__api__v1__profile_reports__ReportIn": {
+    "properties": {
+     "audience": {
+      "default": "subject",
+      "enum": [
+       "subject",
+       "analyst"
+      ],
+      "title": "Audience",
+      "type": "string"
+     },
+     "format": {
+      "default": "markdown",
+      "enum": [
+       "markdown",
+       "html",
+       "json"
+      ],
+      "title": "Format",
+      "type": "string"
+     }
+    },
+    "title": "ReportIn",
+    "type": "object"
+   },
    "osintcc__api__v1__routes__DecisionIn": {
     "properties": {
      "decision": {
@@ -13948,6 +13973,137 @@
      }
     },
     "summary": "Update Remediation"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/report/create": {
+   "post": {
+    "operationId": "report_create_api_v1_subjects__subject_id__report_create_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_reports__ReportIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Report Create"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/report/preview": {
+   "post": {
+    "operationId": "report_preview_api_v1_subjects__subject_id__report_preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_reports__ReportIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Report Preview"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/reports": {
+   "get": {
+    "operationId": "list_reports_api_v1_subjects__subject_id__reports_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Reports"
    }
   },
   "/api/v1/subjects/{subject_id}/research/approve": {

@@ -23,16 +23,18 @@ from sqlalchemy import select
 
 from ..ai import service as ai
 from ..ai.providers import Message, Provider, ProviderError, ProviderUnavailable
-from ..db.models import AiCall, AiProfile, Setting
+from ..db.models import AiCall, AiProfile, Setting, Subject
 from ..telemetry import audit
 from . import context as cx
+from . import profile_tools as pt
 from . import render, store
+from . import render_profile as rp
 from .kb import Hit, KnowledgeBase, tool_chunks
 from .prompts import system_prompt
 from .tools import TOOLS, Toolbox, ToolRefused, case_access, parse_calls, proposal_dict
 
 DEFAULT_CTX_CHARS = 18000
-DETERMINISTIC = {"next_steps", "conflicts", "timeline", "diagnose", "tools"}
+DETERMINISTIC = {"next_steps", "conflicts", "timeline", "diagnose", "tools", *rp.PROFILE_INTENTS}
 MARKER = "```osintcc"
 _SENT = re.compile(r"(?<=[.!?])\s+|\n+")
 _HEDGE = re.compile(r"propos|approv|pending|waiting|would|will |can |could|let me|if you|once you|should|need|unless|not (yet )?(been|run|started)|nothing", re.IGNORECASE)
@@ -104,6 +106,10 @@ def suggested_prompts(mode: str, ctx: dict[str, Any], has_case: bool) -> list[di
         base = [P("Walk me through creating a case", "Walk me through creating and managing an investigation"), P("Show me how to run my first search"),
                 P("How do I import a file?"), P("How do I make a report?"), P("Help me set up a local AI model", "How do I use and switch the AI model?")]
         return base
+    if mode == "investigation" and has_case and tab == "Profile":
+        return [P("What do we actually know?"), P("Which profiles have I verified?", "Which profiles have I verified and what is still only a lead?"), P("What information is publicly exposed?"),
+                P("What should I check next?"), P("Why wasn't this source searched?", "Why wasn't sherlock searched?"), P("Group the account leads", "Group the account leads for the verification queue"),
+                P("Explain this image match")]
     if mode == "investigation" and has_case:
         base = [P("Recommend next steps"), P("Summarise what we know"), P("Do any sources disagree?"), P("Show a timeline"), P("Why is confidence low on these findings?", "Explain the confidence on my findings")]
         if tab == "Search":
@@ -183,13 +189,15 @@ class Engine:
             parts.append(f'<tool_result name="{name}">{_short(res)}</tool_result>')
         return "\n".join(parts), dsrc, csrc
 
-    def _history(self, msgs: list[dict[str, Any]], budget: int) -> list[Message]:
+    def _history(self, msgs: list[dict[str, Any]], budget: int, cloud: bool = False) -> list[Message]:
         out: list[Message] = []
         used = 0
         for m in reversed(msgs):
             if m["role"] == "note":
                 text = "[system note] " + m["content"]
                 role = "user"
+            elif cloud and m["role"] == "assistant" and (m.get("meta") or {}).get("profile_data"):
+                text, role = "[An earlier answer contained target-profile details; it is withheld from cloud models.]", "assistant"
             else:
                 text, role = m["content"], m["role"]
             if used + len(text) > budget:
@@ -224,6 +232,9 @@ class Engine:
             await run("timeline")
         elif intent == "summary" and case_id:
             await run("case_summary")
+        elif intent in rp.PROFILE_INTENTS and case_id:
+            tool = rp.PROFILE_INTENTS[intent]
+            await run(tool, {"source": rp.mentioned_source(txt)} if tool == "why_not_searched" else {})
         elif intent in ("diagnose", "tools"):
             named = render.mentioned_tools(txt, tools) or ([ctx["tool_id"]] if ctx.get("tool_id") in tools else [])
             if named:
@@ -240,7 +251,7 @@ class Engine:
                     await run("list_tools")
             else:
                 await run("list_tools")
-        if case_id and req.mode == "investigation" and intent not in ("next_steps", "conflicts", "timeline", "diagnose", "tools") or intent == "evidence" and case_id:
+        if case_id and req.mode == "investigation" and intent not in ("next_steps", "conflicts", "timeline", "diagnose", "tools", *rp.PROFILE_INTENTS) or intent == "evidence" and case_id:
             await run("search_evidence", {"query": txt[:400]})
         return results, events
 
@@ -273,7 +284,7 @@ class Engine:
             if case_id and profile is not None and not profile.local_only:
                 from ..api.v1.ai import _policy
                 pol = _policy(db, case_id)
-                policy = {"allow_cloud": pol.allow_cloud, "require_preview": pol.require_preview}
+                policy = {"allow_cloud": pol.allow_cloud, "require_preview": pol.require_preview, "deny_sensitive_cloud": pol.deny_sensitive_cloud}
             prior, skipped = store.load_messages(db, conv_id)
             budget_chars = DEFAULT_CTX_CHARS
             row = db.get(Setting, "copilot_context_chars")
@@ -283,7 +294,7 @@ class Engine:
         tools = await cx.tool_status(st)
         kb = KnowledgeBase(tool_chunks(st.adapters, tools))
         box = Toolbox(st, self.user, kb, case_id, req.include_restricted and bool(prof_snap and prof_snap["local"]))
-        intent = req.intent_hint or render.detect_intent(text)
+        intent = req.intent_hint or rp.detect_profile_intent(text) or render.detect_intent(text)
 
         # ---- model readiness (cloud needs its own gate before anything is sent)
         provider: Provider | None = None
@@ -326,14 +337,21 @@ class Engine:
                     evidence, withheld = r["results"], r["withheld_restricted"]
                 except ToolRefused:
                     pass
+        if cloud and case_id and (policy is None or policy.get("deny_sensitive_cloud", True)):
+            with st.sm() as db:
+                has_subject = db.query(Subject).filter(Subject.case_id == case_id).first() is not None
+            if has_subject and evidence:        # a case about a person: stored findings hold identifiers, so none go to a cloud model unless the case policy allows sensitive content
+                withheld += len(evidence)
+                evidence = []
         docs = hits[:5] if supported or mode != "investigation" else hits[:2]
 
         # ---- cloud approval gate: nothing is persisted or sent until the user approves exactly this payload
         sys_msg = Message("system", system_prompt(mode, req.level))
-        blocks, dsrc, csrc = self._blocks(docs, evidence, [(n, r) for n, r in results if n != "search_evidence"], facts, ctx)
+        # a cloud model sees a reduced view of profile results (counts and generic text); the local screen still shows the full deterministic answer
+        blocks, dsrc, csrc = self._blocks(docs, evidence, [(n, pt.cloud_view(n, r) if cloud and n in pt.READ_TOOLS else r) for n, r in results if n != "search_evidence"], facts, ctx)
         user_msg = Message("user", f"{blocks}\n\nQuestion: {ai.sanitize(text)}")
         hist_budget = max(1500, budget_chars - len(sys_msg.content) - len(user_msg.content))
-        history = self._history(prior, hist_budget)
+        history = self._history(prior, hist_budget, cloud)
         messages = [sys_msg, *history, user_msg]
         dropped = max(0, len([m for m in prior if m["role"] != "note"]) - len([m for m in history]))
         use_model = provider is not None and not (intent in DETERMINISTIC and req.quick)
@@ -367,10 +385,12 @@ class Engine:
 
         meta: dict[str, Any] = {"ctx": ctx, "intent": intent, "model": prof_snap if use_model else None, "degraded": degraded or None,
                                 "tools": [{"name": e["name"], "ok": e["ok"], "error": e.get("error")} for e in tool_events], "context_dropped_turns": dropped}
+        if any(n in pt.READ_TOOLS for n, _ in results):
+            meta["profile_data"] = True          # this answer holds target-profile details: it is kept out of any later cloud payload
         shown: list[str] = []
         proposals: list[dict[str, Any]] = []
         warnings: list[str] = []
-        det_text, force = self._deterministic(text, intent, results, evidence, hits, kb, mode, supported, case_id)
+        det_text, force = self._deterministic(text, intent, results, evidence, hits, kb, mode, supported, case_id, tool_events)
         sources_all = dsrc + csrc
 
         # ---- answers that need no model, or when none is available
@@ -450,6 +470,8 @@ class Engine:
                             r = await box.call_read(c["tool"], c["args"])
                             yield ev("tool", name=c["tool"], ok=True, args=c["args"])
                             meta["tools"].append({"name": c["tool"], "ok": True, "error": None})
+                            if c["tool"] in pt.READ_TOOLS:
+                                meta["profile_data"] = True
                             out_blocks.append(f'<tool_result name="{c["tool"]}">{_short(r)}</tool_result>')
                         except ToolRefused as exc:
                             yield ev("tool", name=c["tool"], ok=False, error=str(exc), args=c["args"])
@@ -495,7 +517,10 @@ class Engine:
         if det_text is not None and not used and (supported or mode == "investigation"):   # an honest "not documented" answer cites nothing
             used = [s for s in dsrc[:3]] if mode != "investigation" else [s for s in csrc[:5]]
         steps = next((r["steps"] for n, r in results if n == "recommend_next_steps"), None)
+        profile_cites = list({e["id"]: e for n, r in results if n in pt.READ_TOOLS for e in r.get("citations", [])}.values())
         meta.update(sources=used, proposals=[p["id"] for p in proposals], warnings=warnings, withheld_restricted=withheld)
+        if profile_cites:
+            meta["profile_citations"] = profile_cites
         if steps:
             meta["steps"] = steps
         with st.sm() as db:
@@ -508,14 +533,20 @@ class Engine:
                               payload_sha256=ai.payload_hash(messages), outcome="degraded" if meta.get("degraded") else "ok"))
             db.commit()
             am_id = am.id
-        yield ev("final", text=final, sources=used, warnings=warnings, message_id=am_id, steps=steps)
+        yield ev("final", text=final, sources=used, warnings=warnings, message_id=am_id, steps=steps, profile_citations=profile_cites)
         yield ev("done", conversation_id=conv_id, message_id=am_id, proposals=[p["id"] for p in proposals])
 
     # ------------------------------------------------------------------ deterministic answers
     def _deterministic(self, text: str, intent: str | None, results: list[tuple[str, Any]], evidence: list[dict[str, Any]], hits: list[Hit], kb: KnowledgeBase,
-                       mode: str, supported: bool, case_id: str | None) -> tuple[str | None, bool]:
+                       mode: str, supported: bool, case_id: str | None, tool_events: list[dict[str, Any]] | None = None) -> tuple[str | None, bool]:
         """(answer, force). `force` means the answer is used even when a model is available (it is a computation or an honest 'not documented')."""
         res = dict(results)
+        if intent in rp.PROFILE_INTENTS:
+            tool = rp.PROFILE_INTENTS[intent]
+            if tool in res:
+                return rp.RENDERERS[tool](res[tool]), True
+            err = next((e for e in (tool_events or []) if e["name"] == tool), None)
+            return ("I could not answer that from the stored profile" + (f": {err['error']}" if err and err.get("error") else ".") + " Nothing is assumed."), True
         if intent == "next_steps":
             if "recommend_next_steps" in res:
                 return render.md_next_steps(res["recommend_next_steps"]["steps"]), True

@@ -24,6 +24,7 @@ from ..policy.targets import TargetError
 from ..search import service
 from ..telemetry import audit
 from . import context as cx
+from . import profile_tools as pt
 from .kb import KnowledgeBase
 
 ROLE_RANK = {"viewer": 1, "editor": 2, "owner": 3}
@@ -65,6 +66,19 @@ TOOLS: dict[str, ToolSpec] = {t.name: t for t in [
              sensitive="Writes an encrypted export file."),
     ToolSpec("run_workflow", "action", "Run a saved workflow of this case on a target.", {"workflow_id": "workflow id", "target": "target"},
              sensitive="May contact external services."),
+    # ---- Target profile (addendum TP-1.0): nothing here can verify, confirm, reject or merge anything
+    ToolSpec("summarize_profile", "read", "What is actually known about the case's target: verified items with evidence, unverified leads, contradictions, what is not assessed."),
+    ToolSpec("recommend_research_plan", "read", "Rank the permitted research sources that have not run yet, and list what is blocked and why. Runs nothing."),
+    ToolSpec("explain_claim", "read", "Explain one profile claim: sources, confidence rationale, contradictions and its review history.", {"claim_id": "claim id"}),
+    ToolSpec("create_verification_queue", "read", "Group unresolved account leads for review. Changes nothing and merges nothing."),
+    ToolSpec("explain_exposure", "read", "Explain recorded exposure indicators and the remediation checklist. Never shows secrets."),
+    ToolSpec("guide_image_search", "read", "Walk through the manual reverse-image search steps for an imported image.", {"image_id": "optional image id"}),
+    ToolSpec("why_not_searched", "read", "Explain why a source has not been searched for this target.", {"source": "tool id or name, e.g. sherlock"}),
+    ToolSpec("explain_image_match", "read", "Explain an image match and its limits.", {"match_id": "optional match id"}),
+    ToolSpec("propose_enrichment_workflow", "action", "Propose installing one Target-profile workflow template (TP-01..TP-12) as a DISABLED draft for this target.",
+             {"slug": "template key such as TP-01", "inputs": "optional object of template inputs"}, sensitive="Creates a disabled automation draft; running it later needs its own approval."),
+    ToolSpec("draft_subject_report", "action", "Draft a redacted subject report or analyst package for human review. Exports nothing.", {"audience": "subject|analyst"},
+             sensitive="Builds a draft from the target's records; nothing is exported."),
 ]}
 ACTIONS = {n for n, t in TOOLS.items() if t.kind == "action"}
 
@@ -148,6 +162,11 @@ class Toolbox:
                 hits = self.kb.search(_text(args, "query", 300), 5)
                 return {"supported": self.kb.supported(hits), "results": [{"source": h.chunk.source, "title": h.chunk.title, "text": h.chunk.text[:600]} for h in hits]}
             assert self.case_id
+            if name in pt.READ_TOOLS:
+                try:
+                    return pt.read(db, self.st, self.user, self.case_id, name, args, tools)
+                except pt.Refused as exc:
+                    raise ToolRefused(str(exc)) from exc
             if name == "case_summary":
                 return cx.case_facts(db, self.case_id)
             if name == "search_evidence":
@@ -214,6 +233,11 @@ class Toolbox:
                 raise ToolRefused("unknown report profile or format")
             clean = {"profile": prof, "format": fmt}
             preview = {**clean, "restricted_items": "withheld (the Copilot cannot include them; use the Reports tab)"}
+        elif name in pt.ACTION_TOOLS:
+            try:
+                clean, preview = pt.propose(db, self.st, self.user, case.id, name, args)
+            except pt.Refused as exc:
+                raise ToolRefused(str(exc)) from exc
         else:  # run_workflow
             wid = _text(args, "workflow_id", 64)
             wf = db.get(Workflow, wid)
@@ -292,6 +316,11 @@ class Toolbox:
                 raise ToolRefused(f"report failed: {type(exc).__name__}") from exc
             rr.export_path, rr.status, rr.sha256 = path.name, "done", digest
             return {"executed": True, "report_id": rr.id, "file": path.name, "sha256": digest}
+        if p.tool in pt.ACTION_TOOLS:
+            try:
+                return pt.execute(db, self.st, self.user, case.id, p.tool, a)
+            except pt.Refused as exc:
+                raise ToolRefused(str(exc)) from exc
         if p.tool == "run_workflow":
             from ..workflows import WorkflowError, execute
             try:

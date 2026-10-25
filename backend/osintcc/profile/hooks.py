@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -48,3 +49,31 @@ def workflow_gate(db: Session, wf: AutomationWorkflow, now: datetime | None = No
 
 
 consent.REVOKE_HOOKS.append(deactivate_bound_workflows)
+
+
+class InstallError(Exception):
+    pass
+
+
+def install_template(db: Session, subject: Subject, case: Any, slug: str, inputs: dict[str, Any], owner: str) -> AutomationWorkflow:
+    """Installs a Target-profile template as a DISABLED draft bound to the subject. Shared by the API and the Copilot proposal."""
+    import json
+
+    from ..automations import catalog
+    from ..automations import service as auto
+    t = catalog.get(slug)
+    if t is None or t["category"] != "Target profile":
+        raise InstallError("no such Target profile template")
+    d = json.loads(json.dumps(t["definition"]))
+    for k, v in inputs.items():
+        if k not in d["inputs"]:
+            raise InstallError(f"unknown input {k!r}")
+        d["inputs"][k] = v
+    d["tags"] = [*d.get("tags", [])[:10], f"{TAG_PREFIX}{subject.id}"]
+    try:
+        wf = auto.create_workflow(db, owner=owner, definition=d, case_id=case.id, name=None, template_slug=t["slug"])
+    except auto.ServiceError as exc:
+        raise InstallError(exc.message) from exc
+    from ..telemetry import audit
+    audit.record(db, "subject.workflow_install", actor=owner, case_id=case.id, resource_type="subject", resource_id=subject.id, metadata={"slug": t["slug"]})
+    return wf

@@ -11,7 +11,7 @@ export interface Proposal {
 }
 export interface Msg {
   id?: string; role: "user" | "assistant" | "note"; mode: Mode; content: string;
-  meta?: { sources?: Source[]; warnings?: string[]; proposals?: string[]; steps?: Step[]; tools?: { name: string; ok: boolean; error?: string }[]; degraded?: string | null;
+  meta?: { sources?: Source[]; profile_citations?: { id: string; title: string; sha256: string }[]; warnings?: string[]; proposals?: string[]; steps?: Step[]; tools?: { name: string; ok: boolean; error?: string }[]; degraded?: string | null;
     model?: { name: string; model: string; local: boolean } | null; action_claim_flagged?: boolean; uncited?: boolean; intent?: string | null };
   pending?: boolean;
 }
@@ -35,7 +35,7 @@ export type StreamEvent =
   | { type: "tool"; name: string; ok: boolean; error?: string }
   | { type: "proposal"; proposal: Proposal }
   | { type: "approval_required"; transfer_token: string; preview: Approval["preview"] }
-  | { type: "final"; text: string; sources: Source[]; warnings: string[]; message_id: string; steps?: Step[] | null }
+  | { type: "final"; text: string; sources: Source[]; warnings: string[]; message_id: string; steps?: Step[] | null; profile_citations?: { id: string; title: string; sha256: string }[] }
   | { type: "user_saved"; message_id: string }
   | { type: "done"; conversation_id: string; message_id: string; proposals: string[] }
   | { type: "error"; code: string; message: string };

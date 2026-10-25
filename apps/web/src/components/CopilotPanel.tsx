@@ -103,7 +103,7 @@ export default function CopilotPanel({ open, setOpen }: { open: boolean; setOpen
           setApproval({ body, a: { transfer_token: e.transfer_token, preview: e.preview } });
           setMsgs((all) => all.slice(0, keepUser ? -1 : -2));
           ended = true;
-        } else if (e.type === "final") patch((m) => ({ ...m, content: e.text, pending: false, meta: { ...m.meta, sources: e.sources, warnings: e.warnings, steps: e.steps ?? undefined } }));
+        } else if (e.type === "final") patch((m) => ({ ...m, content: e.text, pending: false, meta: { ...m.meta, sources: e.sources, warnings: e.warnings, steps: e.steps ?? undefined, profile_citations: e.profile_citations ?? undefined } }));
         else if (e.type === "error") { setError(e.message); patch((m) => ({ ...m, pending: false })); ended = true; }
       }
     } catch (err) {
@@ -206,6 +206,11 @@ export default function CopilotPanel({ open, setOpen }: { open: boolean; setOpen
                     {m.meta?.steps && <StepList steps={m.meta.steps} />}
                     {(m.meta?.proposals ?? []).map((pid) => props[pid] && <ProposalCard key={pid} p={props[pid]} onDecide={decide} />)}
                     {(m.meta?.warnings ?? []).map((w, j) => <div key={j} className="banner warn" style={{ fontSize: 12 }}>{w}</div>)}
+                    {!m.pending && m.meta?.profile_citations && m.meta.profile_citations.length > 0 && (
+                      <div className="chips" aria-label="Evidence cited">
+                        <span className="muted" style={{ fontSize: 12 }}>Evidence cited:</span>
+                        {m.meta.profile_citations.map((c) => <code key={c.id} className="chip" title={`${c.title} · sha256 ${c.sha256}`}>{c.id.slice(0, 8)}</code>)}
+                      </div>)}
                     {!m.pending && m.meta?.sources && m.meta.sources.length > 0 && (
                       <div className="chips" aria-label="Sources">
                         <span className="muted" style={{ fontSize: 12 }}>Sources:</span>

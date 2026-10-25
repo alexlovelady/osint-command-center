@@ -2,15 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-import json
-from typing import Any
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from ...automations import catalog
-from ...automations import service as auto
 from ...db.models import ResearchTask, Subject
 from ...main import ApiError
 from ...profile import hooks, registry, research
@@ -149,22 +146,11 @@ class SubjectWorkflowIn(BaseModel):
 async def subject_workflow(request: Request, subject_id: str, body: SubjectWorkflowIn):
     """Installs a Target-profile template as a DISABLED draft bound to this subject: every run then needs the subject's live authorization."""
     st = S(request)
-    t = catalog.get(body.slug)
-    if t is None or t["category"] != "Target profile":
-        raise ApiError(404, "not_found", "no such Target profile template")
-    d: dict[str, Any] = json.loads(json.dumps(t["definition"]))
-    for k, v in body.inputs.items():
-        if k not in d["inputs"]:
-            raise ApiError(422, "INVALID_GRAPH", f"unknown input {k!r}")
-        d["inputs"][k] = v
     with st.sm() as db:
         s, case, _ = subject_for(db, request, subject_id, "editor")
-        d["tags"] = [*d.get("tags", [])[:10], f"{hooks.TAG_PREFIX}{s.id}"]
         try:
-            wf = auto.create_workflow(db, owner=actor(request), definition=d, case_id=case.id, name=None, template_slug=t["slug"])
-        except auto.ServiceError as exc:
-            raise ApiError(exc.status, exc.code, exc.message) from exc
-        audit.record(db, "subject.workflow_install", actor=actor(request), case_id=case.id, resource_type="subject", resource_id=s.id,
-                     metadata={"slug": t["slug"]})
+            wf = hooks.install_template(db, s, case, body.slug, body.inputs, actor(request))
+        except hooks.InstallError as exc:
+            raise ApiError(404 if "no such" in str(exc) else 422, "not_found" if "no such" in str(exc) else "INVALID_GRAPH", str(exc)) from exc
         db.commit()
         return _wf_dict(wf, db, True)

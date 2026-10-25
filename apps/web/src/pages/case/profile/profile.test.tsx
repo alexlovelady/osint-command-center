@@ -62,7 +62,7 @@ describe("TargetProfile", () => {
     expect(screen.getByText(/e1234567/)).toBeInTheDocument();           // evidence reference
     expect(screen.getByLabelText("Target header")).toHaveTextContent(/Next: Record an authorization/);
     expect(screen.getByRole("button", { name: "Refresh approved checks" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Generate report" })).toBeNull();   // actions appear only for features that exist
+    expect(screen.getByRole("button", { name: "Generate report" })).toBeInTheDocument();
   });
 
   it("offers to create a target (mode + purpose) when the case has none", async () => {
