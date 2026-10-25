@@ -1299,3 +1299,6 @@ router.include_router(_automations.router)
 from . import profile as _profile
 
 router.include_router(_profile.router)
+from . import profile_research as _profile_research
+
+router.include_router(_profile_research.router)

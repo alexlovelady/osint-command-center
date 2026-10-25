@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-231 operations in 37 groups.
+238 operations in 38 groups.
 
 ## ai
 
@@ -303,6 +303,12 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | POST | `/api/v1/plugins/{pid}/{version}/enable` | Enable |
 | POST | `/api/v1/plugins/{pid}/{version}/uninstall` | Uninstall |
 
+## profile
+
+| Method | Path | Summary |
+|---|---|---|
+| GET | `/api/v1/profile/sources` | The capability matrix for subject research: what each method needs, produces, costs and how well it has been exercised. |
+
 ## reports
 
 | Method | Path | Summary |
@@ -378,12 +384,18 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/subjects/{subject_id}/consent` | Get Consent |
 | POST | `/api/v1/subjects/{subject_id}/consent` | Add Consent |
 | POST | `/api/v1/subjects/{subject_id}/consent/revoke` | Revoke Consent |
+| GET | `/api/v1/subjects/{subject_id}/coverage` | Get Coverage |
 | GET | `/api/v1/subjects/{subject_id}/identifiers` | List Identifiers |
 | POST | `/api/v1/subjects/{subject_id}/identifiers` | Add Identifier |
 | DELETE | `/api/v1/subjects/{subject_id}/identifiers/{identifier_id}` | Remove Identifier |
 | GET | `/api/v1/subjects/{subject_id}/profile` | Get Profile |
+| POST | `/api/v1/subjects/{subject_id}/research/approve` | Research Approve |
+| POST | `/api/v1/subjects/{subject_id}/research/preview` | Research Preview |
+| GET | `/api/v1/subjects/{subject_id}/research/runs` | Research Runs |
 | GET | `/api/v1/subjects/{subject_id}/review-history` | Review History |
+| GET | `/api/v1/subjects/{subject_id}/templates` | Subject Templates |
 | GET | `/api/v1/subjects/{subject_id}/timeline` | Get Timeline |
+| POST | `/api/v1/subjects/{subject_id}/workflows` | Installs a Target-profile template as a DISABLED draft bound to this subject: every run then needs the subject's live authorization. |
 
 ## system
 

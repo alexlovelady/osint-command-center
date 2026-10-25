@@ -111,6 +111,9 @@ async def get_profile(request: Request, subject_id: str):
     with S(request).sm() as db:
         s, case, role = subject_for(db, request, subject_id)
         out = service.build_profile(db, s, role=role)
+        from ...profile import research  # local: research imports the search service
+        cov = research.coverage(db, s, S(request).adapters)
+        out["next_action"], out["last_collected"] = research.next_action(db, s, cov), research.last_collected(db, s)
         audit.record(db, "profile.view", actor=actor(request), case_id=case.id, resource_type="subject", resource_id=s.id, metadata={"role": role})
         db.commit()
         return out

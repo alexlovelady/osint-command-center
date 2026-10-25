@@ -1,4 +1,4 @@
-"""Generate the 30 bundled automation templates into backend/osintcc/automations/templates/*.json.
+"""Generate the 42 bundled automation templates (30 general + 12 Target-profile) into backend/osintcc/automations/templates/*.json.
 
     uv run python scripts/build_automation_templates.py [--check]
 
@@ -307,8 +307,87 @@ add("CASE-06", "Report Generator", "Investigation", "Manual", "Produces a cited 
     [N("report", "report", [], profile="technical", format="html")], [], inputs={}, tags=["reporting"])
 
 
+# ---------------------------------------------------------------------------------------------------------------------- Target profile (addendum TP-1.0)
+TP_AUTH = ("Open Target profile > Authorization. Confirm the authorization is current, covers the sources and identities this workflow uses, and matches the purpose. "
+           "Expired or revoked authorization blocks every run.")
+TP_LEGAL = ("Applies to verified self-audits and consent-based engagements. Results are leads, not facts; nothing is verified automatically. "
+            "Every run re-checks the subject's authorization, and revoking it switches the schedule off.")
+TP_GAPS_MANUAL = "Steps marked as review are carried out by a person in the Target Profile screens; the automation does not perform them."
+add("TP-01", "Self Digital Footprint Baseline", "Target profile", "Manual", "Baseline of a person's own public username footprint, queued for ownership review and ended with a report.",
+    [consent(TP_AUTH), scope("$inputs.username", "username", deps=["consent"]), q("sherlock", "sherlock", ref="$inputs.username", ttype="username"),
+     q("maigret", "maigret", ref="$inputs.username", ttype="username", optional=True), merge("merged", ["sherlock", "maigret"]), dedupe("unique", "merged"),
+     N("save", "evidence_save", ["unique"], ref=out("unique"), title="Username footprint baseline (unconfirmed candidates)"),
+     N("queue", "analyst_review", ["save"], prompt="Open Target profile > Review queue and mark each account Mine, Not mine or Unsure with a reason.", timeout_hours=168),
+     N("report", "report", ["queue"], profile="technical", format="html")], USERNAME, tags=["target-profile", "self"], legal=TP_LEGAL,
+    gaps=["Published profile pages, documents and professional history are entered or imported by hand (see TP-05, TP-06); this template covers username presence only.", TP_GAPS_MANUAL])
+add("TP-02", "Consent Client Baseline", "Target profile", "Manual", "Client baseline that starts by validating the consent proof and scope, then runs the username footprint.",
+    [consent("Open Target profile > Authorization. Verify the signed proof is attached as evidence, names the identities and purposes, and has an end date. A checkbox is not proof."),
+     scope("$inputs.username", "username", deps=["consent"]), q("sherlock", "sherlock", ref="$inputs.username", ttype="username"),
+     q("maigret", "maigret", ref="$inputs.username", ttype="username", optional=True), merge("merged", ["sherlock", "maigret"]), dedupe("unique", "merged"),
+     N("queue", "analyst_review", ["unique"], prompt="Review each account with the client where possible; record the client's confirmation as an attestation.", timeout_hours=168),
+     N("report", "report", ["queue"], profile="executive", format="html")], USERNAME, tags=["target-profile", "client"], legal=TP_LEGAL,
+    gaps=["The workflow cannot validate a signed document: proof checking is a person's step in the Authorization panel.", TP_GAPS_MANUAL])
+add("TP-03", "Public Account Confirmation Queue", "Target profile", "Manual", "Offline: clusters candidate accounts already found in the case by canonical URL and routes them to ownership review.",
+    [N("cands", "case_findings", [], entity_types=["url"], predicates=["profile.candidate"]), dedupe("unique", "cands"),
+     N("queue", "analyst_review", ["unique"], prompt="Open Target profile > Review queue. Nothing is merged automatically; decide each account on evidence.", timeout_hours=168),
+     N("save", "evidence_save", ["queue", "unique"], ref=out("unique"), title="Candidate accounts queued for review (unconfirmed)")], [], inputs={}, tags=["target-profile", "review"],
+    fixture_extra={"case_findings": [{"entity": "https://social.example/alice", "entity_type": "url", "predicate": "profile.candidate", "value": "Social"},
+                                     {"entity": "https://forum.example/u/alice", "entity_type": "url", "predicate": "profile.candidate", "value": "Forum"}]},
+    legal="No network. A matching handle is never treated as the same person.")
+add("TP-04", "Owned Domain and Company Linkage", "Target profile", "Manual", "Passive registry and DNS data for a domain the subject owns, plus an optional company record. Affiliation stays claimed until corroborated.",
+    [scope("$inputs.domain"), q("rdap", "rdap"), q("dns", "dns"), q("crtsh", "crtsh", optional=True), scope("$inputs.company", "company", id="scope_co"),
+     q("opencorp", "opencorporates", scope_id="scope_co", ref="$inputs.company", ttype="company", optional=True), merge("merged", ["rdap", "dns", "crtsh", "opencorp"]),
+     dedupe("unique", "merged"), N("review", "analyst_review", ["unique"], prompt="Registrant data is often redacted. Treat any company link as claimed until a second independent source supports it.", timeout_hours=168),
+     N("save", "evidence_save", ["review", "unique"], ref=out("unique"), title="Domain and company linkage (claims)")], DOMAIN + COMPANY, tags=["target-profile", "domain"], legal=TP_LEGAL,
+    gaps=["OpenCorporates needs an API token. Beneficial ownership is not available from these sources."])
+add("TP-05", "Published Document Metadata and Disclosure Review", "Target profile", "File upload", "Statically inspects a document the subject published or owns and lists what it discloses (author, software, GPS, URLs). Nothing is opened or executed.",
+    [N("ingest", "file_ingest", [], evidence_ref="$inputs.evidence_id"),
+     N("review", "analyst_review", ["ingest"], prompt="Check the disclosure list: author names, device or software identifiers, GPS, embedded URLs and emails. Record which the subject should remove.", timeout_hours=168),
+     N("summary", "evidence_save", ["review", "ingest"], ref=out("ingest"), title="Document disclosure summary")], FILE_IN, trigger={"type": "file", "enabled": False},
+    inputs={"evidence_id": None}, tags=["target-profile", "files"], legal="Only files the subject owns, published, or that are provided with documented authorization. GPS values are RESTRICTED.",
+    fixture_extra={"file": {"kind": "pdf", "count": 3, "sha256": "c" * 64, "preview": [{"kind": "pdf.metadata", "data": {"author": "withheld"}}]}},
+    gaps=["Public-document URL import is not automated: download the file yourself and import it."])
+add("TP-06", "Public Professional Footprint Summary", "Target profile", "Manual", "Collects the professional claims you entered with citations and writes a summary that separates verified from claimed.",
+    [N("claims", "case_findings", []), N("review", "analyst_review", ["claims"], prompt="Confirm every employer, role and education entry has a citation and is marked claimed until a second source corroborates it.", timeout_hours=168),
+     N("report", "report", ["review"], profile="executive", format="html")], [], inputs={}, tags=["target-profile", "professional"], legal=TP_LEGAL,
+    fixture_extra={"case_findings": [{"entity": "example.org", "entity_type": "domain", "predicate": "rdap.registrar", "value": "Example Registrar Inc"}]},
+    gaps=["There is no automated retrieval of professional profiles: sites that require sign-in are never scraped. Enter cited claims by hand.", TP_GAPS_MANUAL])
+add("TP-07", "Authorized Exposure Indicators", "Target profile", "Manual", "Guides the owner-verified exposure checks and records only status, category, date and remediation. Never stores secrets.",
+    [consent("Confirm the person verified ownership of each account or domain checked (email confirmation, provider verification or signed document). A self-attestation is not enough for exposure checks."),
+     N("checks", "analyst_review", ["consent"], prompt="Open Target profile > Exposure. Run the owner-verified checks. Record yes/no/unknown, category and date only; never paste passwords or leaked data.", timeout_hours=168),
+     N("gaps", "case_gaps", ["checks"]), N("report", "report", ["gaps"], profile="executive", format="html")], [], inputs={}, tags=["target-profile", "exposure"],
+    legal="Sensitive. Needs verifiable authorization. No raw credentials, breach dumps or government identifiers are collected or stored.",
+    gaps=["The breach provider integration (Have I Been Pwned) needs the owner's API key and was not verified against the live service.", TP_GAPS_MANUAL],
+    fixture_extra={"gaps": ["Exposure checks not yet assessed for the primary email (unassessed)"]})
+add("TP-08", "Image Publication and Duplicate Review", "Target profile", "File upload", "Imports an image the subject owns, then routes duplicate and publication review to the Images workbench.",
+    [N("ingest", "file_ingest", [], evidence_ref="$inputs.evidence_id"),
+     N("review", "analyst_review", ["ingest"], prompt="Open Target profile > Images. Review local duplicate matches, then use the manual provider links (Google Lens, Bing Visual Search, TinEye). A provider result is a page candidate, not an identification of anyone.", timeout_hours=168),
+     N("summary", "evidence_save", ["review", "ingest"], ref=out("ingest"), title="Image import summary")], FILE_IN, trigger={"type": "file", "enabled": False},
+    inputs={"evidence_id": None}, tags=["target-profile", "images"], legal="Images the subject owns or has authorised. No facial recognition or identification of people is performed.",
+    fixture_extra={"file": {"kind": "jpeg_exif", "count": 2, "sha256": "d" * 64, "preview": [{"kind": "exif.camera", "data": {"make": "ExampleCam"}}, {"kind": "exif.gps", "data": {"withheld": "restricted"}}]}},
+    gaps=["Reverse-image search cannot be automated: providers offer interactive or commercial access only. The review step is manual."])
+add("TP-09", "Source Freshness and Profile Change Alert", "Target profile", "Weekly, disabled (opt-in)", "Re-checks the public username footprint of an authorised subject and reports changes. Opt-in; needs activation approval.",
+    [scope("$inputs.username", "username"), q("sherlock", "sherlock", ref="$inputs.username", ttype="username"), dedupe("unique", "sherlock"), diff("diff", "unique"),
+     notify("notify", "diff", "Public profile change for a monitored subject"), onfail("fail", ["unique", "diff"], "Profile change alert failed")], USERNAME,
+    trigger=sched("0 10 * * 1"), tags=["target-profile", "monitor"], watch=True, legal=TP_LEGAL + " Recurring monitoring of a person needs a documented purpose.",
+    gaps=["Changes are reported as new or missing candidate URLs; a vanished account is not proof of anything."])
+add("TP-10", "Client Privacy Remediation and Retest", "Target profile", "Manual", "Walks through open remediation tasks, asks for resolution evidence and ends with a retest brief.",
+    [N("work", "analyst_review", [], prompt="Open Target profile > Remediation. For each task record what was done and attach evidence. Mark a task resolved only after a retest.", timeout_hours=168),
+     N("gaps", "case_gaps", ["work"]), N("report", "report", ["gaps"], profile="executive", format="html")], [], inputs={}, tags=["target-profile", "remediation"],
+    legal=TP_LEGAL, gaps=[TP_GAPS_MANUAL], fixture_extra={"gaps": ["Two remediation tasks have no resolution evidence"]})
+add("TP-11", "Research Gaps and Next-Action Brief", "Target profile", "Manual", "Lists which approved research methods have not run, are outdated or were blocked, and why.",
+    [N("gaps", "case_gaps", []), N("review", "analyst_review", ["gaps"], prompt="Open Target profile > Research. Decide which uncovered method to approve next. Absence of results is not evidence of absence.", timeout_hours=168),
+     N("report", "report", ["review"], profile="technical", format="html")], [], inputs={}, tags=["target-profile", "planning"], legal=TP_LEGAL,
+    fixture_extra={"gaps": ["Domain infrastructure checks have not run (eligible)", "Cited professional history not entered (manual)"]})
+add("TP-12", "Redacted Client Report and Citation Check", "Target profile", "Manual", "Prepares the redacted subject report and requires a human check that every statement cites case evidence.",
+    [N("facts", "case_findings", []), N("review", "analyst_review", ["facts"], prompt="Open Target profile > Reports. Generate the subject report preview, run the citation check, and confirm no speculative or sensitive associations are included.", timeout_hours=168),
+     N("report", "report", ["review"], profile="evidence_pack", format="html")], [], inputs={}, tags=["target-profile", "report"], legal=TP_LEGAL,
+    fixture_extra={"case_findings": [{"entity": "example.org", "entity_type": "domain", "predicate": "dns.a", "value": "192.0.2.10"}]},
+    gaps=["The citation check runs in the Reports screen; this workflow only enforces that a person performed it."])
+
+
 def main(check: bool) -> int:
-    assert len(T) == 30, len(T)
+    assert len(T) == 42, len(T)
     problems = []
     for t in T:
         rep = validate(t["definition"], ADAPTERS)

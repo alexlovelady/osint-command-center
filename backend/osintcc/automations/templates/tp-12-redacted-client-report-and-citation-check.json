@@ -1,0 +1,95 @@
+{
+ "slug": "tp-12-redacted-client-report-and-citation-check",
+ "key": "TP-12",
+ "version": 1,
+ "category": "Target profile",
+ "name": "Redacted Client Report and Citation Check",
+ "description": "Prepares the redacted subject report and requires a human check that every statement cites case evidence.",
+ "catalog_trigger": "Manual",
+ "tags": [
+  "target-profile",
+  "report"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [],
+ "legal_notes": "Applies to verified self-audits and consent-based engagements. Results are leads, not facts; nothing is verified automatically. Every run re-checks the subject's authorization, and revoking it switches the schedule off.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+ "capability_gaps": [
+  "The citation check runs in the Reports screen; this workflow only enforces that a person performed it."
+ ],
+ "instructions": "Prepares the redacted subject report and requires a human check that every statement cites case evidence.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "tp-12-redacted-client-report-and-citation-check",
+  "name": "Redacted Client Report and Citation Check",
+  "description": "Prepares the redacted subject report and requires a human check that every statement cites case evidence.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "target-profile",
+   "report"
+  ],
+  "trigger": {
+   "type": "manual",
+   "enabled": false
+  },
+  "inputs": {},
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "facts",
+    "type": "case_findings",
+    "depends_on": [],
+    "config": {}
+   },
+   {
+    "id": "review",
+    "type": "analyst_review",
+    "depends_on": [
+     "facts"
+    ],
+    "config": {
+     "prompt": "Open Target profile > Reports. Generate the subject report preview, run the citation check, and confirm no speculative or sensitive associations are included.",
+     "timeout_hours": 168
+    }
+   },
+   {
+    "id": "report",
+    "type": "report",
+    "depends_on": [
+     "review"
+    ],
+    "config": {
+     "profile": "evidence_pack",
+     "format": "html"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {},
+  "adapter_findings": {},
+  "case_findings": [
+   {
+    "entity": "example.org",
+    "entity_type": "domain",
+    "predicate": "dns.a",
+    "value": "192.0.2.10"
+   }
+  ]
+ }
+}

@@ -5,10 +5,12 @@ import { api } from "../../../lib/api";
 import type { ProfileT, SubjectT } from "../../../lib/profileApi";
 import Authorization, { AuthIndicator } from "./Authorization";
 import ProfileOverview, { StateBadge } from "./ProfileOverview";
+import Research from "./Research";
 import ReviewQueue from "./ReviewQueue";
+import SubjectWorkflows from "./SubjectWorkflows";
 
 // Sub-tabs are listed here only when the feature behind them exists and is tested.
-export const SUBTABS = ["Profile", "Review queue", "Authorization"] as const;
+export const SUBTABS = ["Profile", "Review queue", "Research", "Workflows", "Authorization"] as const;
 
 function NewSubject({ caseId, purpose, onDone }: { caseId: string; purpose: string; onDone: () => void }) {
   const [f, setF] = useState({ display_name: "", mode: "self", purpose });
@@ -26,6 +28,7 @@ function NewSubject({ caseId, purpose, onDone }: { caseId: string; purpose: stri
 }
 
 export function nextAction(p: ProfileT): string {
+  if (p.next_action) return p.next_action;
   if (p.authorization.status === "none") return "Record an authorization before any collection.";
   if (["expired", "revoked"].includes(p.authorization.status)) return "Authorization is no longer valid: renew it to resume collection.";
   if (p.unresolved_leads.length) return `Review ${p.unresolved_leads.length} unresolved lead(s).`;
@@ -70,6 +73,8 @@ export default function TargetProfile({ caseId }: { caseId: string }) {
       </div>
       {sub === "Profile" && <ProfileOverview p={p} onGo={setSub} tabs={[...SUBTABS]} />}
       {sub === "Review queue" && <ReviewQueue p={p} />}
+      {sub === "Research" && <Research p={p} />}
+      {sub === "Workflows" && <SubjectWorkflows p={p} />}
       {sub === "Authorization" && <Authorization p={p} />}
     </section>
   );

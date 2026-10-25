@@ -59,6 +59,10 @@ class AutomationScheduler:
 
     async def tick(self, now: datetime | None = None) -> dict[str, int]:
         now = now or self.clock()
+        from ..profile import consent as profile_consent
+        with self.st.sm() as db:
+            profile_consent.sweep_expired(db, now)
+            db.commit()
         fired = self._fire_due(now)
         fired += self._fire_events(now)
         with self.st.sm() as db:

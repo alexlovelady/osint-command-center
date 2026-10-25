@@ -31,10 +31,23 @@ const profile = (over: object = {}) => ({
   identifiers: [], unresolved_leads: [candidate], image_matches: { total: 0, unreviewed: 0 }, exposure: [], remediation: [],
   risk_summary: { confirmed_exposures: 0, highest_risk: "none", not_assessed: 0 }, counts: { identifiers: 1, claims: 1, candidates: 1, verified: 1 }, ...over });
 
+const coverage = {
+  label: "Coverage shows which approved research methods have run. It is not a measure of how much information exists about this subject.",
+  approved_tasks: 1, completed_tasks: 1, totals: {}, next_action: "Approve the next collection (DNS records is eligible and has not run).", last_collected: null,
+  categories: [{ key: "domain_infrastructure", title: "Owned domains and infrastructure", cells: [
+    { source_id: "rdap", name: "RDAP registration data", maturity: "live_tested", status: "completed", detail: "5 result(s)", last_success: "2026-01-01T00:00:00Z" },
+    { source_id: "dns", name: "DNS records", maturity: "live_tested", status: "not_run", detail: "eligible but not yet approved or run", last_success: null },
+    { source_id: "sherlock", name: "Sherlock", maturity: "live_tested", status: "unavailable", detail: "tool state: not installed", last_success: null },
+    { source_id: "sec_edgar", name: "SEC EDGAR", maturity: "mocked_only", status: "unsupported", detail: "needs a organization input, which this subject does not have", last_success: null }] }],
+};
+const entry = (over: object) => ({ key: "i1:rdap", identifier_id: "i1", identifier_kind: "domain", identifier: "example.com", source_id: "rdap", name: "RDAP registration data", category: "domain_infrastructure",
+  consent_class: "public_passive", privacy: "public_org", maturity: "live_tested", legal_note: "Public registry data.", commercial_use: "x", runnable: true, reason: "passive source",
+  requires_confirmation: false, warnings: [], endpoints: ["https://data.iana.org/rdap/dns.json"], rate_limit_per_minute: 30, cost: "free", needs_key: null, previous: null, ...over });
 const routes = (extra: Record<string, unknown> = {}) => ({
   "/cases/c1/subjects": { total: 1, items: [subject] }, "/subjects/s1/profile": profile(), "/subjects/s1/timeline": { items: [] },
   "/cases/c1/evidence": { items: [] }, "/subjects/s1/candidates": { items: [candidate] }, "/subjects/s1/review-history": { items: [] },
-  "/subjects/s1/consent": { current: profile().authorization, history: [] }, ...extra,
+  "/subjects/s1/consent": { current: profile().authorization, history: [] },
+  "/subjects/s1/coverage": coverage, "/subjects/s1/research/runs": { items: [] }, ...extra,
 });
 
 describe("TargetProfile", () => {
@@ -48,7 +61,8 @@ describe("TargetProfile", () => {
     expect(screen.getByText("verified")).toBeInTheDocument();          // the claim state is a text label, not only a colour
     expect(screen.getByText(/e1234567/)).toBeInTheDocument();           // evidence reference
     expect(screen.getByLabelText("Target header")).toHaveTextContent(/Next: Record an authorization/);
-    expect(screen.queryByRole("button", { name: "Refresh approved checks" })).toBeNull();   // actions appear only for features that exist
+    expect(screen.getByRole("button", { name: "Refresh approved checks" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Generate report" })).toBeNull();   // actions appear only for features that exist
   });
 
   it("offers to create a target (mode + purpose) when the case has none", async () => {
@@ -100,5 +114,55 @@ describe("TargetProfile", () => {
     await waitFor(() => screen.getByLabelText("Verified by"));
     expect(screen.getByText(/never authorises testing unrelated systems/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Record authorization" })).toBeDisabled();
+  });
+
+  it("research: coverage uses honest state words; nothing is preselected; public-site tools need their own confirmation before approval", async () => {
+    const plan = { subject_id: "s1", budget: { max_per_approval: 40, runnable: 2, paid_requests: 0 }, offline: false, note: "Nothing has been sent.", stop_rules: ["No recursion: results never become new research inputs on their own."],
+      entries: [entry({}), entry({ key: "i2:sherlock", identifier_id: "i2", identifier_kind: "username", identifier: "jane_e", source_id: "sherlock", name: "Sherlock", consent_class: "public_site_query",
+        privacy: "public_personal", requires_confirmation: true, warnings: ["Tool contacts many public websites using the supplied handle."], endpoints: ["hundreds of third-party public websites"] }),
+        entry({ key: "i1:crtsh", source_id: "crtsh", name: "Certificate transparency (crt.sh)", runnable: false, reason: "authorization: no live authorization covers 'public_passive'" })] };
+    const calls = mockApi(routes({ "/subjects/s1/research/preview": plan, "/subjects/s1/research/approve": { run_ids: ["r1"], tasks: 2 } }));
+    wrap(<TargetProfile caseId="c1" />);
+    await waitFor(() => screen.getByText("Jane Example"));
+    fireEvent.click(screen.getByRole("tab", { name: "Research" }));
+    await waitFor(() => screen.getByLabelText("Coverage grid"));
+    const grid = screen.getByLabelText("Coverage grid");
+    expect(grid).toHaveTextContent(/completed.*RDAP registration data/);
+    expect(grid).toHaveTextContent(/not run.*DNS records/);
+    expect(grid).toHaveTextContent(/unavailable.*Sherlock.*not installed/);
+    expect(grid).toHaveTextContent(/unsupported.*SEC EDGAR/);
+    expect(grid).toHaveTextContent(/integration only tested against fixtures/);
+    expect(screen.getByText(/not a measure of how much information exists/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Preview what would be contacted/ }));
+    await waitFor(() => screen.getByLabelText("Run Sherlock on jane_e"));
+    expect(screen.getByLabelText("Run Sherlock on jane_e")).not.toBeChecked();
+    expect(screen.getByLabelText("Run Certificate transparency (crt.sh) on example.com")).toBeDisabled();
+    expect(screen.getByText(/Blocked: authorization: no live authorization covers/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve and run 0 source(s)" })).toBeDisabled();
+    fireEvent.click(screen.getByLabelText("Run Sherlock on jane_e"));
+    fireEvent.click(screen.getByLabelText("Run RDAP registration data on example.com"));
+    expect(screen.getByRole("button", { name: "Approve and run 2 source(s)" })).toBeDisabled();          // Sherlock selected but not confirmed
+    fireEvent.click(screen.getByLabelText("Confirm Sherlock contacts third-party sites"));
+    expect(screen.getByRole("button", { name: "Approve and run 2 source(s)" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Approve and run 2 source(s)" }));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/research/approve"))).toBe(true));
+    const sent = JSON.parse(String(calls.find((c) => c.url.endsWith("/research/approve"))!.init!.body));
+    expect([...sent.keys].sort()).toEqual(["i1:rdap", "i2:sherlock"]);
+    expect(sent.confirmed_sources).toEqual(["sherlock"]);
+  });
+
+  it("workflows: templates are described as disabled drafts with their real availability and gaps", async () => {
+    mockApi(routes({ "/subjects/s1/templates": { items: [
+      { slug: "tp-01-self-digital-footprint-baseline", key: "TP-01", name: "Self Digital Footprint Baseline", description: "Baseline.", maturity: "fixture_tested", trigger: "manual", quota_note: "About 2 source request(s) per run",
+        capability_gaps: ["Published profile pages are entered by hand."], dependencies: ["sherlock"], optional_dependencies: [],
+        availability: { state: "setup_required", gaps: [], missing: [{ adapter: "sherlock", status: "not_installed", setup: "Install with `uv tool install sherlock-project`." }] } }] } }));
+    wrap(<TargetProfile caseId="c1" />);
+    await waitFor(() => screen.getByText("Jane Example"));
+    fireEvent.click(screen.getByRole("tab", { name: "Workflows" }));
+    await waitFor(() => screen.getByLabelText("TP-01 Self Digital Footprint Baseline"));
+    expect(screen.getByText(/Templates ship as/)).toHaveTextContent(/disabled drafts/);
+    expect(screen.getByText(/Needs sherlock/)).toBeInTheDocument();
+    expect(screen.getByText(/Gap: Published profile pages are entered by hand/)).toBeInTheDocument();
+    expect(screen.getByText("setup required")).toBeInTheDocument();
   });
 });

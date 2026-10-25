@@ -1,0 +1,115 @@
+{
+ "slug": "tp-05-published-document-metadata-and-disclosure-review",
+ "key": "TP-05",
+ "version": 1,
+ "category": "Target profile",
+ "name": "Published Document Metadata and Disclosure Review",
+ "description": "Statically inspects a document the subject published or owns and lists what it discloses (author, software, GPS, URLs). Nothing is opened or executed.",
+ "catalog_trigger": "File upload",
+ "tags": [
+  "target-profile",
+  "files"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "evidence_id",
+   "label": "Supplied by the 'Run with file' action",
+   "type": "evidence",
+   "required": false,
+   "example": null
+  }
+ ],
+ "legal_notes": "Only files the subject owns, published, or that are provided with documented authorization. GPS values are RESTRICTED.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "A de-duplicated dataset saved as evidence, with every finding linked to its source response.",
+ "capability_gaps": [
+  "Public-document URL import is not automated: download the file yourself and import it."
+ ],
+ "instructions": "Statically inspects a document the subject published or owns and lists what it discloses (author, software, GPS, URLs). Nothing is opened or executed.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "tp-05-published-document-metadata-and-disclosure-review",
+  "name": "Published Document Metadata and Disclosure Review",
+  "description": "Statically inspects a document the subject published or owns and lists what it discloses (author, software, GPS, URLs). Nothing is opened or executed.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "target-profile",
+   "files"
+  ],
+  "trigger": {
+   "type": "file",
+   "enabled": false
+  },
+  "inputs": {
+   "evidence_id": null
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "ingest",
+    "type": "file_ingest",
+    "depends_on": [],
+    "config": {
+     "evidence_ref": "$inputs.evidence_id"
+    }
+   },
+   {
+    "id": "review",
+    "type": "analyst_review",
+    "depends_on": [
+     "ingest"
+    ],
+    "config": {
+     "prompt": "Check the disclosure list: author names, device or software identifiers, GPS, embedded URLs and emails. Record which the subject should remove.",
+     "timeout_hours": 168
+    }
+   },
+   {
+    "id": "summary",
+    "type": "evidence_save",
+    "depends_on": [
+     "review",
+     "ingest"
+    ],
+    "config": {
+     "ref": "$nodes.ingest.output",
+     "title": "Document disclosure summary"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "evidence_id": null
+  },
+  "adapter_findings": {},
+  "file": {
+   "kind": "pdf",
+   "count": 3,
+   "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+   "preview": [
+    {
+     "kind": "pdf.metadata",
+     "data": {
+      "author": "withheld"
+     }
+    }
+   ]
+  }
+ }
+}

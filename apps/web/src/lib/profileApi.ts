@@ -21,7 +21,20 @@ export interface HistoryT { id: string; target_type: string; target_id: string; 
 
 export const STATE_CLASS: Record<string, string> = {
   verified: "st-ok", subject_confirmed: "st-ok", confirmed: "st-ok", candidate: "st-warn", unsure: "st-warn", conflicting: "st-bad", rejected: "st-bad", not_assessed: "st-mute",
+  completed: "st-ok", partial: "st-warn", outdated: "st-warn", running: "st-warn", approved: "st-warn", not_run: "st-mute", failed: "st-bad", blocked: "st-bad",
+  cancelled: "st-mute", unsupported: "st-mute", unavailable: "st-bad", planned: "st-mute",
 };
+export interface CoverageCell { source_id: string; name: string; maturity: string; status: string; detail: string; last_success: string | null }
+export interface CoverageT { categories: { key: string; title: string; cells: CoverageCell[] }[]; totals: Record<string, number>; approved_tasks: number; completed_tasks: number;
+  label: string; next_action: string; last_collected: string | null }
+export interface ResearchEntry { key: string; identifier_id: string; identifier_kind: string; identifier: string; source_id: string; name: string; category: string;
+  consent_class: string; privacy: string; maturity: string; legal_note: string; commercial_use: string; runnable: boolean; reason: string; requires_confirmation: boolean;
+  warnings: string[]; endpoints: string[]; rate_limit_per_minute: number | null; cost: string; needs_key: string | null; health?: string;
+  previous: { status: string; last_success: string | null; result_count: number; limitations: string } | null }
+export interface ResearchPlanT { subject_id: string; entries: ResearchEntry[]; budget: { max_per_approval: number; runnable: number; paid_requests: number }; stop_rules: string[]; note: string; offline: boolean }
+export interface TaskT { id: string; category: string; source_id: string; status: string; run_id: string | null; last_attempt: string | null; last_success: string | null; result_count: number; limitations: string }
+export interface TemplateT { slug: string; key: string; name: string; description: string; maturity: string; capability_gaps: string[]; dependencies: string[]; optional_dependencies: string[];
+  trigger: string; quota_note: string; availability?: { state: string; missing: { adapter: string; status: string; setup: string }[]; gaps: string[] } }
 export const SOURCE_CLASSES: [string, string][] = [
   ["public_passive", "Public passive sources (DNS, registries, archives)"], ["public_site_query", "Username checks on public sites (Sherlock/Maigret)"],
   ["documents", "Published documents"], ["image_analysis", "Image analysis"], ["reverse_image", "Reverse-image search (manual)"],

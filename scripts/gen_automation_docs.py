@@ -30,7 +30,7 @@ def build() -> str:
     for a, ad in sorted(ads.items()):
         m = ad.manifest
         L.append(f"| `{a}` | {m.operation_class} | {', '.join(m.supported_target_types)} | {m.api_key_name or '—'} | {'on' if m.default_selected else 'explicit only'} |")
-    L += ["", "## Template catalog (30)", "",
+    L += ["", "## Template catalog (42: 30 general + 12 Target-profile)", "",
           "Maturity: **fixture-tested** = its dry run passes on synthetic fixture data in the test suite; **runtime-tested** = also executed end to end through the real engine and adapters (network mocked) in the suite. "
           "**No template is marked live-tested here**; see `docs/progress.md` for the live runs that were actually performed. Every template installs disabled.", "",
           "| ID | Name | Trigger | Needs | Optional | Maturity | Known gaps |", "|---|---|---|---|---|---|---|"]

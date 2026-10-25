@@ -81,6 +81,10 @@ def run_gate(db: Session, wf: AutomationWorkflow, version_id: str | None, trigge
         raise NodeError("SCOPE_DENIED", "the run has no case to put evidence in")
     if case.status != "open":
         raise NodeError("SCOPE_DENIED", f"the case is {case.status}; collection needs an open case")
+    from ..profile import (
+        hooks as profile_hooks,  # a workflow bound to a person needs that person's live authorization on every run
+    )
+    profile_hooks.workflow_gate(db, wf, now)
     out: dict[str, Any] = {"confirmed_adapters": []}
     if version_id is None:
         raise NodeError("APPROVAL_REQUIRED", "only published versions can run for real; dry-run the draft or publish it")

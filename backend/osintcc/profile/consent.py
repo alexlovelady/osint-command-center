@@ -191,3 +191,6 @@ def sweep_expired(db: Session, now: datetime | None = None) -> int:
         if cs and not any(_state(c, now) == "active" for c in cs):
             n += stop_dependents(db, s, "authorization expired or revoked")
     return n
+
+
+from . import hooks as _hooks  # noqa: F401  (registers the revoke hook that switches off bound automations)

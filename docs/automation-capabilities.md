@@ -52,7 +52,7 @@ Error codes: `UNSUPPORTED_ADAPTER`, `INVALID_GRAPH`, `SCOPE_EXPIRED`, `APPROVAL_
 | `virustotal` | passive | domain, ip | virustotal | explicit only |
 | `wayback` | passive | domain, url | — | on |
 
-## Template catalog (30)
+## Template catalog (42: 30 general + 12 Target-profile)
 
 Maturity: **fixture-tested** = its dry run passes on synthetic fixture data in the test suite; **runtime-tested** = also executed end to end through the real engine and adapters (network mocked) in the suite. **No template is marked live-tested here**; see `docs/progress.md` for the live runs that were actually performed. Every template installs disabled.
 
@@ -88,3 +88,15 @@ Maturity: **fixture-tested** = its dry run passes on synthetic fixture data in t
 | ID-04 | Public Mention Monitor | Daily, disabled | gdelt | — | fixture-tested | — |
 | ID-05 | Document Metadata | File upload | local data | — | runtime-tested | — |
 | ID-06 | Identity Correlation Review | Manual | local data | — | fixture-tested | — |
+| TP-01 | Self Digital Footprint Baseline | Manual | sherlock | maigret | fixture-tested | Published profile pages, documents and professional history are entered or imported by hand (see TP-05, TP-06); this template covers username presence only.; Steps marked as review are carried out by a person in the Target Profile screens; the automation does not perform them. |
+| TP-02 | Consent Client Baseline | Manual | sherlock | maigret | fixture-tested | The workflow cannot validate a signed document: proof checking is a person's step in the Authorization panel.; Steps marked as review are carried out by a person in the Target Profile screens; the automation does not perform them. |
+| TP-03 | Public Account Confirmation Queue | Manual | local data | — | fixture-tested | — |
+| TP-04 | Owned Domain and Company Linkage | Manual | dns, rdap | crtsh, opencorporates | fixture-tested | OpenCorporates needs an API token. Beneficial ownership is not available from these sources. |
+| TP-05 | Published Document Metadata and Disclosure Review | File upload | local data | — | fixture-tested | Public-document URL import is not automated: download the file yourself and import it. |
+| TP-06 | Public Professional Footprint Summary | Manual | local data | — | fixture-tested | There is no automated retrieval of professional profiles: sites that require sign-in are never scraped. Enter cited claims by hand.; Steps marked as review are carried out by a person in the Target Profile screens; the automation does not perform them. |
+| TP-07 | Authorized Exposure Indicators | Manual | local data | — | fixture-tested | The breach provider integration (Have I Been Pwned) needs the owner's API key and was not verified against the live service.; Steps marked as review are carried out by a person in the Target Profile screens; the automation does not perform them. |
+| TP-08 | Image Publication and Duplicate Review | File upload | local data | — | fixture-tested | Reverse-image search cannot be automated: providers offer interactive or commercial access only. The review step is manual. |
+| TP-09 | Source Freshness and Profile Change Alert | Weekly, disabled (opt-in) | sherlock | — | fixture-tested | Changes are reported as new or missing candidate URLs; a vanished account is not proof of anything. |
+| TP-10 | Client Privacy Remediation and Retest | Manual | local data | — | fixture-tested | Steps marked as review are carried out by a person in the Target Profile screens; the automation does not perform them. |
+| TP-11 | Research Gaps and Next-Action Brief | Manual | local data | — | fixture-tested | — |
+| TP-12 | Redacted Client Report and Citation Check | Manual | local data | — | fixture-tested | The citation check runs in the Reports screen; this workflow only enforces that a person performed it. |

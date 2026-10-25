@@ -1562,6 +1562,56 @@
     "title": "ReqPatch",
     "type": "object"
    },
+   "ResearchApproveIn": {
+    "properties": {
+     "confirmed_sources": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Confirmed Sources",
+      "type": "array"
+     },
+     "keys": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 40,
+      "minItems": 1,
+      "title": "Keys",
+      "type": "array"
+     },
+     "wait": {
+      "default": false,
+      "title": "Wait",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "keys"
+    ],
+    "title": "ResearchApproveIn",
+    "type": "object"
+   },
+   "ResearchPreviewIn": {
+    "properties": {
+     "identifier_ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Identifier Ids"
+     }
+    },
+    "title": "ResearchPreviewIn",
+    "type": "object"
+   },
    "RestoreIn": {
     "properties": {
      "confirm": {
@@ -2050,6 +2100,42 @@
      }
     },
     "title": "SubjectPatch",
+    "type": "object"
+   },
+   "SubjectWorkflowIn": {
+    "properties": {
+     "inputs": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        },
+        {
+         "type": "number"
+        },
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "title": "Inputs",
+      "type": "object"
+     },
+     "slug": {
+      "title": "Slug",
+      "type": "string"
+     }
+    },
+    "required": [
+     "slug"
+    ],
+    "title": "SubjectWorkflowIn",
     "type": "object"
    },
    "UninstallIn": {
@@ -10818,6 +10904,23 @@
     "summary": "Uninstall"
    }
   },
+  "/api/v1/profile/sources": {
+   "get": {
+    "description": "The capability matrix for subject research: what each method needs, produces, costs and how well it has been exercised.",
+    "operationId": "profile_sources_api_v1_profile_sources_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Profile Sources"
+   }
+  },
   "/api/v1/reports/generate": {
    "post": {
     "description": "Spec 23.8 alias of POST /cases/{id}/reports.",
@@ -12184,6 +12287,43 @@
     "summary": "Revoke Consent"
    }
   },
+  "/api/v1/subjects/{subject_id}/coverage": {
+   "get": {
+    "operationId": "get_coverage_api_v1_subjects__subject_id__coverage_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Coverage"
+   }
+  },
   "/api/v1/subjects/{subject_id}/identifiers": {
    "get": {
     "operationId": "list_identifiers_api_v1_subjects__subject_id__identifiers_get",
@@ -12349,6 +12489,137 @@
     "summary": "Get Profile"
    }
   },
+  "/api/v1/subjects/{subject_id}/research/approve": {
+   "post": {
+    "operationId": "research_approve_api_v1_subjects__subject_id__research_approve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ResearchApproveIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Research Approve"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/research/preview": {
+   "post": {
+    "operationId": "research_preview_api_v1_subjects__subject_id__research_preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ResearchPreviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Research Preview"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/research/runs": {
+   "get": {
+    "operationId": "research_runs_api_v1_subjects__subject_id__research_runs_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Research Runs"
+   }
+  },
   "/api/v1/subjects/{subject_id}/review-history": {
    "get": {
     "operationId": "review_history_api_v1_subjects__subject_id__review_history_get",
@@ -12402,6 +12673,43 @@
     "summary": "Review History"
    }
   },
+  "/api/v1/subjects/{subject_id}/templates": {
+   "get": {
+    "operationId": "subject_templates_api_v1_subjects__subject_id__templates_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Subject Templates"
+   }
+  },
   "/api/v1/subjects/{subject_id}/timeline": {
    "get": {
     "operationId": "get_timeline_api_v1_subjects__subject_id__timeline_get",
@@ -12437,6 +12745,54 @@
      }
     },
     "summary": "Get Timeline"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/workflows": {
+   "post": {
+    "description": "Installs a Target-profile template as a DISABLED draft bound to this subject: every run then needs the subject's live authorization.",
+    "operationId": "subject_workflow_api_v1_subjects__subject_id__workflows_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SubjectWorkflowIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Subject Workflow"
    }
   },
   "/api/v1/system/database/remove-plaintext-leftovers": {

@@ -5,7 +5,7 @@ the older `workflows` module (interval schedules, adapter/summarize/diff nodes) 
 
 ## What you can do
 
-* **Library**: 30 bundled templates (CY-01..07, ID-01..06, CO-01..05, GEO-01..06, CASE-01..06). Each shows purpose, sources, availability, quota, legal notes, example output and known gaps. Installed **disabled**.
+* **Library**: 42 bundled templates (CY-01..07, ID-01..06, CO-01..05, GEO-01..06, CASE-01..06, and TP-01..12 for the Target Profile workstation). Each shows purpose, sources, availability, quota, legal notes, example output and known gaps. Installed **disabled**.
 * **AI builder**: describe a goal; get a *typed draft* checked by a deterministic validator. A local model is used by default; with none, the closest template is offered and labelled. The manual editor always works.
 * **Canvas**: pan/zoom, minimap, keyboard arrows, inspector, validation markers, run overlay. A view of the definition only: positions are derived, so visual edits cannot change meaning.
 * **Lifecycle**: draft -> validate -> dry-run (simulated) -> **publish** (immutable numbered version) -> **request approval** (bound to that exact version, with an expiry) -> **activate** (schedule) / run by hand.
@@ -39,7 +39,7 @@ the older `workflows` module (interval schedules, adapter/summarize/diff nodes) 
 
 * Email notifications and inbound webhook triggers are not implemented. Desktop notices appear while the app is open.
 * Templates marked *partial* have documented gaps (for example CVE Intelligence has no advisory feed; Imagery Change Review has no automatic image comparison; Sensor Health reads registration status of simulated/replay devices only, no physical receiver was tested).
-* Only CY-01, ID-05 and CASE-01 were run end to end through the real engine in tests (network mocked); live results are in `docs/progress.md`. All 30 pass their fixture dry runs.
+* Only CY-01, ID-05 and CASE-01 were run end to end through the real engine in tests (network mocked); live results are in `docs/progress.md`. All 42 pass their fixture dry runs.
 * The AI builder was exercised with one local model (see `scripts/automation_live_check.py`); small models sometimes need the bounded correction loop or fall back to a template.
 * Keyed sources (VirusTotal, urlscan, Shodan, Censys, OpenCorporates) and Sherlock/Maigret/Subfinder/Amass are only used when installed/configured; otherwise the template says *setup required* and a run fails with a clear code instead of faking output.
 

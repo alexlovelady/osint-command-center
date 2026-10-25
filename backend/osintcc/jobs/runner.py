@@ -246,6 +246,12 @@ class JobRunner:
                     return self._finish(db, job, "cancelled", None, [])
                 d = policy.evaluate(db, case_id=case_id, manifest=adapter.manifest, target_canonical=at.canonical,
                                     target_domain=dom, mode=mode, offline=self.settings.offline)
+                from ..profile import hooks as _profile_hooks  # noqa: F401
+                from ..profile import research as profile_research
+                if (why := profile_research.execution_gate(db, run, job)) is not None:   # subject authorization re-checked as each source starts
+                    audit.record(db, "adapter.denied", case_id=case_id, resource_type="job", resource_id=job.id, decision="deny",
+                                 metadata={"adapter": job.adapter_id, "reason": why[:160], "gate": "subject_authorization"})
+                    return self._finish(db, job, "denied", "authorization_revoked", [why])
                 if not d.allowed:
                     audit.record(db, "adapter.denied", case_id=case_id, resource_type="job", resource_id=job.id,
                                  decision="deny", metadata={"adapter": job.adapter_id, "reason": d.reason})
