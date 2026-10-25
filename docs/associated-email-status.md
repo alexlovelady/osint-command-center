@@ -53,4 +53,4 @@ Negative cases covered: identity collision (another subject's input or confirmed
 
 ## Results (Windows, 2026-10-25)
 
-Backend 1036 passed / 2 skipped; ruff and mypy clean; vitest 73/73; Playwright 28/28 (axe light and dark where the specs run both); frozen backend smoke 60/60. The Linux clean-checkout build result is recorded in the commit that follows if it differs.
+Backend 1036 passed / 2 skipped; ruff and mypy clean; vitest 73/73; Playwright 28/28 (axe light and dark where the specs run both); frozen backend smoke 60/60. Linux (Ubuntu 22.04 container, clean checkout of the commit): 1036 passed, 2 skipped; cargo test ok; frozen backend smoke 60/60; BUILD OK.
