@@ -1,6 +1,25 @@
 {
  "components": {
   "schemas": {
+   "AccountCheckIn": {
+    "additionalProperties": false,
+    "properties": {
+     "confirm": {
+      "default": false,
+      "title": "Confirm",
+      "type": "boolean"
+     },
+     "identifier_id": {
+      "title": "Identifier Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "identifier_id"
+    ],
+    "title": "AccountCheckIn",
+    "type": "object"
+   },
    "ActionIn": {
     "properties": {
      "adapters": {
@@ -607,6 +626,58 @@
     "title": "Confirm",
     "type": "object"
    },
+   "CorrectionIn": {
+    "additionalProperties": false,
+    "properties": {
+     "justification": {
+      "default": "",
+      "maxLength": 4000,
+      "title": "Justification",
+      "type": "string"
+     },
+     "request": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Request",
+      "type": "string"
+     },
+     "requested_by": {
+      "default": "subject",
+      "maxLength": 200,
+      "title": "Requested By",
+      "type": "string"
+     },
+     "target_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target Id"
+     },
+     "target_type": {
+      "enum": [
+       "claim",
+       "candidate",
+       "exposure",
+       "image_match",
+       "identifier",
+       "other"
+      ],
+      "title": "Target Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "target_type",
+     "request"
+    ],
+    "title": "CorrectionIn",
+    "type": "object"
+   },
    "DecideIn": {
     "properties": {
      "approve": {
@@ -716,6 +787,100 @@
      }
     },
     "title": "ExplainIn",
+    "type": "object"
+   },
+   "ExposureIn": {
+    "additionalProperties": false,
+    "properties": {
+     "cls": {
+      "enum": [
+       "breach_account",
+       "password_exposure",
+       "data_broker_listing",
+       "public_document_disclosure",
+       "precise_location_disclosure",
+       "social_oversharing"
+      ],
+      "title": "Cls",
+      "type": "string"
+     },
+     "descriptor": {
+      "default": "",
+      "maxLength": 200,
+      "title": "Descriptor",
+      "type": "string"
+     },
+     "evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Evidence Id"
+     },
+     "exposure_date": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Exposure Date"
+     },
+     "provider": {
+      "default": "manual",
+      "enum": [
+       "hibp",
+       "pwned_passwords",
+       "manual"
+      ],
+      "title": "Provider",
+      "type": "string"
+     },
+     "risk": {
+      "default": "unknown",
+      "enum": [
+       "unknown",
+       "low",
+       "medium",
+       "high",
+       "critical"
+      ],
+      "title": "Risk",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "not_assessed",
+       "not_found_in_checked_sources",
+       "confirmed_exposure"
+      ],
+      "title": "Status",
+      "type": "string"
+     },
+     "verification_basis": {
+      "enum": [
+       "provider_api",
+       "owner_confirmed",
+       "provider_notice",
+       "manual_review"
+      ],
+      "title": "Verification Basis",
+      "type": "string"
+     }
+    },
+    "required": [
+     "cls",
+     "status",
+     "verification_basis"
+    ],
+    "title": "ExposureIn",
     "type": "object"
    },
    "FromFinding": {
@@ -1127,6 +1292,22 @@
     "title": "NotePatch",
     "type": "object"
    },
+   "PasswordRangeIn": {
+    "additionalProperties": false,
+    "properties": {
+     "prefix": {
+      "maxLength": 5,
+      "minLength": 5,
+      "title": "Prefix",
+      "type": "string"
+     }
+    },
+    "required": [
+     "prefix"
+    ],
+    "title": "PasswordRangeIn",
+    "type": "object"
+   },
    "PatchIn": {
     "properties": {
      "definition": {
@@ -1481,22 +1662,6 @@
     "title": "ProviderResultIn",
     "type": "object"
    },
-   "PurgeIn": {
-    "properties": {
-     "confirm": {
-      "default": false,
-      "title": "Confirm",
-      "type": "boolean"
-     },
-     "confirm_title": {
-      "default": "",
-      "title": "Confirm Title",
-      "type": "string"
-     }
-    },
-    "title": "PurgeIn",
-    "type": "object"
-   },
    "RematchIn": {
     "properties": {
      "crop_max": {
@@ -1522,6 +1687,134 @@
      }
     },
     "title": "RematchIn",
+    "type": "object"
+   },
+   "RemediationIn": {
+    "additionalProperties": false,
+    "properties": {
+     "due_in_days": {
+      "anyOf": [
+       {
+        "maximum": 730.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Due In Days"
+     },
+     "guidance": {
+      "default": "",
+      "maxLength": 4000,
+      "title": "Guidance",
+      "type": "string"
+     },
+     "indicator_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Indicator Id"
+     },
+     "issue": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Issue",
+      "type": "string"
+     },
+     "owner": {
+      "anyOf": [
+       {
+        "maxLength": 80,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner"
+     },
+     "priority": {
+      "default": "medium",
+      "enum": [
+       "low",
+       "medium",
+       "high"
+      ],
+      "title": "Priority",
+      "type": "string"
+     }
+    },
+    "required": [
+     "issue"
+    ],
+    "title": "RemediationIn",
+    "type": "object"
+   },
+   "RemediationPatch": {
+    "additionalProperties": false,
+    "properties": {
+     "owner": {
+      "anyOf": [
+       {
+        "maxLength": 80,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner"
+     },
+     "recheck_in_days": {
+      "anyOf": [
+       {
+        "maximum": 730.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Recheck In Days"
+     },
+     "resolution_evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Resolution Evidence Id"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "enum": [
+         "open",
+         "in_progress",
+         "resolved",
+         "wont_fix"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     }
+    },
+    "title": "RemediationPatch",
     "type": "object"
    },
    "RepairIn": {
@@ -1680,6 +1973,32 @@
      }
     },
     "title": "ResearchPreviewIn",
+    "type": "object"
+   },
+   "ResolveIn": {
+    "additionalProperties": false,
+    "properties": {
+     "decision": {
+      "enum": [
+       "accepted",
+       "declined",
+       "applied"
+      ],
+      "title": "Decision",
+      "type": "string"
+     },
+     "resolution": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Resolution",
+      "type": "string"
+     }
+    },
+    "required": [
+     "decision",
+     "resolution"
+    ],
+    "title": "ResolveIn",
     "type": "object"
    },
    "RestoreIn": {
@@ -3042,6 +3361,20 @@
     "title": "VerifyIn",
     "type": "object"
    },
+   "osintcc__api__v1__profile_exposure__PurgeIn": {
+    "additionalProperties": false,
+    "properties": {
+     "confirm": {
+      "title": "Confirm",
+      "type": "string"
+     }
+    },
+    "required": [
+     "confirm"
+    ],
+    "title": "PurgeIn",
+    "type": "object"
+   },
    "osintcc__api__v1__profile_images__ReviewIn": {
     "properties": {
      "match_id": {
@@ -3099,6 +3432,22 @@
      "decision"
     ],
     "title": "DecisionIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__routes__PurgeIn": {
+    "properties": {
+     "confirm": {
+      "default": false,
+      "title": "Confirm",
+      "type": "boolean"
+     },
+     "confirm_title": {
+      "default": "",
+      "title": "Confirm Title",
+      "type": "string"
+     }
+    },
+    "title": "PurgeIn",
     "type": "object"
    },
    "osintcc__api__v1__routes__ReportIn": {
@@ -7794,7 +8143,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/PurgeIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__routes__PurgeIn"
        }
       }
      },
@@ -11005,6 +11354,39 @@
     "summary": "Uninstall"
    }
   },
+  "/api/v1/profile/exposure/providers": {
+   "get": {
+    "operationId": "exposure_providers_api_v1_profile_exposure_providers_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Exposure Providers"
+   }
+  },
+  "/api/v1/profile/retention/due": {
+   "get": {
+    "description": "Subjects past their retention period in cases you own. Nothing is deleted automatically.",
+    "operationId": "retention_due_api_v1_profile_retention_due_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Retention Due"
+   }
+  },
   "/api/v1/profile/sources": {
    "get": {
     "description": "The capability matrix for subject research: what each method needs, produces, costs and how well it has been exercised.",
@@ -12388,6 +12770,144 @@
     "summary": "Revoke Consent"
    }
   },
+  "/api/v1/subjects/{subject_id}/corrections": {
+   "get": {
+    "operationId": "list_corrections_api_v1_subjects__subject_id__corrections_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Corrections"
+   },
+   "post": {
+    "operationId": "request_correction_api_v1_subjects__subject_id__corrections_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CorrectionIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Request Correction"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/corrections/{correction_id}/resolve": {
+   "post": {
+    "operationId": "resolve_correction_api_v1_subjects__subject_id__corrections__correction_id__resolve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "correction_id",
+      "required": true,
+      "schema": {
+       "title": "Correction Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ResolveIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Resolve Correction"
+   }
+  },
   "/api/v1/subjects/{subject_id}/coverage": {
    "get": {
     "operationId": "get_coverage_api_v1_subjects__subject_id__coverage_get",
@@ -12423,6 +12943,231 @@
      }
     },
     "summary": "Get Coverage"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/exposure": {
+   "get": {
+    "operationId": "list_exposure_api_v1_subjects__subject_id__exposure_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Exposure"
+   },
+   "post": {
+    "operationId": "record_exposure_api_v1_subjects__subject_id__exposure_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ExposureIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Record Exposure"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/exposure/approve": {
+   "post": {
+    "operationId": "exposure_approve_api_v1_subjects__subject_id__exposure_approve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AccountCheckIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Exposure Approve"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/exposure/password-range": {
+   "post": {
+    "description": "k-anonymity relay: accepts exactly five hex characters (never a password or a full hash), stores nothing.",
+    "operationId": "password_range_api_v1_subjects__subject_id__exposure_password_range_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PasswordRangeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Password Range"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/exposure/preview": {
+   "post": {
+    "description": "Exactly what would leave this machine, to whom, at what cost. Sends nothing.",
+    "operationId": "exposure_preview_api_v1_subjects__subject_id__exposure_preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AccountCheckIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Exposure Preview"
    }
   },
   "/api/v1/subjects/{subject_id}/identifiers": {
@@ -13067,6 +13812,144 @@
     "summary": "Get Profile"
    }
   },
+  "/api/v1/subjects/{subject_id}/remediations": {
+   "get": {
+    "operationId": "list_remediations_api_v1_subjects__subject_id__remediations_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Remediations"
+   },
+   "post": {
+    "operationId": "create_remediation_api_v1_subjects__subject_id__remediations_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RemediationIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Remediation"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/remediations/{task_id}": {
+   "patch": {
+    "operationId": "update_remediation_api_v1_subjects__subject_id__remediations__task_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "task_id",
+      "required": true,
+      "schema": {
+       "title": "Task Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RemediationPatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Update Remediation"
+   }
+  },
   "/api/v1/subjects/{subject_id}/research/approve": {
    "post": {
     "operationId": "research_approve_api_v1_subjects__subject_id__research_approve_post",
@@ -13196,6 +14079,127 @@
      }
     },
     "summary": "Research Runs"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/retention/history": {
+   "get": {
+    "operationId": "retention_history_api_v1_subjects__subject_id__retention_history_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Retention History"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/retention/preview": {
+   "get": {
+    "operationId": "retention_preview_api_v1_subjects__subject_id__retention_preview_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Retention Preview"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/retention/purge": {
+   "post": {
+    "operationId": "retention_purge_api_v1_subjects__subject_id__retention_purge_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_exposure__PurgeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Retention Purge"
    }
   },
   "/api/v1/subjects/{subject_id}/review-history": {

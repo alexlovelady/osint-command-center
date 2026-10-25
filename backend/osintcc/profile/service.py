@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from ..db.models import (
     Case,
     Evidence,
-    ExposureIndicator,
     ImageMatch,
     ProfileClaim,
     ProfileReviewEvent,
@@ -237,9 +236,8 @@ def build_profile(db: Session, subject: Subject, *, role: str) -> dict:
             extra = [identifier_dict(i, mask=mask) for i in idents if i.kind == "domain"]
         sections.append({"key": key, "title": title, "identifiers": extra, "claims": items,
                          "state_note": "" if items or extra else "Not assessed. No claim recorded; this does not mean the information does not exist."})
-    expos = [{"id": e.id, "class": e.cls, "provider": e.provider, "status": e.status, "risk": e.risk, "descriptor": e.masked_descriptor,
-              "last_checked": e.last_checked, "remediation_state": e.remediation_state}
-             for e in db.scalars(select(ExposureIndicator).where(ExposureIndicator.subject_id == subject.id))]
+    from . import exposure  # local import: exposure depends on this module
+    expos = exposure.list_for(db, subject, role=role)
     rem = [{"id": r.id, "issue": r.issue, "priority": r.priority, "state": r.state, "due_at": r.due_at, "guidance": r.guidance}
            for r in db.scalars(select(RemediationTask).where(RemediationTask.subject_id == subject.id))]
     images = db.scalars(select(ImageMatch).where(ImageMatch.subject_id == subject.id)).all()
@@ -250,8 +248,8 @@ def build_profile(db: Session, subject: Subject, *, role: str) -> dict:
         "authorization": consent.current_status(db, subject), "sections": sections, "identifiers": [identifier_dict(i, mask=mask) for i in idents],
         "unresolved_leads": [c for c in cands if c["state"] in ("candidate", "unsure")],
         "image_matches": {"total": len(images), "unreviewed": sum(1 for m in images if m.review_state == "candidate")},
-        "exposure": expos if not mask else [{**e, "descriptor": ""} for e in expos], "remediation": rem,
-        "risk_summary": _risk_summary(expos), "role": role,
+        "exposure": expos, "remediation": rem if not mask else [],
+        "risk_summary": _risk_summary(expos) if not mask else {"redacted": True, "confirmed_exposures": 0, "highest_risk": "none", "not_assessed": 0}, "role": role,
         "counts": {"identifiers": len(idents), "claims": len(claims), "candidates": len(cands),
                    "verified": sum(1 for c in claims if c.validation_state in ("verified", "subject_confirmed"))},
         "notice": "Findings are leads, not facts. Absent results are never proof that information does not exist.",

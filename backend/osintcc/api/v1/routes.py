@@ -1305,3 +1305,6 @@ router.include_router(_profile_research.router)
 from . import profile_images as _profile_images
 
 router.include_router(_profile_images.router)
+from . import profile_exposure as _profile_exposure
+
+router.include_router(_profile_exposure.router)

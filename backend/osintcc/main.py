@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import uuid
 from collections.abc import Callable
@@ -69,6 +70,8 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
                ctx_factory=None, init_db: bool = True, vault_key: bytes | None = None) -> FastAPI:
     settings = settings or Settings()
     settings.ensure_dirs()
+    for noisy in ("httpx", "httpcore"):         # their INFO lines print every requested URL: target identifiers and hash prefixes must not reach any log
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     master = vault_key
     if master is None and (settings.vault_encryption != "off" or settings.db_encryption_mode != "off"):
         master = load_or_create_key()

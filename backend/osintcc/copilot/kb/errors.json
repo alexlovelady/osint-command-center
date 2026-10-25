@@ -105,6 +105,11 @@
   "fix": "Write why you made this decision; it is stored with your name and the time."
  },
  {
+  "code": "cannot_apply",
+  "meaning": "This kind of correction cannot be applied automatically.",
+  "fix": "Choose 'accepted', then make the change yourself."
+ },
+ {
   "code": "case_not_open",
   "meaning": "Searches can only be run on an open case.",
   "fix": "Reopen the case, or create a new one."
@@ -123,6 +128,11 @@
   "code": "cloud_not_allowed",
   "meaning": "This case does not allow sending content to a cloud model.",
   "fix": "Use a local model, or change the case's AI policy on the AI tab (your decision, per case)."
+ },
+ {
+  "code": "confirm_required",
+  "meaning": "A confirmation is needed.",
+  "fix": "Review the preview and confirm."
  },
  {
   "code": "confirmation_required",
@@ -148,6 +158,11 @@
   "code": "corroboration_required",
   "meaning": "Confirming an account needs the subject's attestation or independent evidence; a matching handle is not enough.",
   "fix": "Tick 'the subject attests' (self-audit) or attach evidence that does not come from the handle check itself."
+ },
+ {
+  "code": "descriptor_too_long",
+  "meaning": "The descriptor is longer than 200 characters.",
+  "fix": "Shorten it to a category, provider and date."
  },
  {
   "code": "device_busy",
@@ -210,9 +225,19 @@
   "fix": "Use a name, alias, username, email, domain, URL or organization. Government or financial identifiers and secrets are never accepted."
  },
  {
+  "code": "invalid_image",
+  "meaning": "The file could not be decoded as an image, or it is truncated or too large when decoded.",
+  "fix": "Re-save the image from an image editor; very large dimensions are refused."
+ },
+ {
   "code": "invalid_plugin",
   "meaning": "The plugin package or its manifest is not valid.",
   "fix": "Check the manifest against the plugin SDK documentation and re-import."
+ },
+ {
+  "code": "invalid_prefix",
+  "meaning": "The password check accepts exactly five hexadecimal characters.",
+  "fix": "Use the in-app password check; it hashes in your browser and sends only the first five characters."
  },
  {
   "code": "invalid_profile",
@@ -355,6 +380,11 @@
   "fix": "Setup -> API keys: paste the key and Save. Without one the source makes no request."
  },
  {
+  "code": "resolution_evidence_required",
+  "meaning": "A remediation task can only be resolved with evidence of the fix or retest.",
+  "fix": "Attach case evidence (for example a screenshot or note) and resolve again."
+ },
+ {
   "code": "resolver_error",
   "meaning": "DNS lookup failed.",
   "fix": "Check connectivity; the name may not exist."
@@ -365,9 +395,19 @@
   "fix": "Restore always writes into a new empty folder; check the passphrase and the file. The existing data folder is never modified."
  },
  {
+  "code": "rights_required",
+  "meaning": "You must confirm you own the image, it is public, or you have documented authorization to analyse it.",
+  "fix": "Tick the confirmation on the import form."
+ },
+ {
   "code": "scope_required",
   "meaning": "Client authorizations must name the identities they cover.",
   "fix": "Tick the identities this consent applies to."
+ },
+ {
+  "code": "secret_rejected",
+  "meaning": "The text looks like it contains a secret, a credential or a government/financial identifier.",
+  "fix": "Describe the category instead (for example 'breach 2023, passwords exposed'). Exposure records never hold secrets."
  },
  {
   "code": "secret_store_unavailable",
@@ -408,6 +448,21 @@
   "code": "unknown_model",
   "meaning": "The model is not in the setup catalog.",
   "fix": "Pick a model listed in Setup, or add your own profile in Settings -> AI."
+ },
+ {
+  "code": "unmasked_identifier",
+  "meaning": "An email address in the text is not masked.",
+  "fix": "Mask it, for example j***@example.com."
+ },
+ {
+  "code": "unsafe_file",
+  "meaning": "The file is not a plain raster image (SVG, HTML, PDF, archives and executables are refused).",
+  "fix": "Export the picture as JPEG, PNG, GIF, WebP, BMP or TIFF and import that."
+ },
+ {
+  "code": "unsupported_format",
+  "meaning": "That image format is not accepted.",
+  "fix": "Convert it to JPEG, PNG, GIF, WebP, BMP or TIFF."
  },
  {
   "code": "unsupported_kind",

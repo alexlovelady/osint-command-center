@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-247 operations in 38 groups.
+263 operations in 38 groups.
 
 ## ai
 
@@ -307,6 +307,8 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 
 | Method | Path | Summary |
 |---|---|---|
+| GET | `/api/v1/profile/exposure/providers` | Exposure Providers |
+| GET | `/api/v1/profile/retention/due` | Subjects past their retention period in cases you own. Nothing is deleted automatically. |
 | GET | `/api/v1/profile/sources` | The capability matrix for subject research: what each method needs, produces, costs and how well it has been exercised. |
 
 ## reports
@@ -384,7 +386,15 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/subjects/{subject_id}/consent` | Get Consent |
 | POST | `/api/v1/subjects/{subject_id}/consent` | Add Consent |
 | POST | `/api/v1/subjects/{subject_id}/consent/revoke` | Revoke Consent |
+| GET | `/api/v1/subjects/{subject_id}/corrections` | List Corrections |
+| POST | `/api/v1/subjects/{subject_id}/corrections` | Request Correction |
+| POST | `/api/v1/subjects/{subject_id}/corrections/{correction_id}/resolve` | Resolve Correction |
 | GET | `/api/v1/subjects/{subject_id}/coverage` | Get Coverage |
+| GET | `/api/v1/subjects/{subject_id}/exposure` | List Exposure |
+| POST | `/api/v1/subjects/{subject_id}/exposure` | Record Exposure |
+| POST | `/api/v1/subjects/{subject_id}/exposure/approve` | Exposure Approve |
+| POST | `/api/v1/subjects/{subject_id}/exposure/password-range` | k-anonymity relay: accepts exactly five hex characters (never a password or a full hash), stores nothing. |
+| POST | `/api/v1/subjects/{subject_id}/exposure/preview` | Exactly what would leave this machine, to whom, at what cost. Sends nothing. |
 | GET | `/api/v1/subjects/{subject_id}/identifiers` | List Identifiers |
 | POST | `/api/v1/subjects/{subject_id}/identifiers` | Add Identifier |
 | DELETE | `/api/v1/subjects/{subject_id}/identifiers/{identifier_id}` | Remove Identifier |
@@ -398,9 +408,15 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | POST | `/api/v1/subjects/{subject_id}/images/{image_id}/review` | Review |
 | GET | `/api/v1/subjects/{subject_id}/images/{image_id}/thumbnail` | A pixel-only re-encoded PNG. The original bytes are never served to the browser. |
 | GET | `/api/v1/subjects/{subject_id}/profile` | Get Profile |
+| GET | `/api/v1/subjects/{subject_id}/remediations` | List Remediations |
+| POST | `/api/v1/subjects/{subject_id}/remediations` | Create Remediation |
+| PATCH | `/api/v1/subjects/{subject_id}/remediations/{task_id}` | Update Remediation |
 | POST | `/api/v1/subjects/{subject_id}/research/approve` | Research Approve |
 | POST | `/api/v1/subjects/{subject_id}/research/preview` | Research Preview |
 | GET | `/api/v1/subjects/{subject_id}/research/runs` | Research Runs |
+| GET | `/api/v1/subjects/{subject_id}/retention/history` | Retention History |
+| GET | `/api/v1/subjects/{subject_id}/retention/preview` | Retention Preview |
+| POST | `/api/v1/subjects/{subject_id}/retention/purge` | Retention Purge |
 | GET | `/api/v1/subjects/{subject_id}/review-history` | Review History |
 | GET | `/api/v1/subjects/{subject_id}/templates` | Subject Templates |
 | GET | `/api/v1/subjects/{subject_id}/timeline` | Get Timeline |
