@@ -5,12 +5,13 @@ import { api } from "../../../lib/api";
 import type { ProfileT, SubjectT } from "../../../lib/profileApi";
 import Authorization, { AuthIndicator } from "./Authorization";
 import ProfileOverview, { StateBadge } from "./ProfileOverview";
+import Images from "./Images";
 import Research from "./Research";
 import ReviewQueue from "./ReviewQueue";
 import SubjectWorkflows from "./SubjectWorkflows";
 
 // Sub-tabs are listed here only when the feature behind them exists and is tested.
-export const SUBTABS = ["Profile", "Review queue", "Research", "Workflows", "Authorization"] as const;
+export const SUBTABS = ["Profile", "Review queue", "Research", "Images", "Workflows", "Authorization"] as const;
 
 function NewSubject({ caseId, purpose, onDone }: { caseId: string; purpose: string; onDone: () => void }) {
   const [f, setF] = useState({ display_name: "", mode: "self", purpose });
@@ -74,6 +75,7 @@ export default function TargetProfile({ caseId }: { caseId: string }) {
       {sub === "Profile" && <ProfileOverview p={p} onGo={setSub} tabs={[...SUBTABS]} />}
       {sub === "Review queue" && <ReviewQueue p={p} />}
       {sub === "Research" && <Research p={p} />}
+      {sub === "Images" && <Images p={p} />}
       {sub === "Workflows" && <SubjectWorkflows p={p} />}
       {sub === "Authorization" && <Authorization p={p} />}
     </section>

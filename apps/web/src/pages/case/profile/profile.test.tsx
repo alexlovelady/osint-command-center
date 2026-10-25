@@ -165,4 +165,42 @@ describe("TargetProfile", () => {
     expect(screen.getByText(/Gap: Published profile pages are entered by hand/)).toBeInTheDocument();
     expect(screen.getByText("setup required")).toBeInTheDocument();
   });
+
+  const asset = { id: "a1", created_at: "2026-01-01T00:00:00Z", evidence_id: "e9", sha256: "f".repeat(64), format: "JPEG", width: 320, height: 240, ownership: "public", source_url: "https://example.org/p.jpg",
+    has_gps: true, gps: { lat: 51.5072, lon: -0.1275, precision: "exact" }, exif: { Make: "ExampleCam" }, notes: ["12345 bytes follow the end of the image data (possible appended content)."],
+    limits: "x", metadata_caveat: "Metadata can be missing, removed or forged.", unreviewed_matches: 1 };
+  const match = { id: "m1abcdef", type: "near_duplicate", provider: null, matched_url: null, score: 0.95, distance: 3, state: "candidate", reviewer: null, note: "", observed_at: "2026-01-01T00:00:00Z",
+    other_asset_id: "a2", confidence_note: "Perceptual hashes find resized copies. Every match needs a human decision." };
+
+  it("images: previews are sanitized, GPS precision is labelled, matches are candidates needing a reason, imports need a rights confirmation", async () => {
+    const calls = mockApi(routes({
+      "/subjects/s1/images/a1/matches": { items: [match], limits: "Perceptual hashes find resized copies. Every match needs a human decision." },
+      "/subjects/s1/images/a1/reverse-search": { public_url_known: true, authorization: { allowed: false, reason: "no live authorization covers 'reverse_image'" }, steps: ["Run the search in your own browser."], limits: "Do not infer who a person is.",
+        providers: [{ id: "tineye", name: "TinEye", home: "https://tineye.com/", link: null, how: "Open https://tineye.com/ yourself and upload the image file there.", automation: "none: interactive or commercial access only" }] },
+      "/subjects/s1/images/a1/review": { ...match, state: "rejected" },
+      "/subjects/s1/images": { total: 1, limits: "x", items: [asset] } }));
+    wrap(<TargetProfile caseId="c1" />);
+    await waitFor(() => screen.getByText("Jane Example"));
+    fireEvent.click(screen.getByRole("tab", { name: "Images" }));
+    await waitFor(() => screen.getByLabelText(/Image ffffffff/));
+    expect(screen.getByText("GPS exact")).toBeInTheDocument();
+    expect(screen.getByText(/reports and exports always use the coarse form/)).toBeInTheDocument();
+    expect(screen.getByText(/follow the end of the image data/)).toBeInTheDocument();
+    expect(screen.getByText("Metadata can be missing, removed or forged.")).toBeInTheDocument();
+    expect(screen.getByText(/does not recognise or identify people/)).toBeInTheDocument();
+    await waitFor(() => screen.getByText("near duplicate"));
+    expect(screen.getByText("candidate")).toBeInTheDocument();
+    expect(screen.getByText(/similarity 95%/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "False positive" })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/Reason for m1abcd/), { target: { value: "different photo of the same place" } });
+    fireEvent.click(screen.getByRole("button", { name: "False positive" }));
+    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/images/a1/review"))).toBe(true));
+    expect(JSON.parse(String(calls.find((c) => c.url.endsWith("/images/a1/review"))!.init!.body))).toEqual({ match_id: "m1abcdef", state: "rejected", note: "different photo of the same place" });
+    expect(screen.getByText(/Manual reverse-image search/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Manual reverse-image search/));
+    await waitFor(() => screen.getByText(/needs a current authorization with email confirmation/));
+    expect(screen.getByText(/interactive or commercial access only/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Result page address")).toBeNull();     // cannot record results without authorization
+    expect(screen.getByRole("button", { name: "Import" })).toBeDisabled();
+  });
 });

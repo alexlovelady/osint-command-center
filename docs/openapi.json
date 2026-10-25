@@ -1438,6 +1438,49 @@
     "title": "ProposeIn",
     "type": "object"
    },
+   "ProviderResultIn": {
+    "properties": {
+     "matched_url": {
+      "maxLength": 2000,
+      "minLength": 8,
+      "title": "Matched Url",
+      "type": "string"
+     },
+     "note": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Note",
+      "type": "string"
+     },
+     "provider": {
+      "enum": [
+       "google_lens",
+       "bing_visual",
+       "tineye",
+       "other"
+      ],
+      "title": "Provider",
+      "type": "string"
+     },
+     "screenshot_evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Screenshot Evidence Id"
+     }
+    },
+    "required": [
+     "provider",
+     "matched_url"
+    ],
+    "title": "ProviderResultIn",
+    "type": "object"
+   },
    "PurgeIn": {
     "properties": {
      "confirm": {
@@ -1452,6 +1495,33 @@
      }
     },
     "title": "PurgeIn",
+    "type": "object"
+   },
+   "RematchIn": {
+    "properties": {
+     "crop_max": {
+      "default": 8,
+      "maximum": 16.0,
+      "minimum": 0.0,
+      "title": "Crop Max",
+      "type": "integer"
+     },
+     "dhash_max": {
+      "default": 10,
+      "maximum": 24.0,
+      "minimum": 0.0,
+      "title": "Dhash Max",
+      "type": "integer"
+     },
+     "phash_max": {
+      "default": 6,
+      "maximum": 20.0,
+      "minimum": 0.0,
+      "title": "Phash Max",
+      "type": "integer"
+     }
+    },
+    "title": "RematchIn",
     "type": "object"
    },
    "RepairIn": {
@@ -1674,24 +1744,6 @@
      }
     },
     "title": "ReverseIn",
-    "type": "object"
-   },
-   "ReviewIn": {
-    "properties": {
-     "approve": {
-      "title": "Approve",
-      "type": "boolean"
-     },
-     "node": {
-      "title": "Node",
-      "type": "string"
-     }
-    },
-    "required": [
-     "node",
-     "approve"
-    ],
-    "title": "ReviewIn",
     "type": "object"
    },
    "SchedIn": {
@@ -2187,6 +2239,24 @@
      "type"
     ],
     "title": "ValidationError",
+    "type": "object"
+   },
+   "osintcc__api__v1__automations__ReviewIn": {
+    "properties": {
+     "approve": {
+      "title": "Approve",
+      "type": "boolean"
+     },
+     "node": {
+      "title": "Node",
+      "type": "string"
+     }
+    },
+    "required": [
+     "node",
+     "approve"
+    ],
+    "title": "ReviewIn",
     "type": "object"
    },
    "osintcc__api__v1__automations__RunIn": {
@@ -2970,6 +3040,37 @@
      "basis"
     ],
     "title": "VerifyIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile_images__ReviewIn": {
+    "properties": {
+     "match_id": {
+      "title": "Match Id",
+      "type": "string"
+     },
+     "note": {
+      "maxLength": 800,
+      "minLength": 1,
+      "title": "Note",
+      "type": "string"
+     },
+     "state": {
+      "enum": [
+       "candidate",
+       "confirmed_same_image",
+       "rejected",
+       "unsure"
+      ],
+      "title": "State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "match_id",
+     "state",
+     "note"
+    ],
+    "title": "ReviewIn",
     "type": "object"
    },
    "osintcc__api__v1__routes__DecisionIn": {
@@ -4351,7 +4452,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/ReviewIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__automations__ReviewIn"
        }
       }
      },
@@ -12450,6 +12551,483 @@
      }
     },
     "summary": "Remove Identifier"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/images": {
+   "get": {
+    "operationId": "list_images_api_v1_subjects__subject_id__images_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Images"
+   },
+   "post": {
+    "operationId": "import_image_api_v1_subjects__subject_id__images_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "filename",
+      "required": true,
+      "schema": {
+       "maxLength": 255,
+       "minLength": 1,
+       "title": "Filename",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "ownership",
+      "required": false,
+      "schema": {
+       "default": "user_owned",
+       "enum": [
+        "user_owned",
+        "public",
+        "authorized"
+       ],
+       "title": "Ownership",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "source_url",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 2000,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Source Url"
+      }
+     },
+     {
+      "in": "query",
+      "name": "confirm_rights",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Confirm Rights",
+       "type": "boolean"
+      }
+     }
+    ],
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Import Image"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/images/{image_id}": {
+   "get": {
+    "operationId": "get_image_api_v1_subjects__subject_id__images__image_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "image_id",
+      "required": true,
+      "schema": {
+       "title": "Image Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Image"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/images/{image_id}/matches": {
+   "get": {
+    "operationId": "list_matches_api_v1_subjects__subject_id__images__image_id__matches_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "image_id",
+      "required": true,
+      "schema": {
+       "title": "Image Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Matches"
+   },
+   "post": {
+    "description": "Records a result a person found by hand. The application did not run the search and makes no claim that a provider was queried.",
+    "operationId": "add_provider_result_api_v1_subjects__subject_id__images__image_id__matches_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "image_id",
+      "required": true,
+      "schema": {
+       "title": "Image Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProviderResultIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Provider Result"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/images/{image_id}/rematch": {
+   "post": {
+    "operationId": "rematch_api_v1_subjects__subject_id__images__image_id__rematch_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "image_id",
+      "required": true,
+      "schema": {
+       "title": "Image Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RematchIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Rematch"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/images/{image_id}/reverse-search": {
+   "get": {
+    "operationId": "reverse_search_api_v1_subjects__subject_id__images__image_id__reverse_search_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "image_id",
+      "required": true,
+      "schema": {
+       "title": "Image Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reverse Search"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/images/{image_id}/review": {
+   "post": {
+    "operationId": "review_api_v1_subjects__subject_id__images__image_id__review_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "image_id",
+      "required": true,
+      "schema": {
+       "title": "Image Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_images__ReviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Review"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/images/{image_id}/thumbnail": {
+   "get": {
+    "description": "A pixel-only re-encoded PNG. The original bytes are never served to the browser.",
+    "operationId": "thumbnail_api_v1_subjects__subject_id__images__image_id__thumbnail_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "image_id",
+      "required": true,
+      "schema": {
+       "title": "Image Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Thumbnail"
    }
   },
   "/api/v1/subjects/{subject_id}/profile": {

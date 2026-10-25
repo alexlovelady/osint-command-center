@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-238 operations in 38 groups.
+247 operations in 38 groups.
 
 ## ai
 
@@ -388,6 +388,15 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/subjects/{subject_id}/identifiers` | List Identifiers |
 | POST | `/api/v1/subjects/{subject_id}/identifiers` | Add Identifier |
 | DELETE | `/api/v1/subjects/{subject_id}/identifiers/{identifier_id}` | Remove Identifier |
+| GET | `/api/v1/subjects/{subject_id}/images` | List Images |
+| POST | `/api/v1/subjects/{subject_id}/images` | Import Image |
+| GET | `/api/v1/subjects/{subject_id}/images/{image_id}` | Get Image |
+| GET | `/api/v1/subjects/{subject_id}/images/{image_id}/matches` | List Matches |
+| POST | `/api/v1/subjects/{subject_id}/images/{image_id}/matches` | Records a result a person found by hand. The application did not run the search and makes no claim that a provider was queried. |
+| POST | `/api/v1/subjects/{subject_id}/images/{image_id}/rematch` | Rematch |
+| GET | `/api/v1/subjects/{subject_id}/images/{image_id}/reverse-search` | Reverse Search |
+| POST | `/api/v1/subjects/{subject_id}/images/{image_id}/review` | Review |
+| GET | `/api/v1/subjects/{subject_id}/images/{image_id}/thumbnail` | A pixel-only re-encoded PNG. The original bytes are never served to the browser. |
 | GET | `/api/v1/subjects/{subject_id}/profile` | Get Profile |
 | POST | `/api/v1/subjects/{subject_id}/research/approve` | Research Approve |
 | POST | `/api/v1/subjects/{subject_id}/research/preview` | Research Preview |
