@@ -86,6 +86,12 @@ The gap analysis written before any code changed is `docs/aiv-darkint-gap-analys
 | 13 | Reports and AI cite evidence and give remediation without fabricating contents | `test_report_cites_evidence_names_sources_and_suggests_practical_steps_without_inventing_contents`, `test_summary_and_event_explanations_need_no_model_cite_evidence_and_never_invent_contents` |
 | 14 | An authorized low-volume live test, only with approval | **not run** (needs your approval and your key) |
 
+## Builds
+
+- **Windows:** backend 1006 passed / 2 skipped; ruff and mypy clean; vitest 69/69; Playwright 27/27 (axe light and dark); frozen backend smoke 60/60.
+- **Linux (Ubuntu 22.04 container, clean checkout of the commit):** run with `docker/linux-build`; Nmap 7.80 (a verified major) ran its real-binary test. The image's dnstwist is 20220131, an unreviewed version that exits 1 after listing, so its real-binary test skips and the adapter reports it as unverified. Naabu and Nuclei are not installed there. See the result recorded in the commit that follows this one.
+- **Kali on the external SSD:** not run by me; the update commands are in the final message of this change.
+
 ## Phases
 
 | Phase | Status |

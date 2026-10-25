@@ -301,5 +301,8 @@ async def test_real_nmap_connect_scan_of_a_lab_port(env):
 
 @pytest.mark.skipif(not shutil.which("dnstwist"), reason="dnstwist is not installed here (covered on the Linux image)")
 async def test_real_dnstwist_lists_candidates_offline():
+    health = await tools._probe_uncached(tools.TOOLS["dnstwist"])
+    if health["status"] != "healthy":                                    # e.g. Ubuntu 22.04 ships 20220131, which exits 1 after listing; only reviewed versions are exercised
+        pytest.skip(f"installed dnstwist is {health['status']} ({health['version']}); flags were verified on 2024 and later releases")
     res = await run_argv(tools.dnstwist_argv(shutil.which("dnstwist"), "example.com"), 60)
     assert res.returncode == 0 and len(res.stdout.splitlines()) > 20
