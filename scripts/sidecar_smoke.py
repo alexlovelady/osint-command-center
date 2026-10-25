@@ -114,7 +114,7 @@ def run_checks(encrypted: bool) -> None:
         cfin = next((e for e in cev if e["type"] == "final"), None)
         check("Copilot answers from the bundled knowledge base", cop.status_code == 200 and bool(cfin) and "Create case" in cfin["text"] and any(x["source"] == "tutorial:create-case" for x in cfin["sources"]), (cfin["text"][:50] if cfin else cop.text[:80]))
         tpl = c.get("/automations/templates")
-        check("42 automation templates ship in the bundle (30 general + 12 Target-profile)", tpl.status_code == 200 and tpl.json()["total"] == 42, str(tpl.status_code))
+        check("52 automation templates ship in the bundle (30 general + 12 Target-profile + 5 AIV + 5 DARKINT)", tpl.status_code == 200 and tpl.json()["total"] == 52, str(tpl.status_code))
         wfr = c.post("/automations/from-template", json={"slug": "cy-02-domain-change-watch", "inputs": {"domain": "example.org"}})
         val = c.post(f"/automations/workflows/{wfr.json()['id']}/validate") if wfr.status_code == 201 else None
         check("cron + IANA time zone validation works in the bundle (tzdata)", val is not None and val.status_code == 200 and val.json()["valid"], (val.text[:80] if val is not None else wfr.text[:80]))
@@ -134,6 +134,22 @@ def run_checks(encrypted: bool) -> None:
         rp = c.post(f"/subjects/{ps}/report/preview", json={"audience": "subject"})
         check("Target profile: report preview with citation check", rp.status_code == 200 and rp.json()["citation_check"]["ok"] is True, rp.text[:80])
         check("keyring backend importable in the bundle", k.returncode == 0 and k.stdout.strip() != "", k.stdout.strip() or k.stderr[-200:])
+
+        # ---- AIV, DARKINT and branding (addendum v1.1)
+        cap = c.get("/aiv/capabilities")
+        check("AIV: capabilities report it OFF by default and list what is never done", cap.status_code == 200 and cap.json()["enabled"] is False and len(cap.json()["forbidden"]) >= 5, cap.text[:80])
+        blocked = c.post(f"/cases/{pc}/asset-authorizations", json={"asset_type": "fqdn", "scope": ["a.example.org"], "ports": [443], "allowed_classes": ["tls_handshake"], "authorized_by": "x",
+                                                                    "expires_at": (_dt.datetime.now(_dt.UTC) + _dt.timedelta(days=2)).isoformat()})
+        check("AIV: nothing can be authorized while it is off", blocked.status_code == 403 and blocked.json()["code"] == "aiv_disabled", blocked.text[:80])
+        tpl = c.get("/aiv/templates")
+        check("AIV: template review (PyYAML) works in the bundle", tpl.status_code == 200 and c.post("/aiv/templates/review", json={"content": "id: x\ninfo:\n  name: a\n  severity: low\nhttp:\n  - raw: ['GET / HTTP/1.1']\n"}).json()["ok"] is False)
+        src = c.get("/darkint/sources")
+        states = {x["provider_id"]: x["state"] for x in src.json()["items"]} if src.status_code == 200 else {}
+        check("DARKINT: providers report honest states (none live by default)", states.get("hibp") == "disabled" and states.get("intelligence_x") == "manual_only" and "live" not in states.values(), str(states))
+        br = c.get("/branding")
+        check("Branding: the display name is unchanged by default", br.status_code == 200 and br.json()["active"]["productName"] == "OSINT Command Center" and br.json()["preset"] == "current", br.text[:80])
+        tc = c.get("/automations/templates")
+        check("Automation library ships the AIV and DARKINT templates, all disabled", tc.status_code == 200 and tc.json()["total"] == 52 and all(t["installed_disabled"] for t in tc.json()["items"]), tc.text[:60])
 
         r = c.post("/system/shutdown")
         try:

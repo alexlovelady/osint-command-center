@@ -28,9 +28,13 @@ from ..profile import candidates, consent, exposure, hooks, images, reports, res
 from ..profile import registry as preg
 from ..profile import service as pservice
 
+AIV_READ_TOOLS = ("aiv_status", "explain_aiv_plan", "explain_aiv_observation")      # defined in aiv_tools (they need no subject)
+AIV_ACTION_TOOLS = ("propose_aiv_plan",)
+DARK_READ_TOOLS = ("darkint_summary", "explain_exposure_event")                     # defined in darkint_tools
+DARK_ACTION_TOOLS = ("propose_darkint_workflow",)
 READ_TOOLS = ("summarize_profile", "recommend_research_plan", "explain_claim", "create_verification_queue", "explain_exposure", "guide_image_search", "why_not_searched",
-              "explain_image_match")
-ACTION_TOOLS = ("propose_enrichment_workflow", "draft_subject_report")
+              "explain_image_match", *AIV_READ_TOOLS, *DARK_READ_TOOLS)
+ACTION_TOOLS = ("propose_enrichment_workflow", "draft_subject_report", *AIV_ACTION_TOOLS, *DARK_ACTION_TOOLS)
 ROLE_RANK = {"viewer": 1, "editor": 2, "owner": 3}
 CAT_WEIGHT = {"username_footprint": 3, "domain_infrastructure": 3, "organization_filings": 2, "public_mentions": 1, "professional_history": 2, "published_documents": 2, "images": 2, "exposure": 3}
 MATURITY_BONUS = {"live_tested": 2, "partially_verified": 1, "mocked_only": 0, "manual": 1}
@@ -78,6 +82,12 @@ def _ev(db: Session, ids: list[str]) -> list[dict[str, str]]:
 
 # ---------------------------------------------------------------------------------------------------------------------------- read tools
 def read(db: Session, st: Any, user: str, case_id: str, name: str, args: dict[str, Any], tools: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    if name in AIV_READ_TOOLS:
+        from . import aiv_tools
+        return aiv_tools.read(db, st, user, case_id, name, args)
+    if name in DARK_READ_TOOLS:
+        from . import darkint_tools
+        return darkint_tools.read(db, st, user, case_id, name, args)
     role = _role(db, user, case_id)
     s = _subject(db, case_id, args)
     if name == "summarize_profile":
@@ -287,6 +297,12 @@ def _image_match(db: Session, s: Subject, match_id: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------------------------------------------------------- cloud view
 def cloud_view(name: str, r: dict[str, Any]) -> dict[str, Any]:
     """What a cloud model may be shown: counts and generic text only. No identifiers, URLs, descriptors, titles or coordinates."""
+    if name in AIV_READ_TOOLS:
+        from . import aiv_tools
+        return aiv_tools.cloud_view(name, r)
+    if name in DARK_READ_TOOLS:
+        from . import darkint_tools
+        return darkint_tools.cloud_view(name, r)
     notice = "Profile details are withheld from cloud models; only counts and generic text are shown."
     if name == "summarize_profile":
         return {"counts": {"verified": len(r["verified"]), "confirmed_accounts": len(r["confirmed_accounts"]), "unverified_leads": len(r["unverified_leads"]), "contradictions": len(r["contradictions"])},
@@ -311,6 +327,12 @@ def cloud_view(name: str, r: dict[str, Any]) -> dict[str, Any]:
 
 # ---------------------------------------------------------------------------------------------------------------------------- proposals
 def propose(db: Session, st: Any, user: str, case_id: str, name: str, args: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    if name in AIV_ACTION_TOOLS:
+        from . import aiv_tools
+        return aiv_tools.propose(db, st, user, case_id, args)
+    if name in DARK_ACTION_TOOLS:
+        from . import darkint_tools
+        return darkint_tools.propose(db, st, user, case_id, args)
     role = _role(db, user, case_id)
     _need(role, "editor", name.replace("_", " "))
     s = _subject(db, case_id, args)
@@ -349,6 +371,9 @@ def propose(db: Session, st: Any, user: str, case_id: str, name: str, args: dict
 
 
 def execute(db: Session, st: Any, user: str, case_id: str, name: str, a: dict[str, Any]) -> dict[str, Any]:
+    if name in DARK_ACTION_TOOLS:
+        from . import darkint_tools
+        return darkint_tools.execute(db, st, user, case_id, a)
     role = _role(db, user, case_id)
     _need(role, "editor", name.replace("_", " "))
     s = _subject(db, case_id, {"subject_id": a.get("subject_id")})

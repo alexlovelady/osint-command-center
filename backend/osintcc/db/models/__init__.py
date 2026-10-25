@@ -888,6 +888,22 @@ class AutomationSuggestion(Base):
     dismissed_at: Mapped[datetime | None] = ts(nullable=True, default=False)
 
 
+from .aiv import (  # noqa: F401  (Active Intelligence & Verification tables, addendum v1.1)
+    AivApproval,
+    AivObservation,
+    AivPlan,
+    AivRun,
+    AivRunEvent,
+    AivTemplateApproval,
+    AssetAuthorization,
+)
+from .darkint import (  # noqa: F401
+    ExposureCheck,
+    ExposureEvent,
+    ExposureMonitorConfig,
+    ExposureReview,
+    ExposureSource,
+)
 from .profile import (  # noqa: F401  (target-profile tables, addendum TP-1.0)
     ExposureIndicator,
     ImageAsset,

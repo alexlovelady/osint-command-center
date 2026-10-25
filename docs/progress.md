@@ -170,6 +170,15 @@ This session:
 8. theHarvester has no `--version`, so health reported "degraded" → probes `--help`.
 9. `egress_check.py` mis-parsed its own flag as a path, and the Windows checksum file overwrote the Linux entry → fixed.
 
+## AIV, DARKINT and rebrand (addendum v1.1) — 2026-10-25
+
+Baseline before this work: tag `pre-aiv-darkint` (797 backend tests, 57 vitest, 24 Playwright, frozen smoke 48/48). Everything is in `docs/aiv-darkint-status.md`; the pre-code audit is `docs/aiv-darkint-gap-analysis.md`.
+
+- **Built:** migrations 0013 (AIV) and 0014 (DARKINT); asset authorizations, deterministic policy, offline plan preview, single-use plan-bound approvals, run-time re-checks, HTTP/TLS/connect adapters, optional Nmap/Naabu/Nuclei/dnstwist wrappers, reviewed template allowlist, observations with reviews, report and PHANTOM handoff export; DARKINT provider framework (HIBP, Ransomware.live, manual / CSV / JSON / MISP-export intake), consent provider scope, events with grouping, four-state coverage, reviews, monitors, remediation tasks, dashboard, report; ten automation templates (AIV-01..05, DARK-01..05) and five node types; Copilot explain / propose tools; the Verification workbench, DARKINT tab and page, product-name card.
+- **Verified here:** backend, frontend and migration tests (counts in `docs/aiv-darkint-status.md` and the commit message); real-lab checks over 127.0.0.1 with real TLS; tool flags checked against the real tools' help output; real tool output as parser fixtures.
+- **Not verified / not built:** any live third-party service (HIBP, Ransomware.live), a live low-volume DARKINT test (needs your approval and key), Intelligence X and MISP live connectors, ZAP import, Nuclei and Naabu real-binary runs, a clean-machine install.
+- **Bugs found by running it:** a plan could be deduplicated across authorizations (the plan hash now includes the authorization id); a Python 3.14 certificate lacked key identifiers; DARKINT coverage briefly counted gate refusals as "unknown" (they are "not checked"); the Copilot tab list and template counts had to be extended in three places.
+
 ## Next actions (if you continue)
 
 1. Decide about WebView2's `substrate.office.com` traffic (the firewall script, or a bundled fixed-version runtime so a firewall rule can be app-specific).

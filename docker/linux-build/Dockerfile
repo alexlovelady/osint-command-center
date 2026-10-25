@@ -4,7 +4,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl build-essential pkg-config libssl-dev libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev \
-      libayatana-appindicator3-dev libxdo-dev patchelf xvfb xauth x11-utils imagemagick xdotool perl file git procps tcpdump \
+      libayatana-appindicator3-dev libxdo-dev patchelf xvfb xauth x11-utils imagemagick xdotool perl file git procps tcpdump nmap dnstwist \
     && rm -rf /var/lib/apt/lists/*
 ARG UV_VERSION=0.13.5
 ARG UV_SHA256=f68d291c75783122dad58ab77def0e13f3233f358731db5d6d7e8715603b928f

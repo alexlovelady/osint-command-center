@@ -9,7 +9,11 @@ from sqlalchemy.orm import Session
 
 from ..db.models import (
     Evidence,
+    ExposureCheck,
+    ExposureEvent,
     ExposureIndicator,
+    ExposureMonitorConfig,
+    ExposureReview,
     ImageAsset,
     ImageMatch,
     ProfileCandidateLink,
@@ -149,7 +153,7 @@ def _counts(db: Session, subject: Subject) -> dict[str, int]:
     out = {}
     for name, model in (("identifiers", SubjectIdentifier), ("claims", ProfileClaim), ("candidate_accounts", ProfileCandidateLink), ("review_events", ProfileReviewEvent),
                         ("authorizations", SubjectConsent), ("research_tasks", ResearchTask), ("images", ImageAsset), ("image_matches", ImageMatch),
-                        ("exposure_indicators", ExposureIndicator), ("remediation_tasks", RemediationTask), ("correction_requests", SubjectCorrection)):
+                        ("exposure_indicators", ExposureIndicator), ("exposure_events", ExposureEvent), ("exposure_checks", ExposureCheck), ("exposure_monitors", ExposureMonitorConfig), ("remediation_tasks", RemediationTask), ("correction_requests", SubjectCorrection)):
         out[name] = db.scalar(select(func.count()).select_from(model).where(model.subject_id == subject.id)) or 0
     return out
 
@@ -158,6 +162,7 @@ def _evidence_ids(db: Session, subject: Subject) -> set[str]:
     ids = {a.evidence_id for a in db.scalars(select(ImageAsset).where(ImageAsset.subject_id == subject.id))}
     ids |= {c.proof_evidence_id for c in db.scalars(select(SubjectConsent).where(SubjectConsent.subject_id == subject.id)) if c.proof_evidence_id}
     ids |= {x.evidence_id for x in db.scalars(select(ExposureIndicator).where(ExposureIndicator.subject_id == subject.id)) if x.evidence_id}
+    ids |= {x.evidence_id for x in db.scalars(select(ExposureEvent).where(ExposureEvent.subject_id == subject.id)) if x.evidence_id}
     return ids
 
 
@@ -206,7 +211,10 @@ def purge(db: Session, vault_root: Any, subject: Subject, confirm: str, actor: s
             ev.vault_relpath = None
     sid, name = subject.id, subject.display_name
     # children go with the subject (cascade); the subject row stays as a tombstone so the audit trail still points at something
-    for model in (SubjectIdentifier, ProfileClaim, ProfileCandidateLink, ProfileReviewEvent, SubjectConsent, ResearchTask, ImageMatch, ImageAsset, RemediationTask, ExposureIndicator, SubjectCorrection):
+    for rv in db.scalars(select(ExposureReview).join(ExposureEvent, ExposureEvent.id == ExposureReview.event_id).where(ExposureEvent.subject_id == sid)):
+        db.delete(rv)
+    db.flush()
+    for model in (ExposureEvent, ExposureCheck, ExposureMonitorConfig, SubjectIdentifier, ProfileClaim, ProfileCandidateLink, ProfileReviewEvent, SubjectConsent, ResearchTask, ImageMatch, ImageAsset, RemediationTask, ExposureIndicator, SubjectCorrection):
         for row in db.scalars(select(model).where(model.subject_id == sid)):
             db.delete(row)
         db.flush()

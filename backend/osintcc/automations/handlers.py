@@ -594,3 +594,143 @@ async def case_gaps(ctx: Ctx) -> Any:
         items.append({"id": "gap:disputed", "entity": "claims", "entity_type": "claim", "predicate": "gap.disputed_claims", "value": g["disputed_claims"],
                       "confidence": "high", "adapter": "case", "evidence_id": None})
     return _findings_out(items, adapters=["case"])
+
+
+@handler("aiv_authorizations")
+async def aiv_authorizations(ctx: Ctx) -> Any:
+    if ctx.dry:
+        rows = ctx.fixture.get("aiv_authorizations") or []
+        items = [{"id": f"sim:aivauth:{i}", "entity": r.get("scope", "lab.example"), "entity_type": "domain", "predicate": "aiv.authorization", "value": r.get("status", "live"), "confidence": "high",
+                  "adapter": "aiv", "evidence_id": None, "simulated": True} for i, r in enumerate(rows)]
+        return _findings_out(items, adapters=["aiv"], simulated=True)
+    from ..aiv import policy as aivp
+    from ..db.models import AssetAuthorization
+    items = []
+    with ctx.st.sm() as db:
+        for a in db.scalars(select(AssetAuthorization).where(AssetAuthorization.case_id == ctx.case_id).order_by(AssetAuthorization.created_at.desc()).limit(200)):
+            live = aivp.authorization_live(a, ctx.now)
+            if ctx.cfg["only_live"] and not live:
+                continue
+            items.append({"id": a.id, "entity": ", ".join((a.canonical_scope or [])[:3]), "entity_type": "domain", "predicate": "aiv.authorization",
+                          "value": "live" if live else live.code, "confidence": "high", "adapter": "aiv", "evidence_id": None,
+                          "classes": list(a.allowed_classes_json or []), "expires_at": a.expires_at.isoformat() if a.expires_at else None})
+    return _findings_out(items, adapters=["aiv"])
+
+
+_SEV_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3}
+
+
+@handler("aiv_observations")
+async def aiv_observations(ctx: Ctx) -> Any:
+    if ctx.dry:
+        rows = ctx.fixture.get("aiv_observations") or []
+        items = [{"id": f"sim:aivobs:{i}", "entity": r.get("asset", "lab.example"), "entity_type": "domain", "predicate": f"aiv.{r.get('check', 'http_metadata')}", "value": r.get("title", "observation"),
+                  "confidence": "medium", "adapter": "aiv", "evidence_id": f"sim-evidence:aiv:{i}", "severity": r.get("severity", "low"), "simulated": True} for i, r in enumerate(rows)]
+        if not items:
+            ctx.warnings.append("no fixture data for AIV observations: the simulated result is empty")
+        return _findings_out(items, adapters=["aiv"], simulated=True, warnings=ctx.warnings)
+    from ..db.models import AivObservation
+    floor = _SEV_RANK[ctx.cfg["min_severity"]]
+    items = []
+    with ctx.st.sm() as db:
+        q = select(AivObservation).where(AivObservation.case_id == ctx.case_id).order_by(AivObservation.observed_at.desc()).limit(ctx.cfg["limit"] * 2)
+        for o in db.scalars(q):
+            if _SEV_RANK.get(o.severity, 0) < floor or o.review_status in ctx.cfg["exclude_reviewed"]:
+                continue
+            title = (o.observed_value_json or {}).get("title") or o.finding_key or o.check_type
+            items.append({"id": o.id, "entity": o.target_asset, "entity_type": "domain", "predicate": f"aiv.{o.check_type}", "value": str(title)[:200], "confidence": o.confidence,
+                          "adapter": "aiv", "evidence_id": o.evidence_id, "severity": o.severity, "review_status": o.review_status, "basis": o.basis,
+                          "observed_at": o.observed_at.isoformat() if o.observed_at else None})
+    return _findings_out(items[: ctx.cfg["limit"]], adapters=["aiv"])
+
+
+# ---- DARKINT --------------------------------------------------------------------------------------------------------------------------------
+def _event_items(rows: list[Any]) -> list[dict[str, Any]]:
+    return [{"id": e.id, "entity": "exposure", "entity_type": "exposure", "predicate": f"darkint.{e.event_type}", "value": e.title, "confidence": e.confidence, "adapter": e.provider_id,
+             "evidence_id": e.evidence_id, "categories": list(e.categories_json), "claim_status": e.claim_status,
+             "observed_at": e.reported_last_seen.isoformat() if e.reported_last_seen else None} for e in rows]
+
+
+def _sim_exposure(ctx: Ctx) -> list[dict[str, Any]]:
+    rows = ctx.fixture.get("darkint_events") or []
+    return [{"id": f"sim:darkint:{i}", "entity": "exposure", "entity_type": "exposure", "predicate": f"darkint.{r.get('type', 'breach')}", "value": r.get("title", "Reported incident"),
+             "confidence": r.get("confidence", "low"), "adapter": r.get("provider", "hibp"), "evidence_id": f"sim-evidence:darkint:{i}", "categories": r.get("categories", []),
+             "claim_status": "reported", "simulated": True} for i, r in enumerate(rows)]
+
+
+@handler("darkint_check")
+async def darkint_check(ctx: Ctx) -> Any:
+    if ctx.dry:
+        ctx.warnings.append("simulated: no provider was contacted and no consent was exercised")
+        return _findings_out(_sim_exposure(ctx), adapters=["darkint"], simulated=True, warnings=ctx.warnings)
+    from ..darkint import service as dsvc
+    from ..db.models import ExposureEvent, ExposureMonitorConfig
+    mid = ctx.resolve(ctx.cfg["monitor_ref"])
+    if not isinstance(mid, str) or not mid:
+        raise NodeError("SCOPE_DENIED", "no exposure monitor is bound to this automation: create a monitor in the Exposure tab and enter its id as the input")
+    with ctx.st.sm() as db:
+        m = db.get(ExposureMonitorConfig, mid)
+        if m is None or m.case_id != ctx.case_id:
+            raise NodeError("SCOPE_DENIED", "that monitor does not belong to this case")
+        out = await dsvc.run_monitor(db, ctx.st, m, ctx.actor, force=True)
+        db.commit()
+        if not out["ran"]:
+            raise NodeError("SCOPE_DENIED", out["reason"])
+        failed = [r for r in out["results"] if r["outcome"] not in ("match", "no_match")]
+        if out["results"] and len(failed) == len(out["results"]):
+            code = next((r["code"] for r in failed if r["code"] in ("CREDENTIAL_MISSING", "RATE_LIMITED", "SOURCE_UNAVAILABLE", "UNSUPPORTED", "OFFLINE")), "SOURCE_UNAVAILABLE")
+            raise NodeError(code, "; ".join(sorted({r["detail"] for r in failed if r["detail"]}))[:300] or "no provider could be checked", retryable=False)
+        ctx.warnings += [f"{r['provider_id']}: {r['outcome'].replace('_', ' ')}: {r['detail']}"[:240] for r in failed]
+        rows = [e for e in db.scalars(select(ExposureEvent).where(ExposureEvent.case_id == ctx.case_id, ExposureEvent.subject_id == m.subject_id, ExposureEvent.identifier_id.in_(m.identifier_ids_json)))
+                if e.claim_status != "retracted"]
+        return _findings_out(_event_items(rows)[:500], adapters=["darkint"], partial=bool(failed), warnings=ctx.warnings)
+
+
+@handler("darkint_events")
+async def darkint_events(ctx: Ctx) -> Any:
+    if ctx.dry:
+        return _findings_out(_sim_exposure(ctx), adapters=["darkint"], simulated=True, warnings=["simulated"])
+    from ..db.models import ExposureEvent, ExposureReview
+    with ctx.st.sm() as db:
+        q = select(ExposureEvent).where(ExposureEvent.case_id == ctx.case_id).order_by(ExposureEvent.created_at.desc()).limit(ctx.cfg["limit"] * 2)
+        if ctx.cfg["event_types"]:
+            q = q.where(ExposureEvent.event_type.in_(ctx.cfg["event_types"]))
+        rows = []
+        for e in db.scalars(q):
+            if e.claim_status == "retracted":
+                continue
+            if ctx.cfg["exclude_dismissed"]:
+                last = db.scalars(select(ExposureReview).where(ExposureReview.event_id == e.id).order_by(ExposureReview.created_at.desc())).first()
+                if last and last.status == "not_relevant":
+                    continue
+            rows.append(e)
+        return _findings_out(_event_items(rows[: ctx.cfg["limit"]]), adapters=["darkint"])
+
+
+@handler("darkint_remediation")
+async def darkint_remediation(ctx: Ctx) -> Any:
+    if ctx.dry:
+        n = len(ctx.fixture.get("darkint_events") or [])
+        items = [{"id": f"sim:task:{i}", "entity": "remediation", "entity_type": "task", "predicate": "darkint.remediation_task", "value": a, "confidence": "high", "adapter": "darkint",
+                  "evidence_id": None, "simulated": True} for i, a in enumerate(ctx.cfg["actions"][: max(n, 1)])]
+        return _findings_out(items, adapters=["darkint"], simulated=True, warnings=["simulated: no task was created and nothing was sent"])
+    from ..darkint import service as dsvc
+    from ..db.models import ExposureEvent, RemediationTask, Subject
+    created: list[dict[str, Any]] = []
+    with ctx.st.sm() as db:
+        for e in db.scalars(select(ExposureEvent).where(ExposureEvent.case_id == ctx.case_id).order_by(ExposureEvent.created_at)):
+            if e.claim_status == "retracted" or e.subject_id is None or len(created) >= ctx.cfg["max_tasks"]:
+                continue
+            s = db.get(Subject, e.subject_id)
+            if s is None:
+                continue
+            for act in dsvc.suggest_actions(e):
+                if act not in ctx.cfg["actions"] or len(created) >= ctx.cfg["max_tasks"]:
+                    continue
+                if db.scalars(select(RemediationTask).where(RemediationTask.exposure_event_id == e.id, RemediationTask.action_type == act)).first():
+                    continue
+                t = dsvc.create_remediation(db, s, e, act, ctx.actor)
+                created.append({"id": t.id, "entity": "remediation", "entity_type": "task", "predicate": "darkint.remediation_task", "value": f"{act}: {t.issue}"[:200], "confidence": "high",
+                                "adapter": "darkint", "evidence_id": e.evidence_id})
+        db.commit()
+    return _findings_out(created, adapters=["darkint"], warnings=["tasks only: no message was sent and no takedown was submitted"])

@@ -41,7 +41,10 @@ def workflow_gate(db: Session, wf: AutomationWorkflow, now: datetime | None = No
     if subject is None:
         raise NodeError("SCOPE_DENIED", "the subject this automation is bound to no longer exists")
     adapters = {n.get("config", {}).get("adapter") for n in (wf.draft_json or {}).get("nodes", []) if n.get("type") in ("adapter_query", "enrich")}
-    classes = {SOURCES[a].source_class for a in adapters if a in SOURCES} or {"public_passive"}
+    classes = {SOURCES[a].source_class for a in adapters if a in SOURCES}
+    if any(n.get("type") == "darkint_check" for n in (wf.draft_json or {}).get("nodes", [])):
+        classes.add("exposure_check")                       # exposure lookups need the sensitive-class authorization even when no adapter node is present
+    classes = classes or {"public_passive"}
     for cls in sorted(classes):
         d = consent.check(db, subject, cls, now=now)
         if not d.allowed:
@@ -62,8 +65,8 @@ def install_template(db: Session, subject: Subject, case: Any, slug: str, inputs
     from ..automations import catalog
     from ..automations import service as auto
     t = catalog.get(slug)
-    if t is None or t["category"] != "Target profile":
-        raise InstallError("no such Target profile template")
+    if t is None or t["category"] not in ("Target profile", "Exposure"):
+        raise InstallError("no such Target profile or Exposure template")
     d = json.loads(json.dumps(t["definition"]))
     for k, v in inputs.items():
         if k not in d["inputs"]:

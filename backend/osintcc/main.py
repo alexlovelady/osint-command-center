@@ -62,6 +62,7 @@ class AppState:
     egress: Any = None  # startup egress self-check monitor (see selfcheck/egress.py)
     automation: Any = None  # AutomationEngine (runs, retries, recovery)
     automation_scheduler: Any = None  # AutomationScheduler (triggers, queue)
+    aiv: Any = None  # AivExecutor (approved verification plans; never resumes an interrupted run)
     update_http: Any = None  # test/dev seam: SafeHttp used by the update check
     update_transport: Any = None  # test/dev seam: httpx transport used by the update download
 
@@ -112,6 +113,8 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
     from .automations.scheduler import AutomationScheduler
     state.automation = AutomationEngine(state, backoff_scale=settings.retry_scale)
     state.automation_scheduler = AutomationScheduler(state, state.automation)
+    from .aiv.executor import AivExecutor
+    state.aiv = AivExecutor(state)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -119,6 +122,7 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
         app.state.recovered_jobs = recovered
         scheduler.recover()
         app.state.recovered_automation_runs = state.automation.recover()
+        app.state.recovered_aiv_runs = state.aiv.recover()
         from .plugins.manager import PluginManager
         state.plugin_manager = PluginManager(state)
         state.plugin_manager.sync()  # re-register enabled, hash-verified plugins
@@ -144,7 +148,7 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
             egress_task.cancel()
         await scheduler.stop()
         await state.automation_scheduler.stop()
-        for t in list(state.tasks):
+        for t in list(state.tasks) + list(state.aiv.tasks.values()):
             t.cancel()
         with engine.connect() as c:  # checkpoint WAL on clean shutdown
             c.exec_driver_sql("PRAGMA wal_checkpoint(TRUNCATE)")

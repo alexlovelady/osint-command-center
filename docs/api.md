@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-266 operations in 38 groups.
+310 operations in 41 groups.
 
 ## ai
 
@@ -21,6 +21,26 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/ai/profiles` | List Profiles |
 | POST | `/api/v1/ai/profiles` | Create Profile |
 | DELETE | `/api/v1/ai/profiles/{pid}` | Delete Profile |
+
+## aiv
+
+| Method | Path | Summary |
+|---|---|---|
+| GET | `/api/v1/aiv/capabilities` | Capabilities |
+| POST | `/api/v1/aiv/handoff/verify` | Verify Handoff |
+| GET | `/api/v1/aiv/plans/{plan_id}` | Get Plan |
+| POST | `/api/v1/aiv/plans/{plan_id}/approve` | Approve |
+| POST | `/api/v1/aiv/plans/{plan_id}/run` | Run Plan |
+| GET | `/api/v1/aiv/runs/{run_id}` | Get Run |
+| POST | `/api/v1/aiv/runs/{run_id}/cancel` | Cancel Run |
+| GET | `/api/v1/aiv/runs/{run_id}/compare/{other_id}` | Compare |
+| GET | `/api/v1/aiv/runs/{run_id}/events` | Run Events |
+| PUT | `/api/v1/aiv/settings` | Put Settings |
+| GET | `/api/v1/aiv/templates` | List Templates |
+| POST | `/api/v1/aiv/templates` | Approve Template |
+| POST | `/api/v1/aiv/templates/review` | Static review only: nothing is stored or run. |
+| POST | `/api/v1/aiv/templates/{tid}/revoke` | Revoke Template |
+| GET | `/api/v1/aiv/tools/health` | Tools Health |
 
 ## alerts
 
@@ -93,6 +113,13 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | POST | `/api/v1/backups/restore/preview` | Restore Preview |
 | POST | `/api/v1/backups/verify` | Verify Backup |
 
+## branding
+
+| Method | Path | Summary |
+|---|---|---|
+| GET | `/api/v1/branding` | Get Branding |
+| PUT | `/api/v1/branding` | Put Branding |
+
 ## captures
 
 | Method | Path | Summary |
@@ -118,12 +145,34 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 |---|---|---|
 | GET | `/api/v1/cases/{case_id}/ai-policy` | Get Policy |
 | PUT | `/api/v1/cases/{case_id}/ai-policy` | Put Policy |
+| POST | `/api/v1/cases/{case_id}/aiv/handoff` | Exports confirmed observations as a PHANTOM handoff file. It launches nothing; the case owner approves the export. |
+| GET | `/api/v1/cases/{case_id}/aiv/observations` | List Observations |
+| POST | `/api/v1/cases/{case_id}/aiv/observations/{obs_id}/review` | Review Observation |
+| GET | `/api/v1/cases/{case_id}/aiv/plans` | List Plans |
+| POST | `/api/v1/cases/{case_id}/aiv/plans` | Create Plan |
+| POST | `/api/v1/cases/{case_id}/aiv/plans/preview` | Offline: no DNS and no packets. Shows exactly what each step would do and whether policy allows it. |
+| POST | `/api/v1/cases/{case_id}/aiv/report` | Create Report |
 | GET | `/api/v1/cases/{case_id}/alerts` | List Alerts |
 | POST | `/api/v1/cases/{case_id}/archive` | Archive Case |
+| GET | `/api/v1/cases/{case_id}/asset-authorizations` | List Auths |
+| POST | `/api/v1/cases/{case_id}/asset-authorizations` | Create Auth |
+| POST | `/api/v1/cases/{case_id}/asset-authorizations/{auth_id}/revoke` | Revoke Auth |
 | POST | `/api/v1/cases/{case_id}/authorizations` | Add Auth |
 | GET | `/api/v1/cases/{case_id}/contradictions` | Get Contradictions |
 | GET | `/api/v1/cases/{case_id}/cross-links` | Cross Links |
 | POST | `/api/v1/cases/{case_id}/cross-links/decision` | Decide |
+| POST | `/api/v1/cases/{case_id}/darkint/check` | Check |
+| GET | `/api/v1/cases/{case_id}/darkint/exposures` | Exposures |
+| POST | `/api/v1/cases/{case_id}/darkint/exposures/{event_id}/remediation` | Creates a task. It never sends a message or submits a takedown: a person does that outside this application. |
+| PATCH | `/api/v1/cases/{case_id}/darkint/exposures/{event_id}/review` | Review Event |
+| POST | `/api/v1/cases/{case_id}/darkint/import` | Sanitized import (CSV, JSON, or a MISP event export). The file is read, redacted and discarded. |
+| POST | `/api/v1/cases/{case_id}/darkint/manual` | Manual |
+| GET | `/api/v1/cases/{case_id}/darkint/monitors` | List Monitors |
+| POST | `/api/v1/cases/{case_id}/darkint/monitors` | Create Monitor |
+| PATCH | `/api/v1/cases/{case_id}/darkint/monitors/{monitor_id}` | Set Monitor |
+| POST | `/api/v1/cases/{case_id}/darkint/preview` | Exactly what would leave this machine, to whom, under what terms. Sends nothing. Refusals are explained here. |
+| POST | `/api/v1/cases/{case_id}/darkint/reports` | Report Create |
+| POST | `/api/v1/cases/{case_id}/darkint/reports/preview` | Report Preview |
 | GET | `/api/v1/cases/{case_id}/entities` | Entities |
 | GET | `/api/v1/cases/{case_id}/entity-links` | List Links |
 | POST | `/api/v1/cases/{case_id}/entity-links` | Logical merge for views/analysis only. Underlying entities, claims and evidence are never altered. |
@@ -213,6 +262,15 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | Method | Path | Summary |
 |---|---|---|
 | POST | `/api/v1/correlations/{cid}/revoke` | Revoke |
+
+## darkint
+
+| Method | Path | Summary |
+|---|---|---|
+| GET | `/api/v1/darkint/dashboard` | Dashboard |
+| PUT | `/api/v1/darkint/mock-mode` | Put Mock |
+| GET | `/api/v1/darkint/sources` | List Sources |
+| PUT | `/api/v1/darkint/sources/{provider_id}` | Put Source |
 
 ## devices
 
@@ -423,6 +481,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/subjects/{subject_id}/review-history` | Review History |
 | GET | `/api/v1/subjects/{subject_id}/templates` | Subject Templates |
 | GET | `/api/v1/subjects/{subject_id}/timeline` | Get Timeline |
+| GET | `/api/v1/subjects/{subject_id}/verification` | What verification exists for this target profile. Assets belong to a profile only through an explicit link made by a person (owner_subject_i |
 | POST | `/api/v1/subjects/{subject_id}/workflows` | Installs a Target-profile template as a DISABLED draft bound to this subject: every run then needs the subject's live authorization. |
 
 ## system

@@ -16,11 +16,11 @@ async function a11y(page: Page, label: string) {
   expect(bad.map((v) => `${label}: ${v.id} (${v.nodes.length}) ${v.help} :: ${v.nodes.slice(0, 2).map((n) => n.html.slice(0, 110)).join(" | ")}`), "serious/critical accessibility violations").toEqual([]);
 }
 
-test("library shows 42 templates with honest availability and installs only a disabled draft", async ({ page }) => {
+test("library shows 52 templates with honest availability and installs only a disabled draft", async ({ page }) => {
   await openApp(page);
   await page.goto("/#/automations");
   await expect(page.getByRole("heading", { name: "Automations" })).toBeVisible();
-  await expect(page.locator("article.tpl")).toHaveCount(42);
+  await expect(page.locator("article.tpl")).toHaveCount(52);
   await page.getByLabel("Search templates").fill("phishing");
   await expect(page.locator("article.tpl")).toHaveCount(1);
   await page.getByLabel("Search templates").fill("");

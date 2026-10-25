@@ -1,0 +1,16 @@
+id: lab-apache-banner
+info:
+  name: Apache version banner disclosed
+  author: osintcc-tests
+  severity: low
+  description: The Server header reveals the exact Apache version.
+  remediation: Set ServerTokens Prod.
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers:
+      - type: word
+        part: header
+        words:
+          - "Apache/2.4.41"

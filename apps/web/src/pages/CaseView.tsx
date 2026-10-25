@@ -11,12 +11,13 @@ import HardwareTab from "./case/HardwareTab";
 import HumintTab from "./case/HumintTab";
 import MapTab from "./case/MapTab";
 import WorkflowsTab from "./case/WorkflowsTab";
+import Workbench from "./case/verification/Workbench";
 import { Badge, Empty, ErrorBox, Loading, fmt, val } from "../components/ui";
 import { api, apiUrl, authHeader, type CaseT, type FindingT, type GraphT } from "../lib/api";
 import { setAppCtx } from "../lib/appContext";
 import { chart } from "../lib/theme";
 
-const TABS = ["Search", "Plans", "Findings", "Graph", "Timeline", "Map", "Evidence", "Imports", "Analysis", "Cross-links", "Workflows", "Humint", "AI", "Hardware", "Notes", "Reports"] as const;
+const TABS = ["Search", "Plans", "Findings", "Graph", "Timeline", "Map", "Evidence", "Imports", "Analysis", "Cross-links", "Workflows", "Verification", "Humint", "AI", "Hardware", "Notes", "Reports"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function CaseView({ id }: { id: string }) {
@@ -63,6 +64,7 @@ export default function CaseView({ id }: { id: string }) {
       {tab === "Map" && <MapTab id={id} />}
       {tab === "Analysis" && <AnalysisTab id={id} />}
       {tab === "Workflows" && <WorkflowsTab id={id} />}
+      {tab === "Verification" && <Workbench caseId={id} />}
       {tab === "Humint" && <HumintTab id={id} />}
       {tab === "AI" && <AiTab id={id} />}
       {tab === "Hardware" && <HardwareTab id={id} />}

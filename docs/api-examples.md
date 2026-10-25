@@ -78,3 +78,23 @@ curl -s -H "$AUTH" -H 'Content-Type: application/json' -X POST $BASE/backups/ver
 ```json
 {"code":"not_found","message":"…","request_id":"…","retryable":false,"details_safe":{}}
 ```
+
+## 9. Active verification (AIV; off by default)
+
+```bash
+curl -s -H "$AUTH" -X PUT $BASE/aiv/settings -H 'Content-Type: application/json' -d '{"enabled":true}'     # admin
+curl -s -H "$AUTH" -X POST $BASE/cases/$CASE/asset-authorizations -H 'Content-Type: application/json' -d '{"asset_type":"fqdn","scope":["www.example.org"],"ports":[443],
+  "allowed_classes":["http_metadata","tls_handshake"],"authorized_by":"Owner","authority_role":"owner","source_of_authority":"I operate this server","expires_at":"2026-12-01T00:00:00Z"}'
+curl -s -H "$AUTH" -X POST $BASE/cases/$CASE/aiv/plans/preview -H 'Content-Type: application/json' -d '{"authorization_id":"<id>","steps":[{"kind":"tls_handshake","host":"www.example.org","port":443}]}'   # sends nothing
+curl -s -H "$AUTH" -X POST $BASE/aiv/plans/<plan>/approve -H 'Content-Type: application/json' -d '{"confirm":true,"expires_in_minutes":30}'
+curl -s -H "$AUTH" -X POST $BASE/aiv/plans/<plan>/run -H 'Content-Type: application/json' -d '{"approval_id":"<approval>"}'
+```
+
+## 10. DARKINT (exposure intelligence)
+
+```bash
+curl -s -H "$AUTH" $BASE/darkint/sources                                                                      # one honest state per provider
+curl -s -H "$AUTH" -X POST $BASE/cases/$CASE/darkint/preview -H 'Content-Type: application/json' -d '{"subject_id":"<s>","identifier_ids":["<i>"],"provider_ids":["hibp"]}'   # sends nothing
+curl -s -H "$AUTH" -X POST $BASE/cases/$CASE/darkint/check -H 'Content-Type: application/json' -d '{"subject_id":"<s>","identifier_ids":["<i>"],"provider_ids":["hibp"],"confirm":true}'
+curl -s -H "$AUTH" "$BASE/cases/$CASE/darkint/exposures?subject_id=<s>"                                        # coverage, grouped incidents, reviews
+```

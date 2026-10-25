@@ -46,7 +46,7 @@ def _now() -> datetime:
 
 def grant(db: Session, subject: Subject, *, verification_method: str, verifier: str, source_classes: list[str], permitted_purposes: list[str],
           expires_at: datetime, identifier_ids: list[str] | None = None, proof_evidence_id: str | None = None, retention_policy: dict | None = None,
-          actor: str = "local") -> SubjectConsent:
+          actor: str = "local", providers: list[str] | None = None) -> SubjectConsent:
     if verification_method not in VERIFICATION_METHODS:
         raise ProfileError("invalid_method", f"verification_method must be one of {', '.join(VERIFICATION_METHODS)}")
     bad = [c for c in source_classes if c not in SOURCE_CLASSES]
@@ -77,7 +77,7 @@ def grant(db: Session, subject: Subject, *, verification_method: str, verifier: 
         raise ProfileError("verification_too_weak", "sensitive checks (exposure, reverse image) need more than a self-attestation: email confirmation, "
                                                     "provider verification, a signed document or in-person verification")
     c = SubjectConsent(subject_id=subject.id, case_id=subject.case_id, mode=subject.mode, verification_method=verification_method,
-                       verifier=verifier.strip()[:200], scope_json={"identifier_ids": identifier_ids or []}, source_classes=list(source_classes),
+                       verifier=verifier.strip()[:200], scope_json={"identifier_ids": identifier_ids or [], **({"providers": sorted(set(providers))} if providers else {})}, source_classes=list(source_classes),
                        permitted_purposes=permitted_purposes, expires_at=exp, proof_evidence_id=proof_evidence_id,
                        retention_policy=retention_policy or {"days": subject.retention_days or 90}, created_by=actor)
     db.add(c)

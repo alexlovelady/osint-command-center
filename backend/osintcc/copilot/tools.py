@@ -79,6 +79,19 @@ TOOLS: dict[str, ToolSpec] = {t.name: t for t in [
              {"slug": "template key such as TP-01", "inputs": "optional object of template inputs"}, sensitive="Creates a disabled automation draft; running it later needs its own approval."),
     ToolSpec("draft_subject_report", "action", "Draft a redacted subject report or analyst package for human review. Exports nothing.", {"audience": "subject|analyst"},
              sensitive="Builds a draft from the target's records; nothing is exported."),
+    ToolSpec("aiv_status", "read", "Active verification state for this case: live asset authorizations, plans, runs and observations by severity. Reads only."),
+    ToolSpec("explain_aiv_plan", "read", "Explain a verification plan in plain language: exactly what each step would send, the budgets, the authorization and what approval is still needed.",
+             {"plan_id": "optional plan id (default: the latest plan)"}),
+    ToolSpec("explain_aiv_observation", "read", "Explain verification observations that still need review: what was seen, how sure, what it does not prove, and a suggested remedy.",
+             {"observation_id": "optional observation id (default: the most severe unreviewed ones)"}),
+    ToolSpec("darkint_summary", "read", "Exposure coverage and reported incidents for the case's target: which providers were asked and when, what was reported, and what is not checked. Reads stored, redacted records only."),
+    ToolSpec("explain_exposure_event", "read", "Explain one reported exposure event: what the source claims, what it does not prove, and practical next steps. No leaked content exists to show.",
+             {"event_id": "optional event id (default: the newest unreviewed one)"}),
+    ToolSpec("propose_darkint_workflow", "action", "Propose installing one exposure template (DARK-01..DARK-05) as a DISABLED draft for this target.",
+             {"slug": "template key such as DARK-01", "inputs": "optional object, e.g. {monitor_id: ...}"}, sensitive="Creates a disabled automation draft; running it later needs its own approval and a live authorization."),
+    ToolSpec("propose_aiv_plan", "action", "Propose a DRAFT verification plan for an existing asset authorization. It cannot create or widen an authorization, approve, or run anything.",
+             {"authorization_id": "id of an asset authorization in this case", "steps": "list of typed steps, e.g. {kind:'tls_handshake', host:'example.org', port:443}"},
+             sensitive="Stores a draft plan only; a person must approve the exact plan in the Verification workspace before any request is sent."),
 ]}
 ACTIONS = {n for n, t in TOOLS.items() if t.kind == "action"}
 
@@ -316,6 +329,21 @@ class Toolbox:
                 raise ToolRefused(f"report failed: {type(exc).__name__}") from exc
             rr.export_path, rr.status, rr.sha256 = path.name, "done", digest
             return {"executed": True, "report_id": rr.id, "file": path.name, "sha256": digest}
+        if p.tool == "propose_aiv_plan":
+            from ..aiv import service as aivs
+            from ..db.models import AssetAuthorization
+            case_access(db, self.user, case.id, "editor")
+            from . import aiv_tools
+            if not aiv_tools.enabled(db) or case.status != "open":
+                raise ToolRefused("active verification is switched off or the case is not open")
+            auth = db.get(AssetAuthorization, a["authorization_id"])
+            if auth is None or auth.case_id != case.id:
+                raise ToolRefused("the asset authorization no longer exists in this case")
+            try:
+                plan = await aivs.create_plan(db, self.st, case, auth, a["steps"], None, f"copilot:{self.user}"[:80])
+            except aivs.AivError as exc:
+                raise ToolRefused(f"policy refused at execution time: {exc.message}") from exc
+            return {"executed": True, "plan_id": plan.id, "status": plan.status, "note": "Stored as a DRAFT. It is not approved and nothing was sent. Open Verification to review the exact plan and approve it yourself."}
         if p.tool in pt.ACTION_TOOLS:
             try:
                 return pt.execute(db, self.st, self.user, case.id, p.tool, a)

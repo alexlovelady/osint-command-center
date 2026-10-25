@@ -112,3 +112,16 @@ def md_image_matches(r: dict[str, Any]) -> str:
 
 RENDERERS = {"summarize_profile": md_profile_summary, "recommend_research_plan": md_research_plan, "create_verification_queue": md_verification_queue,
              "explain_exposure": md_exposure, "why_not_searched": md_why_not, "explain_image_match": md_image_matches}
+
+
+# Active Intelligence & Verification answers share the same deterministic path: computed from stored records, no model needed.
+from . import aiv_tools as _aiv
+
+PROFILE_INTENTS.update(_aiv.INTENTS)
+PROFILE_PATTERNS[:0] = _aiv.PATTERNS
+RENDERERS.update(_aiv.RENDERERS)
+from . import darkint_tools as _dark
+
+PROFILE_INTENTS.update(_dark.INTENTS)
+PROFILE_PATTERNS[:0] = _dark.PATTERNS
+RENDERERS.update(_dark.RENDERERS)

@@ -76,3 +76,7 @@ matches). Back up before running an update. **Back up the private key**: if it i
 2. `pip-audit`, `pnpm audit`, `cargo audit`, `scripts/secret_scan.py --dist`, `scripts/license_audit.py` reviewed.
 3. Build sidecar → shell → `sidecar_smoke.py` → `release.py`.
 4. Publish `SHA256SUMS.txt` alongside the zip; sign when possible.
+
+## AIV and DARKINT in the packaged builds
+
+Migrations 0013 and 0014 are bundled with the sidecar (`--collect-all alembic`); a frozen smoke run exercises the new routes (`/aiv/capabilities`, `/darkint/sources`, `/branding`) and an upgrade of an existing database. No new native dependency was added: the optional tools (Nmap, Naabu, Nuclei, dnstwist) are the operator's own installs and are never bundled or downloaded. The Linux container image installs Nmap and dnstwist so the real-binary tests run there; Naabu and Nuclei are not installed in the image, so their real-binary tests skip.

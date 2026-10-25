@@ -1,0 +1,153 @@
+{
+ "slug": "dark-04-ransomware-leak-watch",
+ "key": "DARK-04",
+ "version": 1,
+ "category": "Exposure",
+ "name": "Ransomware Leak Watch",
+ "description": "Tracks publicly reported ransomware-victim listings for authorized organizations from the allowed feed, de-duplicates re-posts and labels every listing as an unverified claim.",
+ "catalog_trigger": "Daily, disabled (opt-in)",
+ "tags": [
+  "darkint",
+  "ransomware",
+  "monitor"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "monitor_id",
+   "label": "Exposure monitor id (create one in the Exposure tab)",
+   "type": "monitor",
+   "required": true,
+   "example": null
+  }
+ ],
+ "legal_notes": "Defensive exposure assessment for yourself, a verified consenting client, or an organization you are authorized to assess. Every lookup passes the consent, provider and domain-control gates and is audited. A report that data leaked is a lead, not proof that the record exists, is accurate or is still reachable. No passwords, hashes, tokens, identity documents, card numbers or leaked records are collected, stored or shown.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "Newly reported listings since the last run, each labelled as an unverified claim with its source reference.",
+ "capability_gaps": [
+  "No provider was exercised against its live service in this build (fixture-tested). Have I Been Pwned needs your paid API key; Ransomware.live's free v2 interface is labelled personal use only.",
+  "The automation reads the monitor you created in the Exposure tab; it cannot widen its scope, and revoking the consent stops it.",
+  "A listing is an unverified claim by the actor. Corroborate it (press, regulator, the organization itself) before treating it as a confirmed incident."
+ ],
+ "instructions": "Tracks publicly reported ransomware-victim listings for authorized organizations from the allowed feed, de-duplicates re-posts and labels every listing as an unverified claim.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "dark-04-ransomware-leak-watch",
+  "name": "Ransomware Leak Watch",
+  "description": "Tracks publicly reported ransomware-victim listings for authorized organizations from the allowed feed, de-duplicates re-posts and labels every listing as an unverified claim.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "darkint",
+   "ransomware",
+   "monitor"
+  ],
+  "trigger": {
+   "type": "schedule",
+   "schedule": "0 7 * * *",
+   "timezone": "UTC",
+   "enabled": false,
+   "missed_run_policy": "coalesce"
+  },
+  "inputs": {
+   "monitor_id": null
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "check",
+    "type": "darkint_check",
+    "depends_on": [],
+    "config": {
+     "monitor_ref": "$inputs.monitor_id"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "check"
+    ],
+    "config": {
+     "ref": "$nodes.check.output"
+    }
+   },
+   {
+    "id": "diff",
+    "type": "snapshot_diff",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "dataset_ref": "$nodes.unique.output"
+    }
+   },
+   {
+    "id": "notify",
+    "type": "notification",
+    "depends_on": [
+     "diff"
+    ],
+    "config": {
+     "change_ref": "$nodes.diff.output",
+     "title": "New ransomware-victim listing reported (unverified claim by the actor)",
+     "severity": "warning",
+     "channel": "local_desktop",
+     "only_if_changed": true
+    }
+   },
+   {
+    "id": "fail",
+    "type": "error_handler",
+    "depends_on": [
+     "unique",
+     "diff"
+    ],
+    "config": {
+     "title": "Ransomware leak watch failed"
+    },
+    "run_on": "failure"
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "monitor_id": null
+  },
+  "adapter_findings": {},
+  "darkint_events": [
+   {
+    "type": "breach",
+    "title": "Breach: Example Forum",
+    "provider": "hibp",
+    "categories": [
+     "email addresses",
+     "credential indicator"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "type": "ransomware_listing",
+    "title": "Named on a leak site by group examplegroup (an unverified claim by the actor)",
+    "provider": "ransomware_live",
+    "categories": [
+     "organization named on a leak site"
+    ],
+    "confidence": "low"
+   }
+  ]
+ }
+}

@@ -99,6 +99,11 @@ async def run_argv(argv: list[str], timeout: float, max_output: int = MAX_OUTPUT
         if sys.platform == "win32":
             proc._transport.close()  # type: ignore[attr-defined]  # release proactor pipes so no handles leak
         return ProcResult(None, b"", b"", timed_out=True)
+    except asyncio.CancelledError:      # a cancelled run must not leave the tool or its helpers running
+        _kill(proc)
+        if sys.platform == "win32":
+            proc._transport.close()  # type: ignore[attr-defined]
+        raise
 
 
 def _kill(proc: asyncio.subprocess.Process) -> None:
@@ -361,3 +366,37 @@ class TheHarvesterAdapter(CliAdapter):
             findings.append(FindingDraft(subject=EntityRef(type="email", key=mail, display=mail), predicate="theharvester.email", value=mail,
                                          confidence="low", confidence_reason=reason))
         return findings, rels
+
+
+MAX_LOOKALIKES = 1000
+_DOMAIN_LINE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$")
+
+
+class DnstwistAdapter(CliAdapter):
+    """Permutation generation only (`-f list`): no DNS, no WHOIS, no HTTP, no screenshots. Resolving candidates is a separate, explicit step."""
+    binary_names = ("dnstwist",)
+    version_args = ("--help",)
+    manifest = AdapterManifest(
+        id="dnstwist", default_selected=False, name="dnstwist (lookalike permutations)", version="1.0.0", supported_target_types=["domain"],
+        operation_class="local_only", needs_network=False, timeout_seconds=60, license="Apache-2.0", endpoints=[],
+        install_hint="Install dnstwist (pip install dnstwist). Only permutation generation is used; nothing is resolved or fetched.",
+        description="Runs `dnstwist -f list <domain>`; flags that resolve, fetch, screenshot or fuzz are never passed. Verified against dnstwist 20240812 output.")
+
+    def build_argv(self, binary: str, target: Target) -> list[str]:
+        return [binary, "-f", "list", target.canonical]
+
+    def parse(self, target, stdout):
+        subject = EntityRef(type="domain", key=target.canonical, display=target.canonical)
+        reason = "A generated possibility; it may not be registered and is not evidence of abuse"
+        seen: list[str] = []
+        for line in stdout.decode(errors="replace").splitlines():
+            d = line.strip().lower()
+            if d and d != target.canonical and d not in seen and _DOMAIN_LINE.match(d):
+                seen.append(d)
+        if len(seen) > MAX_LOOKALIKES:
+            self._parse_warnings.append(f"{len(seen)} candidates generated; only the first {MAX_LOOKALIKES} are kept")
+            seen = seen[:MAX_LOOKALIKES]
+        findings = [FindingDraft(subject=subject, predicate="lookalike.candidate_count", value=len(seen), confidence="high", confidence_reason="Counted from dnstwist's generated list")]
+        findings += [FindingDraft(subject=subject, predicate="lookalike.candidate", value={"domain": d, "technique": "dnstwist"}, confidence="low", confidence_reason=reason)
+                     for d in seen[:50]]
+        return findings, []

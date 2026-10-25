@@ -1,4 +1,4 @@
-"""Generate the 42 bundled automation templates (30 general + 12 Target-profile) into backend/osintcc/automations/templates/*.json.
+"""Generate the 52 bundled automation templates (30 general + 12 Target-profile + 5 AIV + 5 DARKINT) into backend/osintcc/automations/templates/*.json.
 
     uv run python scripts/build_automation_templates.py [--check]
 
@@ -386,8 +386,116 @@ add("TP-12", "Redacted Client Report and Citation Check", "Target profile", "Man
     gaps=["The citation check runs in the Reports screen; this workflow only enforces that a person performed it."])
 
 
+# ---------------------------------------------------------------------------------------------------------------------- AIV (Active Intelligence & Verification)
+AIV_LEGAL = ("Only for assets you own or hold written authorization to test. This workflow never sends a request itself: it reads authorization and observation records, and a person "
+             "creates, approves and starts every exact plan in the Verification workspace. Findings are observations to verify, not proof of compromise.")
+AIV_GAPS = ["This workflow is manual only and cannot send requests: checks run from the Verification workspace after a person approves the exact plan.",
+            "Not verified against third-party sites: every check was exercised against local lab servers only."]
+AIV_OBS_FIXTURE = {"aiv_authorizations": [{"scope": "example.org", "status": "live"}],
+                   "aiv_observations": [{"asset": "example.org", "check": "http_metadata", "title": "Content-Security-Policy header missing", "severity": "low"},
+                                        {"asset": "example.org", "check": "tls_handshake", "title": "Certificate expires in 21 days", "severity": "medium"}]}
+
+
+def aiv_flow(plan_prompt: str, review_prompt: str, *, report_profile: str = "technical") -> list[dict[str, Any]]:
+    return [consent("Confirm you own the asset or hold written authorization to test it, and that the authorization names the host, ports and checks. Consent from a person is not authorization for their domains."),
+            N("auth", "aiv_authorizations", ["consent"], only_live=True),
+            N("has_auth", "condition", ["auth"], ref=out("auth", "count"), op="gt", value=0),
+            N("plan", "analyst_review", ["has_auth"], when={"ref": out("has_auth", "value"), "op": "truthy"}, prompt=plan_prompt, timeout_hours=72),
+            N("observed", "aiv_observations", ["plan"], min_severity="info", exclude_reviewed=["false_positive"]),
+            N("review", "analyst_review", ["observed"], prompt=review_prompt, timeout_hours=168),
+            N("report", "report", ["review"], profile=report_profile, format="html")]
+
+
+add("AIV-01", "Website Exposure Assessment", "Verification", "Manual", "Scoped web asset: HEAD/GET metadata, TLS check and a security-header comparison. Reads results; a person approves and starts the checks.",
+    aiv_flow("Open Verification. Create a plan for the authorized web asset: one HTTP metadata check (HEAD) and one TLS handshake. Review the preview, approve the exact plan and start it.",
+             "Review each observation: confirm, mark false positive or accept the risk, with a reason. Header findings are improvement suggestions, not vulnerabilities."), [],
+    inputs={}, tags=["aiv", "verification", "web"], legal=AIV_LEGAL, gaps=AIV_GAPS, fixture_extra=AIV_OBS_FIXTURE,
+    example="Verified headers and TLS observations with prioritised improvement suggestions, each linked to the stored response.")
+add("AIV-02", "Infrastructure Verification", "Verification", "Manual", "Approved host: certificate baseline and a few selected ports at a low rate; reconcile what you found against what you expected to own.",
+    aiv_flow("Open Verification. Create a plan for the authorized host: a TLS handshake and a connect check of at most 10 listed ports (optionally Nmap or Naabu if installed). Approve the exact plan and start it.",
+             "Compare open ports and certificates with your asset inventory. Note anything you did not expect, and record what you could not determine."), [],
+    inputs={}, tags=["aiv", "verification", "infrastructure"], legal=AIV_LEGAL, gaps=AIV_GAPS + ["Nmap and Naabu are optional and used only if installed and version-verified; the built-in connect check always works."],
+    fixture_extra={"aiv_authorizations": [{"scope": "example.org", "status": "live"}],
+                   "aiv_observations": [{"asset": "example.org", "check": "tcp_connect", "title": "TCP port 8080 is open", "severity": "info"}]},
+    example="An inventory delta: ports and certificates observed against the authorization, with notes about what is uncertain.")
+add("AIV-03", "Sensitive Exposure Indicator Review", "Verification", "Manual", "Reviews owner-confirmed exposure indicators for an authorized asset. Records category, confidence and remediation; never raw secrets.",
+    aiv_flow("Confirm which exposure indicators were reported for the authorized asset (for example by the Exposure workspace). Record category and confidence only; never paste secrets or leaked data.",
+             "Check each indicator against the owned asset it affects, mark it confirmed or false positive with a reason, and write the remediation.", report_profile="executive"), [],
+    inputs={}, tags=["aiv", "verification", "exposure"], legal=AIV_LEGAL + " Raw credentials and breach dumps are never collected or stored.",
+    gaps=AIV_GAPS + ["Document and search-result indicators are entered by a person; there is no automated secret scanner in this version."], fixture_extra=AIV_OBS_FIXTURE,
+    example="Exposure category, confidence, affected owned asset and remediation; no raw secrets.")
+add("AIV-04", "Security Misconfiguration Review", "Verification", "Manual", "Authorized scope: approved, reviewed signature templates (read-only GET/HEAD fingerprints) and built-in checks, then analyst review.",
+    aiv_flow("Open Verification > Templates and confirm the signature templates you intend to use are reviewed and approved by id and hash. Create a plan with a signature check, approve the exact plan and start it.",
+             "Treat every match as a lead. Confirm it by hand, mark false positives, and record low-impact remediation. No exploitation is attempted or implied."), [],
+    inputs={}, tags=["aiv", "verification", "misconfiguration"], legal=AIV_LEGAL,
+    gaps=AIV_GAPS + ["Nuclei is optional. Only templates you approved by id and content hash are ever run; the bundled community template library is not used."],
+    fixture_extra={"aiv_authorizations": [{"scope": "example.org", "status": "live"}],
+                   "aiv_observations": [{"asset": "example.org", "check": "signature", "title": "Apache version banner disclosed", "severity": "low"}]},
+    example="Evidence-linked low-impact findings for analyst review, with no exploitation claims.")
+add("AIV-05", "Client Exposure Report", "Verification", "Manual", "Combines verified profile evidence with authorized AIV observations and requires analyst approval before the redacted report is written.",
+    [consent("Confirm the client authorized the assets in scope and approved the report recipients."),
+     N("auth", "aiv_authorizations", ["consent"], only_live=False),
+     N("observed", "aiv_observations", ["auth"], min_severity="info", exclude_reviewed=["false_positive"]),
+     N("facts", "case_findings", ["auth"]),
+     merge("all", ["observed", "facts"]),
+     N("review", "analyst_review", ["all"], prompt="Approve the findings that go into the client report. Remove anything speculative or sensitive; confirm redactions and that every statement cites evidence.", timeout_hours=168),
+     N("save", "evidence_save", ["review", "all"], ref=out("all"), title="Client exposure report dataset"),
+     N("report", "report", ["review"], profile="executive", format="html")], [], inputs={}, tags=["aiv", "verification", "report"], legal=AIV_LEGAL, gaps=AIV_GAPS,
+    fixture_extra={**AIV_OBS_FIXTURE, "case_findings": [{"entity": "example.org", "entity_type": "domain", "predicate": "dns.a", "value": "192.0.2.10"}]},
+    example="An executive and technical report with redactions and an audit appendix.")
+
+
+# ---------------------------------------------------------------------------------------------------------------------- DARKINT (exposure intelligence)
+DARK_LEGAL = ("Defensive exposure assessment for yourself, a verified consenting client, or an organization you are authorized to assess. Every lookup passes the consent, provider and domain-control gates "
+              "and is audited. A report that data leaked is a lead, not proof that the record exists, is accurate or is still reachable. No passwords, hashes, tokens, identity documents, card numbers or leaked records "
+              "are collected, stored or shown.")
+DARK_GAPS = ["No provider was exercised against its live service in this build (fixture-tested). Have I Been Pwned needs your paid API key; Ransomware.live's free v2 interface is labelled personal use only.",
+             "The automation reads the monitor you created in the Exposure tab; it cannot widen its scope, and revoking the consent stops it."]
+DARK_MONITOR = [{"name": "monitor_id", "label": "Exposure monitor id (create one in the Exposure tab)", "type": "monitor", "required": True, "example": None}]
+DARK_FIXTURE = {"darkint_events": [{"type": "breach", "title": "Breach: Example Forum", "provider": "hibp", "categories": ["email addresses", "credential indicator"], "confidence": "medium"},
+                                   {"type": "ransomware_listing", "title": "Named on a leak site by group examplegroup (an unverified claim by the actor)", "provider": "ransomware_live",
+                                    "categories": ["organization named on a leak site"], "confidence": "low"}]}
+
+
+def dark_check(id: str = "check", deps: list[str] | None = None) -> dict[str, Any]:
+    return N(id, "darkint_check", deps or [], monitor_ref="$inputs.monitor_id")
+
+
+add("DARK-01", "Breach Exposure Check", "Exposure", "Manual", "Manual self or verified-client check of the approved email or domain identifiers in one monitor. Reports provider incident names and data categories only, with redacted findings.",
+    [consent("Confirm you have verified consent (not a self-attestation for a client) covering exactly these identifiers and providers, and that you accept the provider's terms."),
+     dark_check("check", ["consent"]), dedupe("unique", "check"),
+     N("review", "analyst_review", ["unique"], prompt="Open Target profile > Exposure. For each reported incident record whether it is relevant, and the data categories only. Never paste leaked content.", timeout_hours=168),
+     N("save", "evidence_save", ["review", "unique"], ref=out("unique"), title="Reported breach exposure (categories only)"), N("report", "report", ["save"], profile="executive", format="html")],
+    DARK_MONITOR, inputs={"monitor_id": None}, tags=["darkint", "exposure"], legal=DARK_LEGAL, gaps=DARK_GAPS, fixture_extra=DARK_FIXTURE,
+    example="Provider breach names, dates and data categories, grouped by incident, with a plain statement of what was and was not checked.")
+add("DARK-02", "Dark-Web Mention Monitor", "Exposure", "Weekly, disabled (opt-in)", "Periodically queries the permitted threat-intelligence sources named in a monitor for authorized company names or domains and alerts only on newly reported items. Nothing is downloaded.",
+    [dark_check("check"), dedupe("unique", "check"), diff("diff", "unique"), notify("notify", "diff", "Newly reported mention of a monitored organization (a claim, not proof)", "warning"),
+     onfail("fail", ["unique", "diff"], "Exposure monitor run failed")],
+    DARK_MONITOR, inputs={"monitor_id": None}, trigger=sched("0 9 * * 1"), tags=["darkint", "monitor"], legal=DARK_LEGAL, watch=True, gaps=DARK_GAPS + ["Intelligence X has no automated integration here: record what you find in its own interface with manual intake."],
+    fixture_extra=DARK_FIXTURE, example="One notification per run listing newly reported items; the first run only records a baseline.")
+add("DARK-03", "Credential Exposure Alert", "Exposure", "Manual", "Detects a provider-reported credential-exposure category for the authorized identifiers and recommends account protections. Never collects raw credentials.",
+    [consent("Confirm the account owner's verified consent. The password exposure checker is a separate, owner-initiated step in the Exposure tab and is never scheduled."),
+     dark_check("check", ["consent"]), N("creds", "transform", ["check"], ref=out("check"), op="pick_predicates", values=["darkint.breach"]),
+     N("review", "analyst_review", ["creds"], prompt="Decide which accounts need action. Recommended: change the password where it was reused, turn on multi-factor authentication or passkeys, use a password manager. The owner runs the Pwned Passwords check by hand if wanted.", timeout_hours=168),
+     N("tasks", "darkint_remediation", ["review"], actions=["password_reset", "mfa", "follow_up_check"], max_tasks=20), N("report", "report", ["tasks"], profile="executive", format="html")],
+    DARK_MONITOR, inputs={"monitor_id": None}, tags=["darkint", "credentials"], legal=DARK_LEGAL, gaps=DARK_GAPS, fixture_extra=DARK_FIXTURE,
+    example="A list of accounts to protect, with tasks for password changes and multi-factor authentication. No password or hash is ever shown.")
+add("DARK-04", "Ransomware Leak Watch", "Exposure", "Daily, disabled (opt-in)", "Tracks publicly reported ransomware-victim listings for authorized organizations from the allowed feed, de-duplicates re-posts and labels every listing as an unverified claim.",
+    [dark_check("check"), dedupe("unique", "check"), diff("diff", "unique"), notify("notify", "diff", "New ransomware-victim listing reported (unverified claim by the actor)", "warning"),
+     onfail("fail", ["unique", "diff"], "Ransomware leak watch failed")],
+    DARK_MONITOR, inputs={"monitor_id": None}, trigger=sched("0 7 * * *"), tags=["darkint", "ransomware", "monitor"], legal=DARK_LEGAL, watch=True,
+    gaps=DARK_GAPS + ["A listing is an unverified claim by the actor. Corroborate it (press, regulator, the organization itself) before treating it as a confirmed incident."],
+    fixture_extra=DARK_FIXTURE, example="Newly reported listings since the last run, each labelled as an unverified claim with its source reference.")
+add("DARK-05", "Exposure Remediation Tracker", "Exposure", "Manual", "Creates tasks for MFA, password resets, domain and email hygiene, takedown requests, notification and follow-up checks. Sends no email and submits no takedown.",
+    [N("events", "darkint_events", [], exclude_dismissed=True), N("tasks", "darkint_remediation", ["events"], actions=["password_reset", "mfa", "domain_hygiene", "takedown", "notify", "follow_up_check"], max_tasks=30),
+     N("review", "analyst_review", ["tasks"], prompt="Review the new tasks. Anything that contacts a person, a host or a provider (a notification, a takedown request) is done by you outside this application, after you decide to.", timeout_hours=168),
+     N("gaps", "case_gaps", ["review"]), N("report", "report", ["gaps"], profile="executive", format="html")],
+    [], inputs={}, tags=["darkint", "remediation"], legal=DARK_LEGAL, gaps=["Nothing is sent from this application: notifications and takedown requests are tracked as tasks and carried out by a person."], fixture_extra=DARK_FIXTURE,
+    example="Open tasks per reported incident with practical guidance and a follow-up re-check.")
+
+
 def main(check: bool) -> int:
-    assert len(T) == 42, len(T)
+    assert len(T) == 52, len(T)
     problems = []
     for t in T:
         rep = validate(t["definition"], ADAPTERS)

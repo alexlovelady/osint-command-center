@@ -1,0 +1,164 @@
+{
+ "slug": "aiv-03-sensitive-exposure-indicator-review",
+ "key": "AIV-03",
+ "version": 1,
+ "category": "Verification",
+ "name": "Sensitive Exposure Indicator Review",
+ "description": "Reviews owner-confirmed exposure indicators for an authorized asset. Records category, confidence and remediation; never raw secrets.",
+ "catalog_trigger": "Manual",
+ "tags": [
+  "aiv",
+  "verification",
+  "exposure"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [],
+ "legal_notes": "Only for assets you own or hold written authorization to test. This workflow never sends a request itself: it reads authorization and observation records, and a person creates, approves and starts every exact plan in the Verification workspace. Findings are observations to verify, not proof of compromise. Raw credentials and breach dumps are never collected or stored.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "Exposure category, confidence, affected owned asset and remediation; no raw secrets.",
+ "capability_gaps": [
+  "This workflow is manual only and cannot send requests: checks run from the Verification workspace after a person approves the exact plan.",
+  "Not verified against third-party sites: every check was exercised against local lab servers only.",
+  "Document and search-result indicators are entered by a person; there is no automated secret scanner in this version."
+ ],
+ "instructions": "Reviews owner-confirmed exposure indicators for an authorized asset. Records category, confidence and remediation; never raw secrets.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "aiv-03-sensitive-exposure-indicator-review",
+  "name": "Sensitive Exposure Indicator Review",
+  "description": "Reviews owner-confirmed exposure indicators for an authorized asset. Records category, confidence and remediation; never raw secrets.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "aiv",
+   "verification",
+   "exposure"
+  ],
+  "trigger": {
+   "type": "manual",
+   "enabled": false
+  },
+  "inputs": {},
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "consent",
+    "type": "analyst_review",
+    "depends_on": [],
+    "config": {
+     "prompt": "Confirm you own the asset or hold written authorization to test it, and that the authorization names the host, ports and checks. Consent from a person is not authorization for their domains.",
+     "timeout_hours": 72
+    }
+   },
+   {
+    "id": "auth",
+    "type": "aiv_authorizations",
+    "depends_on": [
+     "consent"
+    ],
+    "config": {
+     "only_live": true
+    }
+   },
+   {
+    "id": "has_auth",
+    "type": "condition",
+    "depends_on": [
+     "auth"
+    ],
+    "config": {
+     "ref": "$nodes.auth.output.count",
+     "op": "gt",
+     "value": 0
+    }
+   },
+   {
+    "id": "plan",
+    "type": "analyst_review",
+    "depends_on": [
+     "has_auth"
+    ],
+    "config": {
+     "prompt": "Confirm which exposure indicators were reported for the authorized asset (for example by the Exposure workspace). Record category and confidence only; never paste secrets or leaked data.",
+     "timeout_hours": 72
+    },
+    "when": {
+     "ref": "$nodes.has_auth.output.value",
+     "op": "truthy"
+    }
+   },
+   {
+    "id": "observed",
+    "type": "aiv_observations",
+    "depends_on": [
+     "plan"
+    ],
+    "config": {
+     "min_severity": "info",
+     "exclude_reviewed": [
+      "false_positive"
+     ]
+    }
+   },
+   {
+    "id": "review",
+    "type": "analyst_review",
+    "depends_on": [
+     "observed"
+    ],
+    "config": {
+     "prompt": "Check each indicator against the owned asset it affects, mark it confirmed or false positive with a reason, and write the remediation.",
+     "timeout_hours": 168
+    }
+   },
+   {
+    "id": "report",
+    "type": "report",
+    "depends_on": [
+     "review"
+    ],
+    "config": {
+     "profile": "executive",
+     "format": "html"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {},
+  "adapter_findings": {},
+  "aiv_authorizations": [
+   {
+    "scope": "example.org",
+    "status": "live"
+   }
+  ],
+  "aiv_observations": [
+   {
+    "asset": "example.org",
+    "check": "http_metadata",
+    "title": "Content-Security-Policy header missing",
+    "severity": "low"
+   },
+   {
+    "asset": "example.org",
+    "check": "tls_handshake",
+    "title": "Certificate expires in 21 days",
+    "severity": "medium"
+   }
+  ]
+ }
+}

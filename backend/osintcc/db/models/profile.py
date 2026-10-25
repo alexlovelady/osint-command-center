@@ -253,6 +253,8 @@ class RemediationTask(Base):
     recheck_at: Mapped[datetime | None] = ts(nullable=True, default=False)
     state: Mapped[str] = mapped_column(String(12), default="open")  # open | in_progress | resolved | wont_fix
     resolution_evidence_id: Mapped[str | None] = mapped_column(ForeignKey("evidence.id"), nullable=True)
+    exposure_event_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)     # DARKINT: the reported event this task answers (no FK: events may be purged first)
+    action_type: Mapped[str | None] = mapped_column(String(24), nullable=True)                       # mfa | password_reset | domain_hygiene | takedown | notify | follow_up_check
     created_at: Mapped[datetime] = ts()
     updated_at: Mapped[datetime] = ts()
 

@@ -69,3 +69,23 @@ real files to be rejected with a clear error rather than half-parsed.
 | TanStack Query, React | all views | Unit tests + E2E |
 
 Re-verify anything marked Live after upgrading a dependency, and update this file when something moves from Mocked/Absent to Live.
+
+## AIV and DARKINT (addendum v1.1)
+
+Full evidence tables: `docs/aiv-darkint-status.md`. None of the rows below was exercised against a third-party service.
+
+| Integration | Kind | Needs | Evidence |
+|---|---|---|---|
+| Built-in HTTP metadata, TLS posture, TCP connect | AIV, in-process | an asset authorization and an approved plan | **Fixture-tested** against real local lab sockets and TLS handshakes |
+| Nmap (connect scan only) | AIV, external CLI | installed by you (`apt install nmap`) | Flags checked against 7.98; real XML is the parser fixture; end to end through a stand-in program; real-binary test skips when absent |
+| Naabu | AIV, external CLI | installed by you | Flags checked against 2.6.1; real JSONL fixture |
+| Nuclei (reviewed templates only) | AIV, external CLI | installed by you; a reviewed template | Flags checked against engine 3.11.1; real JSONL fixture; no live scan of a lab target |
+| dnstwist (permutations, offline) | local CLI adapter | installed by you | Flags and output verified against 20240812 |
+| ProjectDiscovery httpx | detected only | – | Reported as healthy / wrong program / absent; **not used** for checks |
+| ZAP passive import, sslscan | – | – | **Not implemented** / not used |
+| Have I Been Pwned (account, domain) | DARKINT, HTTP | your paid key; terms accepted by an administrator | **Fixture-tested**, not live-verified |
+| Pwned Passwords range | DARKINT, HTTP relay | nothing | **Fixture-tested** (existing TP5 feature) |
+| Ransomware.live v2 | DARKINT, HTTP | terms accepted (provider labels the free API personal use only) | **Fixture-tested**, not live-verified |
+| Intelligence X | DARKINT | commercial licence | **Not implemented**; manual intake only |
+| MISP | DARKINT | an export file | File import **fixture-tested**; live connector **not implemented** |
+| Manual intake, CSV / JSON import | DARKINT | – | **Fixture-tested** |

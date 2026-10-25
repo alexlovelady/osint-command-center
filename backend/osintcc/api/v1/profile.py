@@ -266,6 +266,7 @@ class ConsentIn(BaseModel):
     identifier_ids: list[str] = Field(default_factory=list)
     proof_evidence_id: str | None = None
     retention_days: int | None = Field(default=None, ge=1, le=3650)
+    providers: list[str] = Field(default_factory=list, max_length=8)      # DARKINT: permitted exposure providers (empty = any enabled provider)
 
 
 @router.get("/subjects/{subject_id}/consent")
@@ -287,7 +288,7 @@ async def add_consent(request: Request, subject_id: str, body: ConsentIn):
             c = consent.grant(db, s, verification_method=body.verification_method, verifier=body.verifier, source_classes=body.source_classes,
                               permitted_purposes=body.permitted_purposes, expires_at=body.expires_at, identifier_ids=body.identifier_ids,
                               proof_evidence_id=body.proof_evidence_id, retention_policy={"days": body.retention_days} if body.retention_days else None,
-                              actor=actor(request))
+                              actor=actor(request), providers=body.providers or None)
         except ProfileError as exc:
             raise perr(exc) from exc
         db.commit()

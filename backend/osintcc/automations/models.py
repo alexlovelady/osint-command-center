@@ -112,6 +112,43 @@ class CaseGaps(Strict):
     pass
 
 
+class AivAuthorizations(Strict):
+    """Read-only: lists this case's asset authorizations and whether each is live. It cannot create, widen or use one."""
+    only_live: bool = True
+
+
+class AivObservations(Strict):
+    """Read-only: reads stored AIV observations of this case. It cannot start a run, approve a plan or send a request."""
+    min_severity: Literal["info", "low", "medium", "high"] = "info"
+    exclude_reviewed: list[Literal["confirmed", "false_positive", "accepted_risk"]] = Field(default_factory=list, max_length=3)
+    limit: int = Field(default=200, ge=1, le=1000)
+
+
+class DarkintCheck(Strict):
+    """Runs the checks of ONE monitor configuration (providers, identifiers, expiry and authorization live in the monitor, never in the workflow)."""
+    monitor_ref: Ref
+
+
+class DarkintEvents(Strict):
+    """Read-only: reported exposure events already stored for this case (redacted titles and categories only)."""
+    exclude_dismissed: bool = True
+    event_types: list[Literal["breach", "paste", "darkweb_mention", "ransomware_listing", "advisory", "manual_report"]] = Field(default_factory=list, max_length=6)
+    limit: int = Field(default=200, ge=1, le=1000)
+
+
+DarkAction = Literal["mfa", "password_reset", "domain_hygiene", "takedown", "notify", "follow_up_check"]
+
+
+def _default_actions() -> list[DarkAction]:
+    return ["password_reset", "mfa", "follow_up_check"]
+
+
+class DarkintRemediation(Strict):
+    """Creates remediation TASKS for reported events that have none. Never sends a message or submits a takedown."""
+    actions: list[DarkAction] = Field(default_factory=_default_actions, min_length=1, max_length=6)
+    max_tasks: int = Field(default=20, ge=1, le=50)
+
+
 class Delay(Strict):
     seconds: int = Field(ge=1, le=300)
 
@@ -130,11 +167,13 @@ CONFIGS: dict[str, type[Strict]] = {
     "authorization_check": AuthorizationCheck, "adapter_query": AdapterQuery, "enrich": Enrich, "transform": Transform,
     "deduplicate": Deduplicate, "correlate": Correlate, "snapshot_diff": SnapshotDiff, "condition": Condition,
     "analyst_review": AnalystReview, "evidence_save": EvidenceSave, "notification": Notification, "report": Report,
-    "case_findings": CaseFindings, "sensor_health": SensorHealth, "case_gaps": CaseGaps,
+    "case_findings": CaseFindings, "sensor_health": SensorHealth, "case_gaps": CaseGaps, "aiv_authorizations": AivAuthorizations, "aiv_observations": AivObservations,
+    "darkint_check": DarkintCheck, "darkint_events": DarkintEvents, "darkint_remediation": DarkintRemediation,
     "delay": Delay, "file_ingest": FileIngest, "error_handler": ErrorHandler,
 }
 NodeType = Literal["authorization_check", "adapter_query", "enrich", "transform", "deduplicate", "correlate", "snapshot_diff", "condition",
-                   "analyst_review", "evidence_save", "notification", "report", "delay", "file_ingest", "error_handler", "case_findings", "sensor_health", "case_gaps"]
+                   "analyst_review", "evidence_save", "notification", "report", "delay", "file_ingest", "error_handler", "case_findings", "sensor_health", "case_gaps",
+                   "aiv_authorizations", "aiv_observations", "darkint_check", "darkint_events", "darkint_remediation"]
 
 
 # ---------------------------------------------------------------------------------------------------------------- the definition

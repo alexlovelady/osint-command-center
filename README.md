@@ -11,6 +11,8 @@ and [`docs/packaging.md`](docs/packaging.md). Read those before trusting a featu
 
 **Target Profile (addendum TP-1.0):** a people case opens on a consent-gated, evidence-grounded profile with a review queue, bounded research plans, an image workbench, exposure and remediation tracking and citation-checked reports. Guide and honest limits: [`docs/profile-guide.md`](docs/profile-guide.md); acceptance evidence: [`docs/profile-test-results.md`](docs/profile-test-results.md).
 
+**Active verification (AIV) and exposure intelligence (DARKINT), addendum v1.1:** bounded, disclosed checks of assets someone authorized (off by default; every plan is previewed and approved once) and a consent-gated exposure workspace with honest provider states and four distinct coverage states (Unknown, Not checked, No match from checked sources, Match reported). No third-party service or tool was exercised live in this build: see [`docs/aiv-darkint-status.md`](docs/aiv-darkint-status.md) for what is fixture-tested, simulated, mocked or not implemented, and for the test matrix. The display name is unchanged until you approve a change in Settings.
+
 ## Run (Windows or Linux; no WSL, Docker, hardware or cloud needed)
 
 ```bash

@@ -1,0 +1,156 @@
+{
+ "slug": "dark-01-breach-exposure-check",
+ "key": "DARK-01",
+ "version": 1,
+ "category": "Exposure",
+ "name": "Breach Exposure Check",
+ "description": "Manual self or verified-client check of the approved email or domain identifiers in one monitor. Reports provider incident names and data categories only, with redacted findings.",
+ "catalog_trigger": "Manual",
+ "tags": [
+  "darkint",
+  "exposure"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [
+  {
+   "name": "monitor_id",
+   "label": "Exposure monitor id (create one in the Exposure tab)",
+   "type": "monitor",
+   "required": true,
+   "example": null
+  }
+ ],
+ "legal_notes": "Defensive exposure assessment for yourself, a verified consenting client, or an organization you are authorized to assess. Every lookup passes the consent, provider and domain-control gates and is audited. A report that data leaked is a lead, not proof that the record exists, is accurate or is still reachable. No passwords, hashes, tokens, identity documents, card numbers or leaked records are collected, stored or shown.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "Provider breach names, dates and data categories, grouped by incident, with a plain statement of what was and was not checked.",
+ "capability_gaps": [
+  "No provider was exercised against its live service in this build (fixture-tested). Have I Been Pwned needs your paid API key; Ransomware.live's free v2 interface is labelled personal use only.",
+  "The automation reads the monitor you created in the Exposure tab; it cannot widen its scope, and revoking the consent stops it."
+ ],
+ "instructions": "Manual self or verified-client check of the approved email or domain identifiers in one monitor. Reports provider incident names and data categories only, with redacted findings.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "dark-01-breach-exposure-check",
+  "name": "Breach Exposure Check",
+  "description": "Manual self or verified-client check of the approved email or domain identifiers in one monitor. Reports provider incident names and data categories only, with redacted findings.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "darkint",
+   "exposure"
+  ],
+  "trigger": {
+   "type": "manual",
+   "enabled": false
+  },
+  "inputs": {
+   "monitor_id": null
+  },
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "consent",
+    "type": "analyst_review",
+    "depends_on": [],
+    "config": {
+     "prompt": "Confirm you have verified consent (not a self-attestation for a client) covering exactly these identifiers and providers, and that you accept the provider's terms.",
+     "timeout_hours": 72
+    }
+   },
+   {
+    "id": "check",
+    "type": "darkint_check",
+    "depends_on": [
+     "consent"
+    ],
+    "config": {
+     "monitor_ref": "$inputs.monitor_id"
+    }
+   },
+   {
+    "id": "unique",
+    "type": "deduplicate",
+    "depends_on": [
+     "check"
+    ],
+    "config": {
+     "ref": "$nodes.check.output"
+    }
+   },
+   {
+    "id": "review",
+    "type": "analyst_review",
+    "depends_on": [
+     "unique"
+    ],
+    "config": {
+     "prompt": "Open Target profile > Exposure. For each reported incident record whether it is relevant, and the data categories only. Never paste leaked content.",
+     "timeout_hours": 168
+    }
+   },
+   {
+    "id": "save",
+    "type": "evidence_save",
+    "depends_on": [
+     "review",
+     "unique"
+    ],
+    "config": {
+     "ref": "$nodes.unique.output",
+     "title": "Reported breach exposure (categories only)"
+    }
+   },
+   {
+    "id": "report",
+    "type": "report",
+    "depends_on": [
+     "save"
+    ],
+    "config": {
+     "profile": "executive",
+     "format": "html"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {
+   "monitor_id": null
+  },
+  "adapter_findings": {},
+  "darkint_events": [
+   {
+    "type": "breach",
+    "title": "Breach: Example Forum",
+    "provider": "hibp",
+    "categories": [
+     "email addresses",
+     "credential indicator"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "type": "ransomware_listing",
+    "title": "Named on a leak site by group examplegroup (an unverified claim by the actor)",
+    "provider": "ransomware_live",
+    "categories": [
+     "organization named on a leak site"
+    ],
+    "confidence": "low"
+   }
+  ]
+ }
+}

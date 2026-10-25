@@ -815,7 +815,7 @@
   "where": {
    "route": "automations"
   },
-  "summary": "Reusable workflows for repeated OSINT work. Five tabs: Library (30 bundled templates), My automations, Runs (execution console), Inbox (notifications, suggestions, approvals waiting) and Settings. Everything starts disabled; nothing collects data on a schedule until you approve and activate it.",
+  "summary": "Reusable workflows for repeated OSINT work. Five tabs: Library (52 bundled templates), My automations, Runs (execution console), Inbox (notifications, suggestions, approvals waiting) and Settings. Everything starts disabled; nothing collects data on a schedule until you approve and activate it.",
   "how_to": [
    "Left menu: Automations.",
    "Library: search or filter templates, press Details, read availability and what is missing, then 'Create from template' (this makes a disabled draft).",
@@ -839,7 +839,7 @@
    "route": "automations",
    "tab": "Library"
   },
-  "summary": "30 bundled templates in six groups: Cyber (CY-01..07), Identity (ID-01..06), Corporate (CO-01..05), GEOINT and Sensors (GEO-01..06), Case and Evidence (CASE-01..06). Each shows its purpose, sources, availability (ready, partial, or setup required with exact instructions), quota estimate, legal notes, example output and any capability gaps. Templates are installed disabled. Maturity is stated: fixture-tested means its dry run passes on synthetic data; runtime-tested means it was run end to end through the engine (CY-01, ID-05, CASE-01).",
+  "summary": "52 bundled templates in nine groups: Cyber (CY-01..07), Identity (ID-01..06), Corporate (CO-01..05), GEOINT and Sensors (GEO-01..06), Case and Evidence (CASE-01..06), Target profile (TP-01..12), Verification (AIV-01..05) and Exposure (DARK-01..05). Each shows its purpose, sources, availability (ready, partial, or setup required with exact instructions), quota estimate, legal notes, example output and any capability gaps. Templates are installed disabled. Maturity is stated: fixture-tested means its dry run passes on synthetic data; runtime-tested means it was run end to end through the engine (CY-01, ID-05, CASE-01).",
   "notes": [
    "A template marked 'partial' has a documented gap, for example CVE Intelligence has no advisory feed connector.",
    "Setup required means a tool or key is missing; nothing pretends it worked."
@@ -995,5 +995,105 @@
    "lead"
   ],
   "related": []
+ },
+ {
+  "id": "tab-verification",
+  "title": "Verification (AIV workbench)",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Verification"
+  },
+  "summary": "Active Intelligence and Verification: bounded, disclosed checks of assets someone has authorized. Off until an administrator switches it on. You record an asset authorization (hosts, ports, checks, an end date and who authorized it), build a plan, read the preview, approve that exact plan once, run it, review the observations and export a report. Exploitation, password testing, logging in, fuzzing and load are not available anywhere in it.",
+  "how_to": [
+   "Status: see whether it is on, what is never done, and which optional tools (Nmap, Naabu, Nuclei, dnstwist) are installed and version-verified.",
+   "Authorizations: record permission from whoever owns the asset. A person's consent to be researched is not permission to test a domain or server that carries their name.",
+   "Plans: pick a check, press Preview (sends nothing), save a draft, tick that you read it and approve it, then Run now.",
+   "Observations: confirm, mark false positive or accept the risk, each with a reason. An observation is not proof of compromise.",
+   "Templates: review and approve read-only signature templates by id and hash. Reports: the verification report and the PHANTOM handoff file (confirmed observations only; it launches nothing)."
+  ],
+  "keywords": [
+   "aiv",
+   "verification",
+   "active",
+   "asset authorization",
+   "nmap",
+   "nuclei",
+   "phantom",
+   "handoff",
+   "plan",
+   "approval"
+  ]
+ },
+ {
+  "id": "darkint-page",
+  "title": "DARKINT page (exposure overview)",
+  "kind": "page",
+  "where": {
+   "route": "darkint"
+  },
+  "summary": "Cross-case overview of exposure checks for targets you can edit: counts of Unknown, Not checked, No match from checked sources and Match reported, items waiting for review, open tasks and monitors. It shows labels and counts only. Administrators enable providers here after reading their terms, and can turn on fixture mode (synthetic answers, no network).",
+  "how_to": [
+   "Open DARKINT from the left menu.",
+   "Read the four states: Not checked and Unknown are not 'no exposure'.",
+   "Open a case to see which providers were asked and when."
+  ],
+  "keywords": [
+   "darkint",
+   "breach",
+   "dark web",
+   "ransomware",
+   "exposure",
+   "hibp",
+   "provider",
+   "coverage"
+  ]
+ },
+ {
+  "id": "tab-darkint",
+  "title": "DARKINT tab (target exposure)",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Profile"
+  },
+  "summary": "On a target profile: what has and has not been checked (per input and provider, with times), a check form that previews exactly what would be sent, reported incidents grouped across sources with their original provenance, review decisions, remediation tasks (nothing is sent), manual intake and sanitized imports, monitors, provider states and an exposure report. Reports describe what sources claim; they are leads, not proof.",
+  "how_to": [
+   "Record an authorization that covers exposure checks (email confirmation or stronger) and name the providers allowed.",
+   "Choose an input and a provider, press Preview, read what leaves this machine, then Confirm and check.",
+   "Review each reported incident with a reason; create tasks for password changes, multi-factor authentication, domain hygiene, takedown, notification or a follow-up check.",
+   "The Pwned Passwords check is a separate owner-initiated step on the Exposure tab; it keeps nothing."
+  ],
+  "keywords": [
+   "darkint",
+   "exposure",
+   "breach",
+   "reported",
+   "not checked",
+   "no match",
+   "monitor",
+   "remediation",
+   "ransomware"
+  ]
+ },
+ {
+  "id": "product-name",
+  "title": "Product name (display only)",
+  "kind": "feature",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "Settings > Product name shows the name displayed inside the app. A provisional alternative (Fusion Intelligence Command Center) can be previewed and applied after you approve. It changes display text only: the repository, package, data folder, keys, identifiers and installer are untouched, and it is not a trademark or domain clearance.",
+  "how_to": [
+   "Pick a name, press Preview, tick the approval and press Apply.",
+   "Choose the current name again to go back."
+  ],
+  "keywords": [
+   "rename",
+   "brand",
+   "fusion",
+   "name",
+   "branding"
+  ]
  }
 ]

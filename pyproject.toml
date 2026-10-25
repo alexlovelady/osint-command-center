@@ -57,6 +57,9 @@ package = true
 [tool.ruff.lint]
 ignore = ["BLE001", "ISC004", "SIM102", "SIM115", "SIM117", "SIM210", "PERF102", "C408", "FURB162"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["F811"]       # fixtures imported from a sibling test module are redefined by the test parameters that use them
+
 [tool.mypy]
 python_version = "3.12"
 files = ["backend/osintcc"]

@@ -513,5 +513,125 @@
   "code": "verification_too_weak",
   "meaning": "Sensitive checks need more than a self-attestation.",
   "fix": "Use email confirmation, provider verification, a signed document or in-person verification."
+ },
+ {
+  "code": "aiv_disabled",
+  "meaning": "Active verification is switched off in this installation, so nothing active can run.",
+  "fix": "An administrator turns it on in the case's Verification tab > Status. It is off by default."
+ },
+ {
+  "code": "auth_missing",
+  "meaning": "No asset authorization covers this action.",
+  "fix": "Record an asset authorization (case owner) that names the exact hosts, ports and checks, then build the plan again."
+ },
+ {
+  "code": "auth_expired",
+  "meaning": "The asset authorization has passed its end date.",
+  "fix": "Record a new authorization. Old ones are never extended silently."
+ },
+ {
+  "code": "auth_revoked",
+  "meaning": "The asset authorization was revoked; approvals and running checks stopped at once.",
+  "fix": "Record a new authorization if the work should continue."
+ },
+ {
+  "code": "auth_not_started",
+  "meaning": "The authorization's start time has not arrived yet.",
+  "fix": "Wait until it starts or record one with the right start."
+ },
+ {
+  "code": "host_out_of_scope",
+  "meaning": "The host is not named in the authorization (or its address is not allowed).",
+  "fix": "Check the host spelling and the authorization's scope. A different host needs its own authorization."
+ },
+ {
+  "code": "port_out_of_scope",
+  "meaning": "The port is not one the authorization permits.",
+  "fix": "Use a listed port or record an authorization that lists it."
+ },
+ {
+  "code": "class_not_allowed",
+  "meaning": "The authorization does not permit this kind of check.",
+  "fix": "Record an authorization that includes the check class, or choose a permitted check."
+ },
+ {
+  "code": "resolved_ip_forbidden",
+  "meaning": "The name resolved to an address that is never allowed (private, loopback, link-local or cloud-metadata space).",
+  "fix": "Use a public host you are authorized to test. Private lab hosts need an explicit lab-network statement."
+ },
+ {
+  "code": "scope_changed",
+  "meaning": "The authorization changed after the plan was approved, so the approval no longer applies.",
+  "fix": "Create a new plan from the current authorization and approve it again."
+ },
+ {
+  "code": "approval_used",
+  "meaning": "A plan approval is single use and has been used.",
+  "fix": "Review the plan and approve it again to run it once more."
+ },
+ {
+  "code": "approval_expired",
+  "meaning": "The approval ran out of time before the run started.",
+  "fix": "Approve the plan again (approvals last at most four hours)."
+ },
+ {
+  "code": "approval_mismatch",
+  "meaning": "The approval was given for a different plan or version.",
+  "fix": "Approve the plan you want to run; editing a plan creates a new version that needs its own approval."
+ },
+ {
+  "code": "template_not_approved",
+  "meaning": "A signature template is not approved by id and content hash.",
+  "fix": "Review it under Verification > Templates and approve that exact text, or remove it from the plan."
+ },
+ {
+  "code": "template_rejected",
+  "meaning": "The template makes requests the review does not allow (not read-only GET/HEAD, has payloads, bodies, headers, flows or other protocols).",
+  "fix": "Use a plain fingerprint template, or do not use that template."
+ },
+ {
+  "code": "approval_required",
+  "meaning": "An explicit approval is needed for this change.",
+  "fix": "Preview it, then tick the approval box and apply."
+ },
+ {
+  "code": "invalid_branding",
+  "meaning": "The product name is not acceptable (for example it uses 'Intel' as a brand or contains markup).",
+  "fix": "Use a name of 3 to 60 characters without markup; 'Intelligence' is fine, 'Intel' alone is not."
+ },
+ {
+  "code": "nothing_to_hand_off",
+  "meaning": "There are no confirmed observations at that severity to export.",
+  "fix": "Review the observations and confirm the ones that are real, then export again."
+ },
+ {
+  "code": "terms_required",
+  "meaning": "A DARKINT provider's terms have not been accepted.",
+  "fix": "An administrator reads the provider's terms and enables it with the confirmation."
+ },
+ {
+  "code": "provider_not_permitted",
+  "meaning": "The authorization does not permit this exposure provider.",
+  "fix": "Record an authorization that lists the provider, or leave the list empty to allow any enabled provider."
+ },
+ {
+  "code": "not_monitorable",
+  "meaning": "This provider cannot be scheduled (password checks and manual sources are owner-initiated only).",
+  "fix": "Run it by hand from the Exposure tab."
+ },
+ {
+  "code": "domain_monitor_unsupported",
+  "meaning": "Domain-wide breach lookups are run by hand after domain verification, not scheduled.",
+  "fix": "Run the lookup from the DARKINT tab after verifying the domain with the provider."
+ },
+ {
+  "code": "RATE_LIMITED",
+  "meaning": "The provider (or its documented rate limit) said to slow down.",
+  "fix": "Wait and try again; the free Ransomware.live interface allows about one request per minute."
+ },
+ {
+  "code": "nothing_to_report",
+  "meaning": "There are no verification runs to put in a report yet.",
+  "fix": "Approve and run a plan first, then create the report."
  }
 ]

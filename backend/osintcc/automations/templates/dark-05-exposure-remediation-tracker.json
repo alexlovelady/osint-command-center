@@ -1,0 +1,136 @@
+{
+ "slug": "dark-05-exposure-remediation-tracker",
+ "key": "DARK-05",
+ "version": 1,
+ "category": "Exposure",
+ "name": "Exposure Remediation Tracker",
+ "description": "Creates tasks for MFA, password resets, domain and email hygiene, takedown requests, notification and follow-up checks. Sends no email and submits no takedown.",
+ "catalog_trigger": "Manual",
+ "tags": [
+  "darkint",
+  "remediation"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [],
+ "legal_notes": "Defensive exposure assessment for yourself, a verified consenting client, or an organization you are authorized to assess. Every lookup passes the consent, provider and domain-control gates and is audited. A report that data leaked is a lead, not proof that the record exists, is accurate or is still reachable. No passwords, hashes, tokens, identity documents, card numbers or leaked records are collected, stored or shown.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "Open tasks per reported incident with practical guidance and a follow-up re-check.",
+ "capability_gaps": [
+  "Nothing is sent from this application: notifications and takedown requests are tracked as tasks and carried out by a person."
+ ],
+ "instructions": "Creates tasks for MFA, password resets, domain and email hygiene, takedown requests, notification and follow-up checks. Sends no email and submits no takedown.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "dark-05-exposure-remediation-tracker",
+  "name": "Exposure Remediation Tracker",
+  "description": "Creates tasks for MFA, password resets, domain and email hygiene, takedown requests, notification and follow-up checks. Sends no email and submits no takedown.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "darkint",
+   "remediation"
+  ],
+  "trigger": {
+   "type": "manual",
+   "enabled": false
+  },
+  "inputs": {},
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "events",
+    "type": "darkint_events",
+    "depends_on": [],
+    "config": {
+     "exclude_dismissed": true
+    }
+   },
+   {
+    "id": "tasks",
+    "type": "darkint_remediation",
+    "depends_on": [
+     "events"
+    ],
+    "config": {
+     "actions": [
+      "password_reset",
+      "mfa",
+      "domain_hygiene",
+      "takedown",
+      "notify",
+      "follow_up_check"
+     ],
+     "max_tasks": 30
+    }
+   },
+   {
+    "id": "review",
+    "type": "analyst_review",
+    "depends_on": [
+     "tasks"
+    ],
+    "config": {
+     "prompt": "Review the new tasks. Anything that contacts a person, a host or a provider (a notification, a takedown request) is done by you outside this application, after you decide to.",
+     "timeout_hours": 168
+    }
+   },
+   {
+    "id": "gaps",
+    "type": "case_gaps",
+    "depends_on": [
+     "review"
+    ],
+    "config": {}
+   },
+   {
+    "id": "report",
+    "type": "report",
+    "depends_on": [
+     "gaps"
+    ],
+    "config": {
+     "profile": "executive",
+     "format": "html"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {},
+  "adapter_findings": {},
+  "darkint_events": [
+   {
+    "type": "breach",
+    "title": "Breach: Example Forum",
+    "provider": "hibp",
+    "categories": [
+     "email addresses",
+     "credential indicator"
+    ],
+    "confidence": "medium"
+   },
+   {
+    "type": "ransomware_listing",
+    "title": "Named on a leak site by group examplegroup (an unverified claim by the actor)",
+    "provider": "ransomware_live",
+    "categories": [
+     "organization named on a leak site"
+    ],
+    "confidence": "low"
+   }
+  ]
+ }
+}

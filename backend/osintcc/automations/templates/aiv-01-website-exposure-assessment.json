@@ -1,0 +1,163 @@
+{
+ "slug": "aiv-01-website-exposure-assessment",
+ "key": "AIV-01",
+ "version": 1,
+ "category": "Verification",
+ "name": "Website Exposure Assessment",
+ "description": "Scoped web asset: HEAD/GET metadata, TLS check and a security-header comparison. Reads results; a person approves and starts the checks.",
+ "catalog_trigger": "Manual",
+ "tags": [
+  "aiv",
+  "verification",
+  "web"
+ ],
+ "dependencies": [],
+ "optional_dependencies": [],
+ "inputs": [],
+ "legal_notes": "Only for assets you own or hold written authorization to test. This workflow never sends a request itself: it reads authorization and observation records, and a person creates, approves and starts every exact plan in the Verification workspace. Findings are observations to verify, not proof of compromise.",
+ "quota_note": "No network requests (works on local data)",
+ "example_output": "Verified headers and TLS observations with prioritised improvement suggestions, each linked to the stored response.",
+ "capability_gaps": [
+  "This workflow is manual only and cannot send requests: checks run from the Verification workspace after a person approves the exact plan.",
+  "Not verified against third-party sites: every check was exercised against local lab servers only."
+ ],
+ "instructions": "Scoped web asset: HEAD/GET metadata, TLS check and a security-header comparison. Reads results; a person approves and starts the checks.",
+ "maturity": "fixture_tested",
+ "definition": {
+  "schema_version": 1,
+  "workflow_key": "aiv-01-website-exposure-assessment",
+  "name": "Website Exposure Assessment",
+  "description": "Scoped web asset: HEAD/GET metadata, TLS check and a security-header comparison. Reads results; a person approves and starts the checks.",
+  "owner_scope": "investigation",
+  "status": "draft",
+  "tags": [
+   "aiv",
+   "verification",
+   "web"
+  ],
+  "trigger": {
+   "type": "manual",
+   "enabled": false
+  },
+  "inputs": {},
+  "policy": {
+   "network_mode": "passive_only",
+   "max_requests_per_provider_per_run": 50,
+   "max_duration_seconds": 600,
+   "max_concurrent_nodes": 2,
+   "reentrancy": "skip"
+  },
+  "nodes": [
+   {
+    "id": "consent",
+    "type": "analyst_review",
+    "depends_on": [],
+    "config": {
+     "prompt": "Confirm you own the asset or hold written authorization to test it, and that the authorization names the host, ports and checks. Consent from a person is not authorization for their domains.",
+     "timeout_hours": 72
+    }
+   },
+   {
+    "id": "auth",
+    "type": "aiv_authorizations",
+    "depends_on": [
+     "consent"
+    ],
+    "config": {
+     "only_live": true
+    }
+   },
+   {
+    "id": "has_auth",
+    "type": "condition",
+    "depends_on": [
+     "auth"
+    ],
+    "config": {
+     "ref": "$nodes.auth.output.count",
+     "op": "gt",
+     "value": 0
+    }
+   },
+   {
+    "id": "plan",
+    "type": "analyst_review",
+    "depends_on": [
+     "has_auth"
+    ],
+    "config": {
+     "prompt": "Open Verification. Create a plan for the authorized web asset: one HTTP metadata check (HEAD) and one TLS handshake. Review the preview, approve the exact plan and start it.",
+     "timeout_hours": 72
+    },
+    "when": {
+     "ref": "$nodes.has_auth.output.value",
+     "op": "truthy"
+    }
+   },
+   {
+    "id": "observed",
+    "type": "aiv_observations",
+    "depends_on": [
+     "plan"
+    ],
+    "config": {
+     "min_severity": "info",
+     "exclude_reviewed": [
+      "false_positive"
+     ]
+    }
+   },
+   {
+    "id": "review",
+    "type": "analyst_review",
+    "depends_on": [
+     "observed"
+    ],
+    "config": {
+     "prompt": "Review each observation: confirm, mark false positive or accept the risk, with a reason. Header findings are improvement suggestions, not vulnerabilities.",
+     "timeout_hours": 168
+    }
+   },
+   {
+    "id": "report",
+    "type": "report",
+    "depends_on": [
+     "review"
+    ],
+    "config": {
+     "profile": "technical",
+     "format": "html"
+    }
+   }
+  ],
+  "error_policy": {
+   "transient_retries": 2,
+   "backoff": "exponential_jitter",
+   "fail_closed_on_scope_error": true
+  }
+ },
+ "fixture": {
+  "inputs": {},
+  "adapter_findings": {},
+  "aiv_authorizations": [
+   {
+    "scope": "example.org",
+    "status": "live"
+   }
+  ],
+  "aiv_observations": [
+   {
+    "asset": "example.org",
+    "check": "http_metadata",
+    "title": "Content-Security-Policy header missing",
+    "severity": "low"
+   },
+   {
+    "asset": "example.org",
+    "check": "tls_handshake",
+    "title": "Certificate expires in 21 days",
+    "severity": "medium"
+   }
+  ]
+ }
+}

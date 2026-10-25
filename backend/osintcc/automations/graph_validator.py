@@ -208,6 +208,8 @@ def validate(raw: Any, adapters: dict[str, Any], health: dict[str, str] | None =
 
     # ---- trigger
     t = d.trigger
+    if any(n.type.startswith("aiv_") for n in d.nodes) and t.type != "manual":
+        errors.append(_issue("INVALID_GRAPH", "verification (AIV) steps can only be used in a manually started workflow: a schedule, event or file trigger could never carry a person's approval of an exact plan"))
     if t.type == "schedule":
         if not t.schedule:
             errors.append(_issue("INVALID_GRAPH", "a schedule trigger needs a cron schedule"))
@@ -218,6 +220,8 @@ def validate(raw: Any, adapters: dict[str, Any], health: dict[str, str] | None =
                 errors.append(_issue("INVALID_GRAPH", f"trigger: {exc}"))
     elif t.schedule:
         warnings.append(_issue("INVALID_GRAPH", "trigger.schedule is ignored unless trigger.type is schedule"))
+    if any(n.type == "darkint_check" for n in d.nodes) and t.type in ("event", "file"):
+        errors.append(_issue("INVALID_GRAPH", "exposure lookups run only from a manual start or a schedule bound to a consent-backed monitor; an event or file trigger could loop or look up data nobody authorized"))
     if t.type == "event" and t.event != "new_finding":
         errors.append(_issue("UNSUPPORTED", "event triggers support only event=new_finding"))
     if t.type == "file" and not any(n.type == "file_ingest" for n in d.nodes):

@@ -36,3 +36,17 @@ Run `uv run python -m osintcc.doctor` for the live version of the first table.
 Nothing was installed system-wide except what is marked "with owner approval". Everything else is project-local
 (`.venv`, `node_modules`, `target`, `dist`) or user-level tools (`cargo-audit` in `~/.cargo/bin`, uv/pip-audit tool caches).
 `apps/web/pnpm-workspace.yaml` allows only the `esbuild` post-install script that `pnpm` blocks by default (D-013).
+
+## Optional AIV tools (not installed by this application)
+
+Nothing below is downloaded by Setup. Install with your OS package manager, then open Verification > Status: each tool is identity-checked and version-checked, and a program that is the wrong one or an unreviewed version is reported and not run.
+
+| Tool | Kali / Debian | Verified flags | Used for |
+|---|---|---|---|
+| Nmap | `sudo apt install nmap` | 7.98 | connect-scan port and service check |
+| Naabu | `sudo apt install naabu` where packaged, otherwise the upstream release page | 2.6.1 | fast port check (off by default) |
+| Nuclei | `sudo apt install nuclei` where packaged, otherwise the upstream release page | engine 3.11.1 | reviewed read-only templates only |
+| dnstwist | `sudo apt install dnstwist` or `pipx install dnstwist` | 20240812 | look-alike domain permutations (offline) |
+| ProjectDiscovery httpx | `sudo apt install httpx-toolkit` (the Python client also installs a command named `httpx`) | 1.12.0 | detected, not used |
+
+The built-in HTTP, TLS and TCP checks need none of them. Licences differ (Nmap uses the Nmap Public Source License; the ProjectDiscovery tools are MIT; dnstwist is Apache-2.0): read them before redistributing any binary.

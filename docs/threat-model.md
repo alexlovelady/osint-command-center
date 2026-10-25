@@ -54,3 +54,23 @@ attacker on the same machine, hardware attacks, a compromised OS credential stor
 | Notification flooding / alert fatigue | De-duplication per window, quiet hours, digest, ack | **T** `test_notification_dedupe_...` |
 | Duplicate side effects after a crash | Idempotency keys on runs, checkpoints per node, replay-safe flag, de-duplicated notifications | **T** `test_restart_resumes_replay_safe_runs...` |
 | Behavioural profiling by suggestions | Off by default; application events only; personal investigations excluded unless opted in; each suggestion lists its basis | **T** `test_suggestions_are_off_by_default...` |
+
+## Active verification (AIV) and exposure intelligence (DARKINT)
+
+| Threat | Control | Status |
+|---|---|---|
+| Testing an asset nobody authorized because a person's name appears on it | Asset authorization is a separate record; person consent never feeds it; profile links are explicit ids only | **T** `test_person_consent_does_not_authorize_an_associated_domain`, `test_target_profile_view_lists_only_explicitly_linked_assets_never_by_name` |
+| Scope escape through redirects, DNS rebinding or a private/metadata answer | Every hop re-judged; DNS resolved once and the connection pinned to the checked address; cloud-metadata addresses never allowed | **T** `test_redirects_out_of_scope_are_reported_and_not_followed`, `test_dns_answers_in_private_or_metadata_space_fail_closed_at_connection_time`, `test_the_checked_address_is_the_address_that_is_used` |
+| Replaying or widening an approval | Approval bound to plan hash, single use, expiring; any edit needs a new one; interrupted runs are never replayed | **T** `test_approvals_are_explicit_single_use_expiring_and_bound_to_the_exact_plan`, `test_a_run_interrupted_by_a_restart_is_never_replayed` |
+| Command or flag injection through tool arguments | Fixed argv builders; the target is one element; only connect scans; no NSE, no template paths | **T** `test_argv_builders_use_fixed_flags_and_keep_the_target_as_a_single_element` |
+| Malicious or unsafe Nuclei template | Static review (GET/HEAD, word/regex/status/size matchers only); approval by id and SHA-256; re-reviewed and re-hashed at run time | **T** `test_templates_with_risky_semantics_are_rejected_statically`, `test_template_approval_is_by_id_and_hash_and_needs_the_reviewer_to_confirm` |
+| A same-named program impersonating a tool (Python `httpx` CLI) | Identity and version check before any run | **T** `test_tool_health_states_are_truthful` |
+| A tool leaving orphan processes after cancel | Process tree killed on cancel and timeout | **T** `test_cancelling_a_tool_run_kills_the_whole_process_tree` |
+| An AI assistant approving, running or widening a check | No such tool exists; proposals store a draft only | **T** `test_there_is_no_tool_that_authorizes_approves_or_runs` |
+| Secrets or leaked content entering records, logs, exports or prompts (DARKINT) | No column for them; redaction before indexing; strict request models; counts-only cloud view; imports discarded | **T** `test_sanitizer_redacts_secret_shaped_values_and_masks_addresses`, `test_manual_intake_and_imports_redact_and_never_keep_the_upload`, `test_audit_records_every_lookup_without_identifier_values` |
+| Looking up someone without verified consent, or after it was withdrawn | Fail-closed gate on class, identifier and provider at preview, check and monitor time; revocation switches monitors off | **T** `test_no_consent_a_weak_consent_a_provider_outside_the_scope_and_revocation_all_block`, `test_monitors_need_live_consent_stop_on_revocation_and_exclude_owner_only_checks` |
+| Reading "not checked" or a missing report as "safe" | Four distinct states; no universal clean indicator; negatives name providers and times | **T** `test_not_checked_unknown_no_match_and_match_are_four_different_states` |
+| Treating a ransomware listing as proof | Stored as a reported claim with low confidence and a caveat in every view | **T** `test_a_ransomware_listing_is_an_unverified_claim_and_says_so` |
+| Cross-case reading of exposure data | Case membership and role on every route; dashboard shows counts for cases you can edit | **T** `test_other_users_and_viewers_cannot_use_or_see_another_cases_exposure_data` |
+| Operator attests a domain is verified when it is not | The attestation is required and audited but cannot be proven | **O** accepted: the provider refuses an unverified domain (HTTP 403), which is reported as unsupported |
+| Provider terms or APIs change | Terms were read on 2026-10-25; every provider is `fixture_tested`, none live-verified | **O** re-read terms and run an approved live check before relying on a provider |

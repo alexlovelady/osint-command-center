@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ErrorBox, Loading } from "../components/ui";
 import { api, getToken, setToken } from "../lib/api";
+import BrandingCard from "../components/BrandingCard";
 import AdminPanel from "./AdminPanel";
 import UpdatesCard from "./UpdatesCard";
 
@@ -26,6 +27,7 @@ export default function Settings() {
           <p className="muted">API secrets are stored only in the OS credential vault (never in this database or in logs).</p>
         </div>
       )}
+      <BrandingCard />
       <AdminPanel />
       <UpdatesCard />
       <h3>Session</h3>

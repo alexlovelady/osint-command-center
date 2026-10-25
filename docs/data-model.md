@@ -2,7 +2,7 @@
 
 Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mode with foreign keys on; schema changes only through Alembic migrations (`backend/osintcc/db/migrations`). FTS5 `search_index` is maintained by triggers and is not an ORM table.
 
-73 tables.
+85 tables.
 
 ## ai_calls
 
@@ -31,6 +31,105 @@ Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mod
 | config_json | JSON | no |  |
 | created_at | DATETIME | no |  |
 
+## aiv_approvals
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| plan_id | VARCHAR(36) | no | FK → aiv_plans |
+| plan_version | INTEGER | no |  |
+| plan_hash | VARCHAR(64) | no |  |
+| approver_id | VARCHAR(80) | no |  |
+| approved_at | DATETIME | no |  |
+| expires_at | DATETIME | no |  |
+| maximum_uses | INTEGER | no |  |
+| uses | INTEGER | no |  |
+| revoked_at | DATETIME | yes |  |
+
+## aiv_observations
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | no | FK → cases |
+| run_id | VARCHAR(36) | no | FK → aiv_runs |
+| asset_authorization_id | VARCHAR(36) | no | FK → asset_authorizations |
+| target_asset | VARCHAR(300) | no |  |
+| check_type | VARCHAR(40) | no |  |
+| finding_key | VARCHAR(64) | no |  |
+| observed_value_json | JSON | no |  |
+| severity | VARCHAR(12) | no |  |
+| confidence | VARCHAR(12) | no |  |
+| basis | VARCHAR(12) | no |  |
+| remediation | TEXT | no |  |
+| evidence_id | VARCHAR(36) | yes | FK → evidence |
+| observed_at | DATETIME | no |  |
+| review_status | VARCHAR(16) | no |  |
+| reviewer | VARCHAR(80) | yes |  |
+| review_note | TEXT | no |  |
+| reviewed_at | DATETIME | yes |  |
+
+## aiv_plans
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | no | FK → cases |
+| target_profile_id | VARCHAR(36) | yes | FK → subjects |
+| asset_authorization_id | VARCHAR(36) | no | FK → asset_authorizations |
+| plan_hash | VARCHAR(64) | no |  |
+| version | INTEGER | no |  |
+| supersedes_id | VARCHAR(36) | yes |  |
+| steps_json | JSON | no |  |
+| projected_limits_json | JSON | no |  |
+| status | VARCHAR(16) | no |  |
+| created_by | VARCHAR(80) | no |  |
+| created_at | DATETIME | no |  |
+
+## aiv_run_events
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| run_id | VARCHAR(36) | no | FK → aiv_runs |
+| seq | INTEGER | no |  |
+| kind | VARCHAR(32) | no |  |
+| payload_json | JSON | no |  |
+| at | DATETIME | no |  |
+
+## aiv_runs
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| plan_id | VARCHAR(36) | no | FK → aiv_plans |
+| case_id | VARCHAR(36) | no | FK → cases |
+| approval_id | VARCHAR(36) | yes |  |
+| actor_id | VARCHAR(80) | no |  |
+| status | VARCHAR(16) | no |  |
+| started_at | DATETIME | no |  |
+| finished_at | DATETIME | yes |  |
+| actual_request_counts_json | JSON | no |  |
+| tool_versions_json | JSON | no |  |
+| abort_reason | TEXT | no |  |
+| scope_snapshot_hash | VARCHAR(64) | no |  |
+
+## aiv_template_approvals
+
+A reviewed signature template, pinned by id AND content hash. Anything else is refused.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| template_id | VARCHAR(120) | no |  |
+| sha256 | VARCHAR(64) | no |  |
+| content | TEXT | no |  |
+| semantics_json | JSON | no |  |
+| reviewed_by | VARCHAR(80) | no |  |
+| reviewed_at | DATETIME | no |  |
+| revoked_at | DATETIME | yes |  |
+| notes | TEXT | no |  |
+
 ## alerts
 
 | Column | Type | Null | Key |
@@ -45,6 +144,34 @@ Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mod
 | message | TEXT | no |  |
 | details_json | JSON | no |  |
 | acknowledged_at | DATETIME | yes |  |
+| created_at | DATETIME | no |  |
+
+## asset_authorizations
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | no | FK → cases |
+| owner_subject_id | VARCHAR(36) | yes | FK → subjects |
+| asset_type | VARCHAR(12) | no |  |
+| canonical_scope | JSON | no |  |
+| ports_json | JSON | no |  |
+| paths_json | JSON | no |  |
+| allowed_classes_json | JSON | no |  |
+| exclusions_json | JSON | no |  |
+| limits_json | JSON | no |  |
+| authorized_by | VARCHAR(200) | no |  |
+| authority_role | VARCHAR(120) | no |  |
+| source_of_authority | TEXT | no |  |
+| attestation_kind | VARCHAR(32) | no |  |
+| attestation_ref | VARCHAR(36) | yes | FK → evidence |
+| domain_verifications | JSON | no |  |
+| starts_at | DATETIME | no |  |
+| expires_at | DATETIME | no |  |
+| revoked_at | DATETIME | yes |  |
+| retention_terms | TEXT | no |  |
+| notes | TEXT | no |  |
+| created_by | VARCHAR(80) | no |  |
 | created_at | DATETIME | no |  |
 
 ## audit_events
@@ -473,6 +600,51 @@ Reversible analyst merge decision: `entity_id` is treated as `canonical_entity_i
 | chain_of_custody_json | JSON | no |  |
 | created_at | DATETIME | no |  |
 
+## exposure_checks
+
+One attempt to ask one provider about one identifier, and how it ended. This is what makes 'not checked', 'unknown' and 'no match' distinguishable.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | no | FK → cases |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| identifier_id | VARCHAR(36) | yes |  |
+| provider_id | VARCHAR(40) | no |  |
+| operation | VARCHAR(32) | no |  |
+| outcome | VARCHAR(24) | no |  |
+| events_found | INTEGER | no |  |
+| evidence_id | VARCHAR(36) | yes | FK → evidence |
+| detail | VARCHAR(300) | no |  |
+| actor | VARCHAR(80) | no |  |
+| checked_at | DATETIME | no |  |
+
+## exposure_events
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | no | FK → cases |
+| subject_id | VARCHAR(36) | yes | FK → subjects |
+| indicator_id | VARCHAR(36) | yes | FK → exposure_indicators |
+| identifier_id | VARCHAR(36) | yes | FK → subject_identifiers |
+| identifier_token | VARCHAR(32) | no |  |
+| provider_id | VARCHAR(40) | no |  |
+| event_type | VARCHAR(24) | no |  |
+| incident_key | VARCHAR(160) | no |  |
+| group_key | VARCHAR(80) | no |  |
+| title | VARCHAR(200) | no |  |
+| categories_json | JSON | no |  |
+| reported_first_seen | DATETIME | yes |  |
+| reported_last_seen | DATETIME | yes |  |
+| claim_status | VARCHAR(16) | no |  |
+| confidence | VARCHAR(10) | no |  |
+| evidence_id | VARCHAR(36) | yes | FK → evidence |
+| provider_ref | VARCHAR(300) | no |  |
+| redacted | BOOLEAN | no |  |
+| dedupe_key | VARCHAR(64) | no |  |
+| created_at | DATETIME | no |  |
+
 ## exposure_indicators
 
 Status, class, provider and a masked descriptor. There is intentionally no field that could hold a secret or raw dump.
@@ -493,6 +665,55 @@ Status, class, provider and a masked descriptor. There is intentionally no field
 | remediation_state | VARCHAR(16) | no |  |
 | evidence_id | VARCHAR(36) | yes | FK → evidence |
 | created_at | DATETIME | no |  |
+
+## exposure_monitor_configs
+
+A bounded, expiring scope that a scheduled workflow may use. It holds references to identifiers and an authorization, never values.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | no | FK → cases |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| name | VARCHAR(120) | no |  |
+| identifier_ids_json | JSON | no |  |
+| providers_json | JSON | no |  |
+| cadence_hours | INTEGER | no |  |
+| consent_id | VARCHAR(36) | yes |  |
+| expires_at | DATETIME | no |  |
+| enabled | BOOLEAN | no |  |
+| disabled_reason | VARCHAR(200) | no |  |
+| last_run_at | DATETIME | yes |  |
+| last_outcome_json | JSON | no |  |
+| created_by | VARCHAR(80) | no |  |
+| created_at | DATETIME | no |  |
+
+## exposure_reviews
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| event_id | VARCHAR(36) | no | FK → exposure_events |
+| reviewer | VARCHAR(80) | no |  |
+| status | VARCHAR(20) | no |  |
+| rationale | TEXT | no |  |
+| action_items_json | JSON | no |  |
+| review_source | VARCHAR(40) | no |  |
+| created_at | DATETIME | no |  |
+
+## exposure_sources
+
+Operator state per provider. Static facts (licence, terms, coverage limits) live in code; this row holds only what the operator decided and what was last observed.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| provider_id | VARCHAR(40) | no |  |
+| enabled | BOOLEAN | no |  |
+| last_verification_json | JSON | no |  |
+| terms_acknowledged_at | DATETIME | yes |  |
+| terms_acknowledged_by | VARCHAR(80) | yes |  |
+| updated_at | DATETIME | no |  |
 
 ## findings
 
@@ -868,6 +1089,8 @@ Append-only history of ownership/validation decisions; reversal writes a new eve
 | recheck_at | DATETIME | yes |  |
 | state | VARCHAR(12) | no |  |
 | resolution_evidence_id | VARCHAR(36) | yes | FK → evidence |
+| exposure_event_id | VARCHAR(36) | yes |  |
+| action_type | VARCHAR(24) | yes |  |
 | created_at | DATETIME | no |  |
 | updated_at | DATETIME | no |  |
 

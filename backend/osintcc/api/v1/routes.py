@@ -813,7 +813,7 @@ async def download_report(request: Request, rid: str):
         rr = db.get(ReportRun, rid)
         if not rr or not rr.export_path:
             raise ApiError(404, "not_found", "report not found")
-        case_for(db, request, rr.case_id, "editor" if rr.template == "subject-analyst" else "viewer")   # the private evidence package is not for viewers
+        case_for(db, request, rr.case_id, "editor" if rr.template in ("subject-analyst", "aiv-report", "aiv-handoff", "darkint-report") else "viewer")   # private evidence packages and verification exports are not for viewers
         p = (st.settings.export_dir / rr.export_path).resolve()
         if st.settings.export_dir.resolve() not in p.parents or not p.is_file():
             raise ApiError(404, "not_found", "report file missing")
@@ -1311,3 +1311,15 @@ router.include_router(_profile_exposure.router)
 from . import profile_reports as _profile_reports
 
 router.include_router(_profile_reports.router)
+from . import aiv as _aiv
+
+router.include_router(_aiv.router)
+from . import aiv_reports as _aiv_reports
+
+router.include_router(_aiv_reports.router)
+from . import darkint as _darkint
+
+router.include_router(_darkint.router)
+from . import branding as _branding
+
+router.include_router(_branding.router)

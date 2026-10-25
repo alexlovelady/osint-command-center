@@ -4,6 +4,7 @@ import json
 
 import httpx
 import pytest
+from aiv_lab import WEAK_HEADERS, Lab, Resolver, client_trust, make_ca, make_server_cert, server_ctx
 from osintcc.adapters.base import AdapterContext
 from osintcc.adapters.registry import default_adapters
 from osintcc.config import Settings
@@ -125,3 +126,39 @@ async def api(settings, calls):
         c.app = app
         yield c
         await c.aclose()
+
+
+# ---- Active Intelligence & Verification: a throwaway CA and a real local lab (shared by tests/integration/test_aiv_*.py) ----------------------------------
+TABLE = {"lab.test": ["127.0.0.1"], "other.test": ["127.0.0.1"], "evil.test": ["127.0.0.1"], "rebind.test": ["10.0.0.5"], "meta.test": ["169.254.169.254"]}
+
+
+@pytest.fixture
+def pki(tmp_path):
+    key, cert, pem = make_ca(tmp_path)
+    return {"key": key, "cert": cert, "pem": pem, "tmp": tmp_path}
+
+
+@pytest.fixture
+async def env(settings, calls, pki):
+    http = SafeHttp(resolver=fake_resolver, transport=httpx.MockTransport(make_handler(calls)))
+    app = create_app(settings, ctx_factory=lambda: AdapterContext(http=http, dns_query=fake_dns))
+    resolver = Resolver(TABLE)
+    labs: list[Lab] = []
+    async with app.router.lifespan_context(app):
+        st = app.state.core
+        st.aiv.resolver, st.aiv.ssl_context, st.aiv.rate_boost = resolver, client_trust(pki["pem"]), 1000.0
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1", headers={"Authorization": f"Bearer {settings.session_token}"}) as c:
+            c.app = app
+
+            async def lab(routes=None, tls: list[str] | None = None, **kw) -> Lab:
+                lb = Lab(routes=routes or {"*": (200, WEAK_HEADERS, b"<html>hello</html>")}, **kw)
+                ctx = None
+                if tls is not None:
+                    cp, kp = make_server_cert(pki["tmp"], pki["key"], pki["cert"], tls, tag=f"srv{len(labs)}")
+                    ctx = server_ctx(cp, kp)
+                await lb.start(ctx)
+                labs.append(lb)
+                return lb
+            yield {"api": c, "st": st, "resolver": resolver, "lab": lab, "pki": pki, "calls": calls}
+    for lb in labs:
+        await lb.stop()

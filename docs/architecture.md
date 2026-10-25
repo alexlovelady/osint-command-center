@@ -91,3 +91,10 @@ Hardware, Notes, Reports. An Automations page (library, builder with an SVG work
 | E2E backend / web | 8792 / 5174 | `scripts/e2e_server.py`, mocked network |
 
 The PyInstaller single-file backend runs as two OS processes (bootloader + interpreter); both exit on shutdown.
+
+## Active verification and exposure intelligence (addendum v1.1)
+
+- `aiv/policy.py` is pure and deterministic: authorization liveness, scope, class, port, redirect and resolved-address checks, budgets. `aiv/plans.py` previews offline (no DNS, no packets) and hashes a plan. `aiv/executor.py` re-checks everything at run time and before every request; `aiv/service.py` and `api/v1/aiv*.py` expose it; `adapters/active/{http_metadata,tls_posture,bounded_ports}.py` make the requests; `aiv/tools.py` wraps the optional CLIs and reviews Nuclei templates.
+- `darkint/providers.py` is the single place that defines a provider and its state; `darkint/service.py` holds the gate (`profile.consent` + provider scope + domain control), previews, checks, events, coverage, reviews, monitors, remediation and reports; `api/v1/darkint.py` exposes it. Existing exposure indicators, remediation tasks and consent are reused, not duplicated.
+- Automation: node types `aiv_authorizations`, `aiv_observations`, `darkint_check`, `darkint_events`, `darkint_remediation`; AIV nodes are read-only and AIV workflows are manual-trigger only. Copilot: `copilot/aiv_tools.py`, `copilot/darkint_tools.py` (explain and propose only).
+- `branding.py` is one typed display definition; nothing that identifies an installation reads from it.

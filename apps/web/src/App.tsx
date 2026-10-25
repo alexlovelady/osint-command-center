@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ErrorBox } from "./components/ui";
+import { useBranding } from "./components/BrandingCard";
 import CopilotPanel from "./components/CopilotPanel";
 import NavIcon from "./components/NavIcon";
 import { api, getToken } from "./lib/api";
@@ -8,6 +9,7 @@ import { setAppCtx } from "./lib/appContext";
 import CaseView from "./pages/CaseView";
 import Automations from "./pages/Automations";
 import Cases from "./pages/Cases";
+import Darkint from "./pages/Darkint";
 import Overview from "./pages/Overview";
 import Settings from "./pages/Settings";
 import Setup from "./pages/Setup";
@@ -27,7 +29,7 @@ function useRoute(): [string, (r: string) => void] {
   return [r, (x) => { window.location.hash = `/${x}`; }];
 }
 
-const NAV: [string, string][] = [["overview", "Overview"], ["cases", "Cases"], ["automations", "Automations"], ["tools", "Tool Manager"], ["setup", "Setup"], ["settings", "Settings"]];
+const NAV: [string, string][] = [["overview", "Overview"], ["cases", "Cases"], ["automations", "Automations"], ["darkint", "DARKINT"], ["tools", "Tool Manager"], ["setup", "Setup"], ["settings", "Settings"]];
 
 export default function App() {
   getToken(); // capture + scrub #token=… before routing reads the hash
@@ -35,7 +37,10 @@ export default function App() {
   const [search, setSearch] = useState(false);
   const [copilot, setCopilot] = useState(() => { try { return localStorage.getItem("osintcc.copilot.open") === "1"; } catch { return false; } });
   const toggleCopilot = (v: boolean) => { setCopilot(v); try { localStorage.setItem("osintcc.copilot.open", v ? "1" : "0"); } catch { /* the panel still works without storage */ } };
+  const branding = useBranding();
+  const productName = branding.data?.active.productName ?? "OSINT Command Center";
   const setup = useQuery({ queryKey: ["setup-banner"], queryFn: () => api<{ completed: boolean }>("/setup/status"), retry: false });
+  useEffect(() => { document.title = productName; }, [productName]);
   useEffect(() => {  // first run: land on Setup once, unless the user already navigated somewhere
     if (setup.data && !setup.data.completed && !window.location.hash.replace(/^#\/?/, "")) go("setup");
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,6 +62,7 @@ export default function App() {
   if (section === "case" && id) page = <CaseView id={id} />;
   else if (section === "cases") page = <Cases open={(i) => go(`case/${i}`)} />;
   else if (section === "automations") page = <Automations workflowId={id} />;
+  else if (section === "darkint") page = <Darkint openCase={(i) => go(`case/${i}`)} />;
   else if (section === "tools") page = <Tools />;
   else if (section === "settings") page = <Settings />;
   else if (section === "setup") page = <Setup />;
@@ -65,7 +71,7 @@ export default function App() {
   return (
     <div className="app">
       <nav className="side" aria-label="Primary">
-        <h1>OSINT Command Center</h1>
+        <h1>{productName}</h1>
         <div className="brand-sub">Open source · Lawful · Cited</div>
         {NAV.map(([k, label]) => (
           <a key={k} href={`#/${k}`} data-tour={`nav-${k}`} aria-current={section === k || (k === "cases" && section === "case") ? "page" : undefined}><NavIcon name={k} />{label}</a>

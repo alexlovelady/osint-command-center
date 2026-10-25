@@ -5,6 +5,7 @@ import { api } from "../../../lib/api";
 import type { ProfileT, SubjectT } from "../../../lib/profileApi";
 import Authorization, { AuthIndicator } from "./Authorization";
 import ProfileOverview, { StateBadge } from "./ProfileOverview";
+import Darkint from "./Darkint";
 import Exposure from "./Exposure";
 import Images from "./Images";
 import Privacy from "./Privacy";
@@ -13,9 +14,10 @@ import Reports from "./Reports";
 import Research from "./Research";
 import ReviewQueue from "./ReviewQueue";
 import SubjectWorkflows from "./SubjectWorkflows";
+import Verification from "./Verification";
 
 // Sub-tabs are listed here only when the feature behind them exists and is tested.
-export const SUBTABS = ["Profile", "Review queue", "Research", "Images", "Exposure", "Remediation", "Reports", "Workflows", "Authorization", "Privacy & data"] as const;
+export const SUBTABS = ["Profile", "Review queue", "Research", "Images", "Exposure", "DARKINT", "Remediation", "Verification", "Reports", "Workflows", "Authorization", "Privacy & data"] as const;
 
 function NewSubject({ caseId, purpose, onDone }: { caseId: string; purpose: string; onDone: () => void }) {
   const [f, setF] = useState({ display_name: "", mode: "self", purpose });
@@ -81,7 +83,9 @@ export default function TargetProfile({ caseId }: { caseId: string }) {
       {sub === "Research" && <Research p={p} />}
       {sub === "Images" && <Images p={p} />}
       {sub === "Exposure" && <Exposure p={p} />}
+      {sub === "DARKINT" && <Darkint p={p} />}
       {sub === "Remediation" && <Remediation p={p} />}
+      {sub === "Verification" && <Verification p={p} />}
       {sub === "Reports" && <Reports p={p} />}
       {sub === "Privacy & data" && <Privacy p={p} />}
       {sub === "Workflows" && <SubjectWorkflows p={p} />}

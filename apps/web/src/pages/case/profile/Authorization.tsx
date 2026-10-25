@@ -23,12 +23,12 @@ export default function Authorization({ p }: { p: ProfileT }) {
   const c = useQuery({ queryKey: ["consent", sid], queryFn: () => api<ConsentOut>(`/subjects/${sid}/consent`) });
   const evq = useQuery({ queryKey: ["evidence", p.case.id], queryFn: () => api<{ items: { id: string; title: string }[] }>(`/cases/${p.case.id}/evidence`) });
   const inDays = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
-  const [f, setF] = useState({ method: p.subject.mode === "client" ? "signed_document" : "self_attestation", verifier: "", purposes: "privacy self-audit", days: 30, proof: "", classes: ["public_passive", "public_site_query"] as string[], scope: [] as string[] });
+  const [f, setF] = useState({ method: p.subject.mode === "client" ? "signed_document" : "self_attestation", verifier: "", purposes: "privacy self-audit", days: 30, proof: "", classes: ["public_passive", "public_site_query"] as string[], scope: [] as string[], providers: [] as string[] });
   const inv = () => { qc.invalidateQueries({ queryKey: ["consent", sid] }); qc.invalidateQueries({ queryKey: ["profile", sid] }); };
   const grant = useMutation({
     mutationFn: () => api(`/subjects/${sid}/consent`, { method: "POST", json: {
       verification_method: f.method, verifier: f.verifier, source_classes: f.classes, permitted_purposes: f.purposes.split(",").map((x) => x.trim()).filter(Boolean),
-      expires_at: new Date(inDays(f.days) + "T23:59:59Z").toISOString(), identifier_ids: f.scope, proof_evidence_id: f.proof || null } }),
+      expires_at: new Date(inDays(f.days) + "T23:59:59Z").toISOString(), identifier_ids: f.scope, proof_evidence_id: f.proof || null, providers: f.classes.includes("exposure_check") ? f.providers : [] } }),
     onSuccess: inv,
   });
   const revoke = useMutation({ mutationFn: (id: string) => api(`/subjects/${sid}/consent/revoke`, { method: "POST", json: { consent_id: id, reason: "revoked by operator" } }), onSuccess: inv });
@@ -63,6 +63,12 @@ export default function Authorization({ p }: { p: ProfileT }) {
               <label key={k} style={{ display: "block" }}><input type="checkbox" style={{ width: "auto" }} checked={f.classes.includes(k)}
                 onChange={(e) => setF({ ...f, classes: e.target.checked ? [...f.classes, k] : f.classes.filter((x) => x !== k) })} /> {label}</label>))}
           </fieldset>
+          {f.classes.includes("exposure_check") && (
+            <fieldset style={{ marginTop: 6 }}><legend>Exposure providers permitted (none ticked = any provider an administrator enabled)</legend>
+              {[["hibp", "Have I Been Pwned"], ["ransomware_live", "Ransomware.live"]].map(([k, label]) => (
+                <label key={k} style={{ display: "block" }}><input type="checkbox" style={{ width: "auto" }} checked={f.providers.includes(k)}
+                  onChange={(e) => setF({ ...f, providers: e.target.checked ? [...f.providers, k] : f.providers.filter((x) => x !== k) })} /> {label}</label>))}
+            </fieldset>)}
           <fieldset style={{ marginTop: 6 }}><legend>Identities covered (required for client mode)</legend>
             {p.identifiers.map((i) => (
               <label key={i.id} style={{ display: "block" }}><input type="checkbox" style={{ width: "auto" }} checked={f.scope.includes(i.id)}

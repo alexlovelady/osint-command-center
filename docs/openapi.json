@@ -173,74 +173,6 @@
     "title": "AssessIn",
     "type": "object"
    },
-   "AuthIn": {
-    "properties": {
-     "allowed_classes": {
-      "items": {
-       "enum": [
-        "passive",
-        "public_site_query",
-        "active"
-       ],
-       "type": "string"
-      },
-      "title": "Allowed Classes",
-      "type": "array"
-     },
-     "authorized_by": {
-      "maxLength": 200,
-      "minLength": 2,
-      "title": "Authorized By",
-      "type": "string"
-     },
-     "document_ref": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Document Ref"
-     },
-     "expires_at": {
-      "anyOf": [
-       {
-        "format": "date-time",
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Expires At"
-     },
-     "scope_type": {
-      "enum": [
-       "domain",
-       "ip",
-       "cidr",
-       "url"
-      ],
-      "title": "Scope Type",
-      "type": "string"
-     },
-     "scope_value": {
-      "maxLength": 255,
-      "minLength": 3,
-      "title": "Scope Value",
-      "type": "string"
-     }
-    },
-    "required": [
-     "scope_type",
-     "scope_value",
-     "authorized_by"
-    ],
-    "title": "AuthIn",
-    "type": "object"
-   },
    "BackupIn": {
     "properties": {
      "allow_plaintext": {
@@ -290,6 +222,47 @@
      "file"
     ],
     "title": "BackupPathIn",
+    "type": "object"
+   },
+   "BrandingIn": {
+    "additionalProperties": false,
+    "properties": {
+     "approve_display_change": {
+      "default": false,
+      "title": "Approve Display Change",
+      "type": "boolean"
+     },
+     "custom": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Custom"
+     },
+     "preset": {
+      "enum": [
+       "current",
+       "fusion",
+       "custom"
+      ],
+      "title": "Preset",
+      "type": "string"
+     },
+     "preview_only": {
+      "default": false,
+      "title": "Preview Only",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "preset"
+    ],
+    "title": "BrandingIn",
     "type": "object"
    },
    "BulkReviewIn": {
@@ -613,6 +586,50 @@
      "text"
     ],
     "title": "ChatIn",
+    "type": "object"
+   },
+   "CheckIn": {
+    "additionalProperties": false,
+    "properties": {
+     "confirm": {
+      "default": false,
+      "title": "Confirm",
+      "type": "boolean"
+     },
+     "domain_control_attested": {
+      "default": false,
+      "title": "Domain Control Attested",
+      "type": "boolean"
+     },
+     "identifier_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Identifier Ids",
+      "type": "array"
+     },
+     "provider_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Provider Ids",
+      "type": "array"
+     },
+     "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "subject_id",
+     "identifier_ids",
+     "provider_ids"
+    ],
+    "title": "CheckIn",
     "type": "object"
    },
    "Confirm": {
@@ -990,6 +1007,29 @@
     "title": "HTTPValidationError",
     "type": "object"
    },
+   "HandoffIn": {
+    "additionalProperties": false,
+    "properties": {
+     "confirm_handoff": {
+      "default": false,
+      "title": "Confirm Handoff",
+      "type": "boolean"
+     },
+     "min_severity": {
+      "default": "medium",
+      "enum": [
+       "info",
+       "low",
+       "medium",
+       "high"
+      ],
+      "title": "Min Severity",
+      "type": "string"
+     }
+    },
+    "title": "HandoffIn",
+    "type": "object"
+   },
    "HypClaimIn": {
     "properties": {
      "claim_id": {
@@ -1098,31 +1138,6 @@
     "title": "IdentifierIn",
     "type": "object"
    },
-   "ImportIn": {
-    "properties": {
-     "case_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Case Id"
-     },
-     "document": {
-      "additionalProperties": true,
-      "title": "Document",
-      "type": "object"
-     }
-    },
-    "required": [
-     "document"
-    ],
-    "title": "ImportIn",
-    "type": "object"
-   },
    "LinkIn": {
     "properties": {
      "canonical_entity_id": {
@@ -1148,6 +1163,87 @@
     "title": "LinkIn",
     "type": "object"
    },
+   "ManualIn": {
+    "additionalProperties": false,
+    "properties": {
+     "categories": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Categories",
+      "type": "array"
+     },
+     "claim_status": {
+      "default": "reported",
+      "enum": [
+       "reported",
+       "corroborated",
+       "disputed"
+      ],
+      "title": "Claim Status",
+      "type": "string"
+     },
+     "event_type": {
+      "default": "manual_report",
+      "enum": [
+       "breach",
+       "paste",
+       "darkweb_mention",
+       "ransomware_listing",
+       "advisory",
+       "manual_report"
+      ],
+      "title": "Event Type",
+      "type": "string"
+     },
+     "identifier_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Identifier Id"
+     },
+     "reported_at": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reported At"
+     },
+     "source_url": {
+      "default": "",
+      "maxLength": 300,
+      "title": "Source Url",
+      "type": "string"
+     },
+     "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+     },
+     "title": {
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "subject_id",
+     "title"
+    ],
+    "title": "ManualIn",
+    "type": "object"
+   },
    "MemberIn": {
     "properties": {
      "access_role": {
@@ -1169,6 +1265,20 @@
      "user_id"
     ],
     "title": "MemberIn",
+    "type": "object"
+   },
+   "MockIn": {
+    "additionalProperties": false,
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "MockIn",
     "type": "object"
    },
    "ModelIn": {
@@ -1197,6 +1307,74 @@
      }
     },
     "title": "ModelIn",
+    "type": "object"
+   },
+   "MonitorIn": {
+    "additionalProperties": false,
+    "properties": {
+     "cadence_hours": {
+      "default": 168,
+      "maximum": 720.0,
+      "minimum": 24.0,
+      "title": "Cadence Hours",
+      "type": "integer"
+     },
+     "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+     },
+     "identifier_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Identifier Ids",
+      "type": "array"
+     },
+     "name": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+     },
+     "provider_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Provider Ids",
+      "type": "array"
+     },
+     "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "subject_id",
+     "name",
+     "identifier_ids",
+     "provider_ids",
+     "expires_at"
+    ],
+    "title": "MonitorIn",
+    "type": "object"
+   },
+   "MonitorSet": {
+    "additionalProperties": false,
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "MonitorSet",
     "type": "object"
    },
    "NewConv": {
@@ -1343,85 +1521,6 @@
      "definition"
     ],
     "title": "PatchIn",
-    "type": "object"
-   },
-   "PlanIn": {
-    "properties": {
-     "adapters": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "string"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Adapters"
-     },
-     "case_id": {
-      "title": "Case Id",
-      "type": "string"
-     },
-     "data_sensitivity": {
-      "default": "INTERNAL",
-      "enum": [
-       "PUBLIC",
-       "INTERNAL",
-       "RESTRICTED"
-      ],
-      "title": "Data Sensitivity",
-      "type": "string"
-     },
-     "mode": {
-      "default": "passive",
-      "enum": [
-       "passive",
-       "public_site_query",
-       "active"
-      ],
-      "title": "Mode",
-      "type": "string"
-     },
-     "reason": {
-      "maxLength": 2000,
-      "minLength": 3,
-      "title": "Reason",
-      "type": "string"
-     },
-     "target": {
-      "maxLength": 2048,
-      "minLength": 1,
-      "title": "Target",
-      "type": "string"
-     },
-     "target_type": {
-      "anyOf": [
-       {
-        "enum": [
-         "domain",
-         "ip",
-         "url",
-         "email",
-         "username"
-        ],
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Target Type"
-     }
-    },
-    "required": [
-     "case_id",
-     "target",
-     "reason"
-    ],
-    "title": "PlanIn",
     "type": "object"
    },
    "PolicyIn": {
@@ -1687,74 +1786,6 @@
      }
     },
     "title": "RematchIn",
-    "type": "object"
-   },
-   "RemediationIn": {
-    "additionalProperties": false,
-    "properties": {
-     "due_in_days": {
-      "anyOf": [
-       {
-        "maximum": 730.0,
-        "minimum": 1.0,
-        "type": "integer"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Due In Days"
-     },
-     "guidance": {
-      "default": "",
-      "maxLength": 4000,
-      "title": "Guidance",
-      "type": "string"
-     },
-     "indicator_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Indicator Id"
-     },
-     "issue": {
-      "maxLength": 2000,
-      "minLength": 1,
-      "title": "Issue",
-      "type": "string"
-     },
-     "owner": {
-      "anyOf": [
-       {
-        "maxLength": 80,
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Owner"
-     },
-     "priority": {
-      "default": "medium",
-      "enum": [
-       "low",
-       "medium",
-       "high"
-      ],
-      "title": "Priority",
-      "type": "string"
-     }
-    },
-    "required": [
-     "issue"
-    ],
-    "title": "RemediationIn",
     "type": "object"
    },
    "RemediationPatch": {
@@ -2509,6 +2540,33 @@
     "title": "SubjectWorkflowIn",
     "type": "object"
    },
+   "TemplateIn": {
+    "additionalProperties": false,
+    "properties": {
+     "confirm_reviewed": {
+      "default": false,
+      "title": "Confirm Reviewed",
+      "type": "boolean"
+     },
+     "content": {
+      "maxLength": 20000,
+      "minLength": 10,
+      "title": "Content",
+      "type": "string"
+     },
+     "notes": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Notes",
+      "type": "string"
+     }
+    },
+    "required": [
+     "content"
+    ],
+    "title": "TemplateIn",
+    "type": "object"
+   },
    "UninstallIn": {
     "properties": {
      "confirm": {
@@ -2558,6 +2616,375 @@
      "type"
     ],
     "title": "ValidationError",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv__ApproveIn": {
+    "additionalProperties": false,
+    "properties": {
+     "confirm": {
+      "default": false,
+      "title": "Confirm",
+      "type": "boolean"
+     },
+     "expires_in_minutes": {
+      "default": 60,
+      "maximum": 240.0,
+      "minimum": 1.0,
+      "title": "Expires In Minutes",
+      "type": "integer"
+     }
+    },
+    "title": "ApproveIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv__AuthIn": {
+    "additionalProperties": false,
+    "properties": {
+     "allowed_classes": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Allowed Classes",
+      "type": "array"
+     },
+     "asset_type": {
+      "enum": [
+       "fqdn",
+       "ip",
+       "cidr",
+       "url_prefix"
+      ],
+      "title": "Asset Type",
+      "type": "string"
+     },
+     "attestation_kind": {
+      "default": "owner_statement",
+      "enum": [
+       "signed_document",
+       "owner_statement",
+       "email_confirmation",
+       "domain_control_record",
+       "mandate_letter"
+      ],
+      "title": "Attestation Kind",
+      "type": "string"
+     },
+     "attestation_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Attestation Ref"
+     },
+     "authority_role": {
+      "default": "",
+      "maxLength": 120,
+      "title": "Authority Role",
+      "type": "string"
+     },
+     "authorized_by": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Authorized By",
+      "type": "string"
+     },
+     "exclusions": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 50,
+      "title": "Exclusions",
+      "type": "array"
+     },
+     "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+     },
+     "limits": {
+      "additionalProperties": true,
+      "title": "Limits",
+      "type": "object"
+     },
+     "notes": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Notes",
+      "type": "string"
+     },
+     "owner_subject_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner Subject Id"
+     },
+     "paths": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Paths",
+      "type": "array"
+     },
+     "ports": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Ports",
+      "type": "array"
+     },
+     "retention_terms": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Retention Terms",
+      "type": "string"
+     },
+     "scope": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Scope",
+      "type": "array"
+     },
+     "source_of_authority": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Source Of Authority",
+      "type": "string"
+     },
+     "starts_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Starts At"
+     }
+    },
+    "required": [
+     "asset_type",
+     "scope",
+     "ports",
+     "allowed_classes",
+     "authorized_by",
+     "expires_at"
+    ],
+    "title": "AuthIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv__PlanIn": {
+    "additionalProperties": false,
+    "properties": {
+     "authorization_id": {
+      "title": "Authorization Id",
+      "type": "string"
+     },
+     "steps": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "maxItems": 12,
+      "minItems": 1,
+      "title": "Steps",
+      "type": "array"
+     },
+     "supersedes": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Supersedes"
+     },
+     "target_profile_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target Profile Id"
+     }
+    },
+    "required": [
+     "authorization_id",
+     "steps"
+    ],
+    "title": "PlanIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv__ReviewIn": {
+    "additionalProperties": false,
+    "properties": {
+     "note": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Note",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "confirmed",
+       "false_positive",
+       "accepted_risk",
+       "unreviewed"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status"
+    ],
+    "title": "ReviewIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv__RevokeIn": {
+    "additionalProperties": false,
+    "properties": {
+     "reason": {
+      "default": "",
+      "maxLength": 500,
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "title": "RevokeIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv__RunIn": {
+    "additionalProperties": false,
+    "properties": {
+     "approval_id": {
+      "title": "Approval Id",
+      "type": "string"
+     },
+     "wait": {
+      "default": false,
+      "title": "Wait",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "approval_id"
+    ],
+    "title": "RunIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv__SettingsIn": {
+    "additionalProperties": false,
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "SettingsIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv_reports__ReportIn": {
+    "additionalProperties": false,
+    "properties": {
+     "format": {
+      "default": "html",
+      "enum": [
+       "html",
+       "markdown",
+       "json"
+      ],
+      "title": "Format",
+      "type": "string"
+     },
+     "include_false_positive": {
+      "default": false,
+      "title": "Include False Positive",
+      "type": "boolean"
+     },
+     "run_ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 50,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Run Ids"
+     }
+    },
+    "title": "ReportIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__aiv_reports__VerifyIn": {
+    "additionalProperties": false,
+    "properties": {
+     "document": {
+      "additionalProperties": true,
+      "title": "Document",
+      "type": "object"
+     }
+    },
+    "required": [
+     "document"
+    ],
+    "title": "VerifyIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__automations__ImportIn": {
+    "properties": {
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "document": {
+      "additionalProperties": true,
+      "title": "Document",
+      "type": "object"
+     }
+    },
+    "required": [
+     "document"
+    ],
+    "title": "ImportIn",
     "type": "object"
    },
    "osintcc__api__v1__automations__ReviewIn": {
@@ -2751,6 +3178,149 @@
     "title": "SettingsIn",
     "type": "object"
    },
+   "osintcc__api__v1__darkint__ImportIn": {
+    "additionalProperties": false,
+    "properties": {
+     "content": {
+      "maxLength": 2097152,
+      "title": "Content",
+      "type": "string"
+     },
+     "identifier_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Identifier Id"
+     },
+     "kind": {
+      "enum": [
+       "csv",
+       "json",
+       "misp"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "subject_id",
+     "kind",
+     "content"
+    ],
+    "title": "ImportIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__darkint__RemediationIn": {
+    "additionalProperties": false,
+    "properties": {
+     "action_type": {
+      "enum": [
+       "mfa",
+       "password_reset",
+       "domain_hygiene",
+       "takedown",
+       "notify",
+       "follow_up_check"
+      ],
+      "title": "Action Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "action_type"
+    ],
+    "title": "RemediationIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__darkint__ReportIn": {
+    "additionalProperties": false,
+    "properties": {
+     "format": {
+      "default": "markdown",
+      "enum": [
+       "markdown",
+       "html",
+       "json"
+      ],
+      "title": "Format",
+      "type": "string"
+     },
+     "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "subject_id"
+    ],
+    "title": "ReportIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__darkint__ReviewIn": {
+    "additionalProperties": false,
+    "properties": {
+     "action_items": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Action Items",
+      "type": "array"
+     },
+     "rationale": {
+      "maxLength": 1000,
+      "minLength": 3,
+      "title": "Rationale",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "acknowledged",
+       "relevant",
+       "not_relevant",
+       "corroborated",
+       "resolved",
+       "accepted_risk"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status",
+     "rationale"
+    ],
+    "title": "ReviewIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__darkint__SourceIn": {
+    "additionalProperties": false,
+    "properties": {
+     "acknowledge_terms": {
+      "default": false,
+      "title": "Acknowledge Terms",
+      "type": "boolean"
+     },
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "SourceIn",
+    "type": "object"
+   },
    "osintcc__api__v1__fusion__ApproveIn": {
     "properties": {
      "confirmed_adapters": {
@@ -2837,6 +3407,85 @@
      "sources"
     ],
     "title": "ClaimIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__fusion__PlanIn": {
+    "properties": {
+     "adapters": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Adapters"
+     },
+     "case_id": {
+      "title": "Case Id",
+      "type": "string"
+     },
+     "data_sensitivity": {
+      "default": "INTERNAL",
+      "enum": [
+       "PUBLIC",
+       "INTERNAL",
+       "RESTRICTED"
+      ],
+      "title": "Data Sensitivity",
+      "type": "string"
+     },
+     "mode": {
+      "default": "passive",
+      "enum": [
+       "passive",
+       "public_site_query",
+       "active"
+      ],
+      "title": "Mode",
+      "type": "string"
+     },
+     "reason": {
+      "maxLength": 2000,
+      "minLength": 3,
+      "title": "Reason",
+      "type": "string"
+     },
+     "target": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "title": "Target",
+      "type": "string"
+     },
+     "target_type": {
+      "anyOf": [
+       {
+        "enum": [
+         "domain",
+         "ip",
+         "url",
+         "email",
+         "username"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target Type"
+     }
+    },
+    "required": [
+     "case_id",
+     "target",
+     "reason"
+    ],
+    "title": "PlanIn",
     "type": "object"
    },
    "osintcc__api__v1__fusion__ReqIn": {
@@ -3249,6 +3898,14 @@
       ],
       "title": "Proof Evidence Id"
      },
+     "providers": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Providers",
+      "type": "array"
+     },
      "retention_days": {
       "anyOf": [
        {
@@ -3375,6 +4032,74 @@
     "title": "PurgeIn",
     "type": "object"
    },
+   "osintcc__api__v1__profile_exposure__RemediationIn": {
+    "additionalProperties": false,
+    "properties": {
+     "due_in_days": {
+      "anyOf": [
+       {
+        "maximum": 730.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Due In Days"
+     },
+     "guidance": {
+      "default": "",
+      "maxLength": 4000,
+      "title": "Guidance",
+      "type": "string"
+     },
+     "indicator_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Indicator Id"
+     },
+     "issue": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Issue",
+      "type": "string"
+     },
+     "owner": {
+      "anyOf": [
+       {
+        "maxLength": 80,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner"
+     },
+     "priority": {
+      "default": "medium",
+      "enum": [
+       "low",
+       "medium",
+       "high"
+      ],
+      "title": "Priority",
+      "type": "string"
+     }
+    },
+    "required": [
+     "issue"
+    ],
+    "title": "RemediationIn",
+    "type": "object"
+   },
    "osintcc__api__v1__profile_images__ReviewIn": {
     "properties": {
      "match_id": {
@@ -3429,6 +4154,74 @@
      }
     },
     "title": "ReportIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__routes__AuthIn": {
+    "properties": {
+     "allowed_classes": {
+      "items": {
+       "enum": [
+        "passive",
+        "public_site_query",
+        "active"
+       ],
+       "type": "string"
+      },
+      "title": "Allowed Classes",
+      "type": "array"
+     },
+     "authorized_by": {
+      "maxLength": 200,
+      "minLength": 2,
+      "title": "Authorized By",
+      "type": "string"
+     },
+     "document_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Document Ref"
+     },
+     "expires_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expires At"
+     },
+     "scope_type": {
+      "enum": [
+       "domain",
+       "ip",
+       "cidr",
+       "url"
+      ],
+      "title": "Scope Type",
+      "type": "string"
+     },
+     "scope_value": {
+      "maxLength": 255,
+      "minLength": 3,
+      "title": "Scope Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "scope_type",
+     "scope_value",
+     "authorized_by"
+    ],
+    "title": "AuthIn",
     "type": "object"
    },
    "osintcc__api__v1__routes__DecisionIn": {
@@ -3854,6 +4647,532 @@
     "summary": "Delete Profile"
    }
   },
+  "/api/v1/aiv/capabilities": {
+   "get": {
+    "operationId": "capabilities_api_v1_aiv_capabilities_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Capabilities"
+   }
+  },
+  "/api/v1/aiv/handoff/verify": {
+   "post": {
+    "operationId": "verify_handoff_api_v1_aiv_handoff_verify_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv_reports__VerifyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Verify Handoff"
+   }
+  },
+  "/api/v1/aiv/plans/{plan_id}": {
+   "get": {
+    "operationId": "get_plan_api_v1_aiv_plans__plan_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "plan_id",
+      "required": true,
+      "schema": {
+       "title": "Plan Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Plan"
+   }
+  },
+  "/api/v1/aiv/plans/{plan_id}/approve": {
+   "post": {
+    "operationId": "approve_api_v1_aiv_plans__plan_id__approve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "plan_id",
+      "required": true,
+      "schema": {
+       "title": "Plan Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv__ApproveIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Approve"
+   }
+  },
+  "/api/v1/aiv/plans/{plan_id}/run": {
+   "post": {
+    "operationId": "run_plan_api_v1_aiv_plans__plan_id__run_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "plan_id",
+      "required": true,
+      "schema": {
+       "title": "Plan Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv__RunIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Run Plan"
+   }
+  },
+  "/api/v1/aiv/runs/{run_id}": {
+   "get": {
+    "operationId": "get_run_api_v1_aiv_runs__run_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Run"
+   }
+  },
+  "/api/v1/aiv/runs/{run_id}/cancel": {
+   "post": {
+    "operationId": "cancel_run_api_v1_aiv_runs__run_id__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Cancel Run"
+   }
+  },
+  "/api/v1/aiv/runs/{run_id}/compare/{other_id}": {
+   "get": {
+    "operationId": "compare_api_v1_aiv_runs__run_id__compare__other_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "other_id",
+      "required": true,
+      "schema": {
+       "title": "Other Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Compare"
+   }
+  },
+  "/api/v1/aiv/runs/{run_id}/events": {
+   "get": {
+    "operationId": "run_events_api_v1_aiv_runs__run_id__events_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "After",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Run Events"
+   }
+  },
+  "/api/v1/aiv/settings": {
+   "put": {
+    "operationId": "put_settings_api_v1_aiv_settings_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv__SettingsIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Settings"
+   }
+  },
+  "/api/v1/aiv/templates": {
+   "get": {
+    "operationId": "list_templates_api_v1_aiv_templates_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "List Templates"
+   },
+   "post": {
+    "operationId": "approve_template_api_v1_aiv_templates_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TemplateIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Approve Template"
+   }
+  },
+  "/api/v1/aiv/templates/review": {
+   "post": {
+    "description": "Static review only: nothing is stored or run.",
+    "operationId": "review_template_api_v1_aiv_templates_review_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TemplateIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Review Template"
+   }
+  },
+  "/api/v1/aiv/templates/{tid}/revoke": {
+   "post": {
+    "operationId": "revoke_template_api_v1_aiv_templates__tid__revoke_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "tid",
+      "required": true,
+      "schema": {
+       "title": "Tid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Revoke Template"
+   }
+  },
+  "/api/v1/aiv/tools/health": {
+   "get": {
+    "operationId": "tools_health_api_v1_aiv_tools_health_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Tools Health"
+   }
+  },
   "/api/v1/alerts/{aid}/acknowledge": {
    "post": {
     "operationId": "ack_alert_api_v1_alerts__aid__acknowledge_post",
@@ -4239,7 +5558,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/ImportIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__automations__ImportIn"
        }
       }
      },
@@ -6124,6 +7443,56 @@
     "summary": "Verify Backup"
    }
   },
+  "/api/v1/branding": {
+   "get": {
+    "operationId": "get_branding_api_v1_branding_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Get Branding"
+   },
+   "put": {
+    "operationId": "put_branding_api_v1_branding_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BrandingIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Branding"
+   }
+  },
   "/api/v1/captures": {
    "get": {
     "operationId": "list_captures_api_v1_captures_get",
@@ -6559,6 +7928,372 @@
     "summary": "Put Policy"
    }
   },
+  "/api/v1/cases/{case_id}/aiv/handoff": {
+   "post": {
+    "description": "Exports confirmed observations as a PHANTOM handoff file. It launches nothing; the case owner approves the export.",
+    "operationId": "create_handoff_api_v1_cases__case_id__aiv_handoff_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HandoffIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Handoff"
+   }
+  },
+  "/api/v1/cases/{case_id}/aiv/observations": {
+   "get": {
+    "operationId": "list_observations_api_v1_cases__case_id__aiv_observations_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "run_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Run Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "review_status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Review Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "severity",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Severity"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Observations"
+   }
+  },
+  "/api/v1/cases/{case_id}/aiv/observations/{obs_id}/review": {
+   "post": {
+    "operationId": "review_observation_api_v1_cases__case_id__aiv_observations__obs_id__review_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "obs_id",
+      "required": true,
+      "schema": {
+       "title": "Obs Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv__ReviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Review Observation"
+   }
+  },
+  "/api/v1/cases/{case_id}/aiv/plans": {
+   "get": {
+    "operationId": "list_plans_api_v1_cases__case_id__aiv_plans_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Plans"
+   },
+   "post": {
+    "operationId": "create_plan_api_v1_cases__case_id__aiv_plans_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv__PlanIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Plan"
+   }
+  },
+  "/api/v1/cases/{case_id}/aiv/plans/preview": {
+   "post": {
+    "description": "Offline: no DNS and no packets. Shows exactly what each step would do and whether policy allows it.",
+    "operationId": "preview_plan_api_v1_cases__case_id__aiv_plans_preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv__PlanIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Preview Plan"
+   }
+  },
+  "/api/v1/cases/{case_id}/aiv/report": {
+   "post": {
+    "operationId": "create_report_api_v1_cases__case_id__aiv_report_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv_reports__ReportIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Report"
+   }
+  },
   "/api/v1/cases/{case_id}/alerts": {
    "get": {
     "operationId": "list_alerts_api_v1_cases__case_id__alerts_get",
@@ -6653,6 +8388,144 @@
     "summary": "Archive Case"
    }
   },
+  "/api/v1/cases/{case_id}/asset-authorizations": {
+   "get": {
+    "operationId": "list_auths_api_v1_cases__case_id__asset_authorizations_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Auths"
+   },
+   "post": {
+    "operationId": "create_auth_api_v1_cases__case_id__asset_authorizations_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv__AuthIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Auth"
+   }
+  },
+  "/api/v1/cases/{case_id}/asset-authorizations/{auth_id}/revoke": {
+   "post": {
+    "operationId": "revoke_auth_api_v1_cases__case_id__asset_authorizations__auth_id__revoke_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "auth_id",
+      "required": true,
+      "schema": {
+       "title": "Auth Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__aiv__RevokeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Revoke Auth"
+   }
+  },
   "/api/v1/cases/{case_id}/authorizations": {
    "post": {
     "operationId": "add_auth_api_v1_cases__case_id__authorizations_post",
@@ -6671,7 +8544,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/AuthIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__routes__AuthIn"
        }
       }
      },
@@ -6853,6 +8726,587 @@
      }
     },
     "summary": "Decide"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/check": {
+   "post": {
+    "operationId": "check_api_v1_cases__case_id__darkint_check_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CheckIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Check"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/exposures": {
+   "get": {
+    "operationId": "exposures_api_v1_cases__case_id__darkint_exposures_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Exposures"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/exposures/{event_id}/remediation": {
+   "post": {
+    "description": "Creates a task. It never sends a message or submits a takedown: a person does that outside this application.",
+    "operationId": "add_remediation_api_v1_cases__case_id__darkint_exposures__event_id__remediation_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "event_id",
+      "required": true,
+      "schema": {
+       "title": "Event Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__darkint__RemediationIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Remediation"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/exposures/{event_id}/review": {
+   "patch": {
+    "operationId": "review_event_api_v1_cases__case_id__darkint_exposures__event_id__review_patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "event_id",
+      "required": true,
+      "schema": {
+       "title": "Event Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__darkint__ReviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Review Event"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/import": {
+   "post": {
+    "description": "Sanitized import (CSV, JSON, or a MISP event export). The file is read, redacted and discarded.",
+    "operationId": "import_file_api_v1_cases__case_id__darkint_import_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__darkint__ImportIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Import File"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/manual": {
+   "post": {
+    "operationId": "manual_api_v1_cases__case_id__darkint_manual_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ManualIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Manual"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/monitors": {
+   "get": {
+    "operationId": "list_monitors_api_v1_cases__case_id__darkint_monitors_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Monitors"
+   },
+   "post": {
+    "operationId": "create_monitor_api_v1_cases__case_id__darkint_monitors_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MonitorIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Monitor"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/monitors/{monitor_id}": {
+   "patch": {
+    "operationId": "set_monitor_api_v1_cases__case_id__darkint_monitors__monitor_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "monitor_id",
+      "required": true,
+      "schema": {
+       "title": "Monitor Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MonitorSet"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Set Monitor"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/preview": {
+   "post": {
+    "description": "Exactly what would leave this machine, to whom, under what terms. Sends nothing. Refusals are explained here.",
+    "operationId": "preview_api_v1_cases__case_id__darkint_preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CheckIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Preview"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/reports": {
+   "post": {
+    "operationId": "report_create_api_v1_cases__case_id__darkint_reports_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__darkint__ReportIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Report Create"
+   }
+  },
+  "/api/v1/cases/{case_id}/darkint/reports/preview": {
+   "post": {
+    "operationId": "report_preview_api_v1_cases__case_id__darkint_reports_preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "case_id",
+      "required": true,
+      "schema": {
+       "title": "Case Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__darkint__ReportIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Report Preview"
    }
   },
   "/api/v1/cases/{case_id}/entities": {
@@ -9464,7 +11918,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/PlanIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__fusion__PlanIn"
        }
       }
      },
@@ -9500,7 +11954,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/PlanIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__fusion__PlanIn"
        }
       }
      },
@@ -10360,6 +12814,121 @@
      }
     },
     "summary": "Revoke"
+   }
+  },
+  "/api/v1/darkint/dashboard": {
+   "get": {
+    "operationId": "dashboard_api_v1_darkint_dashboard_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Dashboard"
+   }
+  },
+  "/api/v1/darkint/mock-mode": {
+   "put": {
+    "operationId": "put_mock_api_v1_darkint_mock_mode_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MockIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Mock"
+   }
+  },
+  "/api/v1/darkint/sources": {
+   "get": {
+    "operationId": "list_sources_api_v1_darkint_sources_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "List Sources"
+   }
+  },
+  "/api/v1/darkint/sources/{provider_id}": {
+   "put": {
+    "operationId": "put_source_api_v1_darkint_sources__provider_id__put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "provider_id",
+      "required": true,
+      "schema": {
+       "title": "Provider Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__darkint__SourceIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Source"
    }
   },
   "/api/v1/devices": {
@@ -13890,7 +16459,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/RemediationIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_exposure__RemediationIn"
        }
       }
      },
@@ -14483,6 +17052,44 @@
      }
     },
     "summary": "Get Timeline"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/verification": {
+   "get": {
+    "description": "What verification exists for this target profile. Assets belong to a profile only through an explicit link made by a person (owner_subject_id on the\nauthorization, target_profile_id on the plan); a name that merely looks similar links nothing.",
+    "operationId": "profile_verification_api_v1_subjects__subject_id__verification_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Profile Verification"
    }
   },
   "/api/v1/subjects/{subject_id}/workflows": {
