@@ -194,5 +194,17 @@
  {
   "term": "Reported, not verified",
   "definition": "A provider or leak-site claim. A listing is not proof that data exists, is accurate or is still reachable."
+ },
+ {
+  "term": "Associated email",
+  "definition": "An address a source associates with the target. It is a candidate until a person confirms it; guessed patterns are never presented as discoveries."
+ },
+ {
+  "term": "Likely / Possible",
+  "definition": "Likely: two independent sources explicitly tie an address to the subject. Possible: seen in evidence but not tied by enough independent sources, or the evidence conflicts. Neither is a fact."
+ },
+ {
+  "term": "Expansion plan",
+  "definition": "The prioritized, inspectable list of research steps that start from your inputs and confirmed addresses, across disciplines, inside depth, budget and authorization limits."
  }
 ]

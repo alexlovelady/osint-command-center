@@ -114,7 +114,7 @@ def run_checks(encrypted: bool) -> None:
         cfin = next((e for e in cev if e["type"] == "final"), None)
         check("Copilot answers from the bundled knowledge base", cop.status_code == 200 and bool(cfin) and "Create case" in cfin["text"] and any(x["source"] == "tutorial:create-case" for x in cfin["sources"]), (cfin["text"][:50] if cfin else cop.text[:80]))
         tpl = c.get("/automations/templates")
-        check("52 automation templates ship in the bundle (30 general + 12 Target-profile + 5 AIV + 5 DARKINT)", tpl.status_code == 200 and tpl.json()["total"] == 52, str(tpl.status_code))
+        check("53 automation templates ship in the bundle (30 general + 13 Target-profile + 5 AIV + 5 DARKINT)", tpl.status_code == 200 and tpl.json()["total"] == 53, str(tpl.status_code))
         wfr = c.post("/automations/from-template", json={"slug": "cy-02-domain-change-watch", "inputs": {"domain": "example.org"}})
         val = c.post(f"/automations/workflows/{wfr.json()['id']}/validate") if wfr.status_code == 201 else None
         check("cron + IANA time zone validation works in the bundle (tzdata)", val is not None and val.status_code == 200 and val.json()["valid"], (val.text[:80] if val is not None else wfr.text[:80]))
@@ -149,7 +149,7 @@ def run_checks(encrypted: bool) -> None:
         br = c.get("/branding")
         check("Branding: the display name is unchanged by default", br.status_code == 200 and br.json()["active"]["productName"] == "OSINT Command Center" and br.json()["preset"] == "current", br.text[:80])
         tc = c.get("/automations/templates")
-        check("Automation library ships the AIV and DARKINT templates, all disabled", tc.status_code == 200 and tc.json()["total"] == 52 and all(t["installed_disabled"] for t in tc.json()["items"]), tc.text[:60])
+        check("Automation library ships the AIV and DARKINT templates, all disabled", tc.status_code == 200 and tc.json()["total"] == 53 and all(t["installed_disabled"] for t in tc.json()["items"]), tc.text[:60])
 
         r = c.post("/system/shutdown")
         try:

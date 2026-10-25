@@ -734,3 +734,23 @@ async def darkint_remediation(ctx: Ctx) -> Any:
                                 "adapter": "darkint", "evidence_id": e.evidence_id})
         db.commit()
     return _findings_out(created, adapters=["darkint"], warnings=["tasks only: no message was sent and no takedown was submitted"])
+
+
+@handler("associated_emails")
+async def associated_emails_node(ctx: Ctx) -> Any:
+    if ctx.dry:
+        rows = ctx.fixture.get("associated_emails") or []
+        items = [{"id": f"sim:email:{i}", "entity": r.get("address", "j***@example.org"), "entity_type": "email", "predicate": "profile.associated_email", "value": r.get("classification", "possible"),
+                  "confidence": "low", "adapter": "profile", "evidence_id": f"sim-evidence:email:{i}", "simulated": True} for i, r in enumerate(rows)]
+        return _findings_out(items, adapters=["profile"], simulated=True, warnings=["simulated: no source was contacted"])
+    from ..db.models import AssociatedEmail
+    from ..profile.normalize import mask_value
+    items = []
+    with ctx.st.sm() as db:
+        for r in db.scalars(select(AssociatedEmail).where(AssociatedEmail.case_id == ctx.case_id).order_by(AssociatedEmail.discovered_at)):
+            if r.state == "rejected" or r.classification not in ctx.cfg["classes"]:
+                continue
+            ev = next((s["evidence_id"] for s in r.sources if s.get("evidence_id")), None)
+            items.append({"id": r.id, "entity": mask_value("email", r.address), "entity_type": "email", "predicate": "profile.associated_email", "value": r.classification,
+                          "confidence": {"confirmed": "high", "likely": "medium"}.get(r.classification, "low"), "adapter": "profile", "evidence_id": ev, "state": r.state})
+    return _findings_out(items[: ctx.cfg["limit"]], adapters=["profile"])

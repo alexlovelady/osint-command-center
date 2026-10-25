@@ -40,6 +40,7 @@ class AdapterManifest(BaseModel):
     description: str = ""
     install_hint: str | None = None
     default_selected: bool = True  # False: shown in the preview but only runs when explicitly chosen
+    profile_only: bool = False  # True: reachable only from a target profile's research plan, never offered by a generic search preview
 
 
 class RawArtifact(BaseModel):

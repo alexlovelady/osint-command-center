@@ -1320,6 +1320,9 @@ router.include_router(_aiv_reports.router)
 from . import darkint as _darkint
 
 router.include_router(_darkint.router)
+from . import profile_emails as _profile_emails
+
+router.include_router(_profile_emails.router)
 from . import branding as _branding
 
 router.include_router(_branding.router)

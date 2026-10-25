@@ -1,3 +1,4 @@
+from .contacts import GithubPublicAdapter, PageContactsAdapter  # noqa: F401
 from .crtsh import CrtShAdapter  # noqa: F401
 from .dns import DnsAdapter  # noqa: F401
 from .edgar import EdgarAdapter  # noqa: F401

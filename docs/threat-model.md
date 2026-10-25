@@ -74,3 +74,16 @@ attacker on the same machine, hardware attacks, a compromised OS credential stor
 | Cross-case reading of exposure data | Case membership and role on every route; dashboard shows counts for cases you can edit | **T** `test_other_users_and_viewers_cannot_use_or_see_another_cases_exposure_data` |
 | Operator attests a domain is verified when it is not | The attestation is required and audited but cannot be proven | **O** accepted: the provider refuses an unverified domain (HTTP 403), which is reported as unsupported |
 | Provider terms or APIs change | Terms were read on 2026-10-25; every provider is `fixture_tested`, none live-verified | **O** re-read terms and run an approved live check before relying on a provider |
+
+## Associated emails and cross-INT expansion
+
+| Threat | Control | Status |
+|---|---|---|
+| A guessed or mis-attributed address presented as a fact | Only addresses a stored source shows become candidates; classification is derived with reasons; conflicts cap it at Possible; confirmation needs the owner's attestation or independent corroboration | **T** `test_associated_addresses_appear_with_evidence_and_never_as_facts`, `test_confirming_needs_attestation_or_corroboration_and_records_which` |
+| Expansion into a different person (identity collision) | Seeds are inputs and confirmed addresses only; another subject holding the address is a conflict; rejected addresses are ignored | **T** `test_unconfirmed_matches_never_trigger_expansion_and_confirmed_ones_do`, `test_rejected_associations_stop_generating_work_and_stay_rejected` |
+| Runaway recursion | Depth, total runs, runs per pass, authorization, offline and closed-case stops, each recorded | **T** `test_recursion_respects_depth_budget_per_pass_and_ends_with_a_stop_reason` |
+| Recursion widening a client's scope | Per-identifier consent check on every step; a new input is outside a named-identifier consent | **T** `test_a_new_address_is_not_covered_by_a_client_consent_that_names_its_identifiers` |
+| A candidate sent to a breach provider | Exposure checks accept only subject identifiers; a candidate is not one | **T** `test_exposure_checks_only_ever_receive_authorized_identifiers` |
+| Secrets or others' addresses warehoused from a page | Passages are redacted before storage; script blocks are not read; only addresses are kept | **T** `test_sensitive_material_near_an_address_is_never_stored_or_shown` |
+| The assistant deciding for the analyst | No tool confirms, rejects, merges or promotes; the one action is a bounded passive pass behind an approval card | **T** `test_no_tool_can_confirm_reject_merge_or_promote_an_address` |
+| Self-declared commit author addresses mistaken for ownership | Commit authors are low-confidence, flagged with the author name, and conflict when the name differs | **T** `test_commit_authors_with_other_names_are_conflicts_and_stay_possible` |

@@ -35,7 +35,7 @@ from .service import ProfileError
 MAX_TASKS_PER_APPROVAL = 40       # work budget per approval
 OUTDATED_DAYS = 30
 STOP_RULES = [
-    "No recursion: results never become new research inputs on their own. New identifiers are listed as unresolved leads for you to add.",
+    "No automatic recursion here: results never become new research inputs on their own. New addresses are candidates; bounded follow-up from CONFIRMED addresses is planned under Associated emails.",
     f"At most {MAX_TASKS_PER_APPROVAL} source runs per approval; each additional identifier or source needs a fresh approval.",
     "Authorization is re-checked when each source starts, so revoking or expiring it stops queued work.",
     "A source that is unavailable, rate limited or fails is reported as such; it is never reported as 'nothing found'.",

@@ -74,6 +74,8 @@ def build_plan(db: Session, case: Case, parsed: ParsedTarget, adapters: dict[str
         m = ad.manifest
         if selected is not None and aid not in selected:
             continue
+        if selected is None and m.profile_only:
+            continue  # contact-address discovery is planned from a target profile, never offered by a generic search
         if parsed.type not in m.supported_target_types:
             if selected is not None:
                 steps.append({"adapter_id": aid, "name": m.name, "runnable": False,

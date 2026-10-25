@@ -279,7 +279,7 @@ async def test_expiry_sweep_cancels_pending_work_without_a_request(api):
 async def test_tp25_target_profile_templates_are_listed_with_honest_availability(api):
     _cid, sid, _ids = await setup_subject(api)
     items = {t["key"]: t for t in (await api.get(f"{B}/subjects/{sid}/templates")).json()["items"]}
-    assert sorted(items) == [f"TP-{i:02d}" for i in range(1, 13)]
+    assert sorted(items) == [f"TP-{i:02d}" for i in range(1, 14)]
     assert items["TP-01"]["availability"]["state"] == "setup_required"                      # sherlock is not installed in tests
     assert items["TP-03"]["availability"]["state"] == "ready"
     assert items["TP-07"]["availability"]["state"] == "partial" and items["TP-07"]["capability_gaps"]
@@ -288,7 +288,7 @@ async def test_tp25_target_profile_templates_are_listed_with_honest_availability
 
 async def test_tp25_every_template_dry_runs_when_bound_to_a_subject(api):
     cid, sid, _ids = await setup_subject(api)
-    for i in range(1, 13):
+    for i in range(1, 14):
         key = f"tp-{i:02d}"
         slug = next(t["slug"] for t in (await api.get(f"{B}/subjects/{sid}/templates")).json()["items"] if t["key"] == f"TP-{i:02d}")
         wf = await api.post(f"{B}/subjects/{sid}/workflows", json={"slug": slug})

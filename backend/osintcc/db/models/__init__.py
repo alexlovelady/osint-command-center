@@ -905,6 +905,8 @@ from .darkint import (  # noqa: F401
     ExposureSource,
 )
 from .profile import (  # noqa: F401  (target-profile tables, addendum TP-1.0)
+    AssociatedEmail,
+    ExpansionRun,
     ExposureIndicator,
     ImageAsset,
     ImageMatch,

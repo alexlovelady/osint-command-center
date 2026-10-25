@@ -19,7 +19,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..ai import service as ai
-from ..db.models import Case, CaseMember, CopilotProposal, Note, ReportRun, Requirement, Workflow
+from ..db.models import Case, CaseMember, CopilotProposal, Note, ReportRun, Requirement, Subject, Workflow
 from ..policy.targets import TargetError
 from ..search import service
 from ..telemetry import audit
@@ -89,6 +89,10 @@ TOOLS: dict[str, ToolSpec] = {t.name: t for t in [
              {"event_id": "optional event id (default: the newest unreviewed one)"}),
     ToolSpec("propose_darkint_workflow", "action", "Propose installing one exposure template (DARK-01..DARK-05) as a DISABLED draft for this target.",
              {"slug": "template key such as DARK-01", "inputs": "optional object, e.g. {monitor_id: ...}"}, sensitive="Creates a disabled automation draft; running it later needs its own approval and a live authorization."),
+    ToolSpec("associated_emails_summary", "read", "Email addresses that sources associate with the target, kept apart as confirmed facts, hypotheses (likely / possible) and rejected matches, with evidence ids, conflicts and gaps."),
+    ToolSpec("plan_cross_int", "read", "The prioritized, inspectable cross-discipline research plan for the target: what is ready to run, what needs a person first, what is blocked and why. Runs nothing."),
+    ToolSpec("propose_expansion_run", "action", "Propose ONE bounded expansion pass: passive, authorized steps from the cross-INT plan. Cannot confirm anything, start exposure checks or active verification.",
+             {"keys": "optional list of plan step keys (default: the top ready steps)"}, sensitive="Contacts the public sources shown in the preview, within the plan's budget, for identifiers the authorization already covers."),
     ToolSpec("propose_aiv_plan", "action", "Propose a DRAFT verification plan for an existing asset authorization. It cannot create or widen an authorization, approve, or run anything.",
              {"authorization_id": "id of an asset authorization in this case", "steps": "list of typed steps, e.g. {kind:'tls_handshake', host:'example.org', port:443}"},
              sensitive="Stores a draft plan only; a person must approve the exact plan in the Verification workspace before any request is sent."),
@@ -329,6 +333,28 @@ class Toolbox:
                 raise ToolRefused(f"report failed: {type(exc).__name__}") from exc
             rr.export_path, rr.status, rr.sha256 = path.name, "done", digest
             return {"executed": True, "report_id": rr.id, "file": path.name, "sha256": digest}
+        if p.tool == "propose_expansion_run":
+            from ..profile import emails as pemails
+            from ..profile import expansion as pexp
+            from ..profile import research as presearch
+            from ..profile.service import ProfileError
+            subject = db.get(Subject, a["subject_id"])
+            if subject is None or subject.case_id != case.id:
+                raise ToolRefused("the subject no longer exists in this case")
+            presearch.refresh_tasks(db, subject)
+            pemails.sweep(db, subject, f"copilot:{self.user}"[:80])
+            try:
+                out = pexp.run(db, subject, case, self.st.adapters, self.st.settings, actor=f"copilot:{self.user}"[:80], keys=a["keys"], confirmed_sources=confirmed)
+            except ProfileError as exc:
+                raise ToolRefused(f"policy refused at execution time: {exc.message}") from exc
+            db.flush()
+            db.commit()
+            for rid in out["run_ids"]:
+                t = asyncio.create_task(self.st.runner.run_until_idle(rid))
+                self.st.tasks.add(t)
+                t.add_done_callback(self.st.tasks.discard)
+            return {"executed": True, "status": out["status"], "started_runs": out["started_runs"], "stop_reason": out["stop_reason"],
+                    "note": "Started the passive steps in the preview. New addresses will appear as candidates; none is confirmed, researched further or checked for exposure automatically."}
         if p.tool == "propose_aiv_plan":
             from ..aiv import service as aivs
             from ..db.models import AssetAuthorization

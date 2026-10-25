@@ -244,7 +244,7 @@ async def test_offline_pauses_network_workflows_safely_while_local_ones_keep_wor
     assert det["state"] == "paused" and det["error_code"] == "OFFLINE" and len(calls) == n and "Retry when you are online" in det["summary_full"]["error"]
     ok = await run_detail(api, (await run_now(api, local["id"], cid))["id"])
     assert ok["state"] == "completed"                                                         # local files and reports work offline
-    assert (await api.get(f"{B}/templates")).json()["total"] == 52                            # the library is local data
+    assert (await api.get(f"{B}/templates")).json()["total"] == 53                            # the library is local data
     assert (await api.post(f"{B}/ai/propose", json={"goal": "watch the company filing feed for a company"})).json()["source"] in ("template_match", "none")   # no model needed
     await api.put(f"{API}/settings", json={"values": {"offline": False}})
     assert (await api.post(f"{B}/runs/{det['id']}/retry", params={"wait": True})).status_code == 202

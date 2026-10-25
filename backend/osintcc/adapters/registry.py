@@ -16,8 +16,10 @@ from .http import (
     DnsAdapter,
     EdgarAdapter,
     GdeltAdapter,
+    GithubPublicAdapter,
     OpenCorporatesAdapter,
     OverpassAdapter,
+    PageContactsAdapter,
     RdapAdapter,
     ShodanAdapter,
     UrlscanAdapter,
@@ -32,7 +34,8 @@ def default_adapters(settings: Settings | None = None) -> dict[str, IntelAdapter
     items: list[IntelAdapter] = [RdapAdapter(), DnsAdapter(), CrtShAdapter(), WaybackAdapter(), SubfinderAdapter(state_path=sp),
                                  SherlockAdapter(state_path=sp), MaigretAdapter(state_path=sp), LookalikeAdapter(), EdgarAdapter(),
                                  VirusTotalAdapter(), UrlscanAdapter(), ShodanAdapter(), OverpassAdapter(), GdeltAdapter(), OpenCorporatesAdapter(), CensysAdapter(),
-                                 AmassAdapter(state_path=sp), TheHarvesterAdapter(state_path=sp), DnstwistAdapter(state_path=sp)]
+                                 AmassAdapter(state_path=sp), TheHarvesterAdapter(state_path=sp), DnstwistAdapter(state_path=sp),
+                                 GithubPublicAdapter(), PageContactsAdapter()]
     if settings is not None and settings.enable_active_module:
         from .active import TcpConnectAdapter
         items.append(TcpConnectAdapter())

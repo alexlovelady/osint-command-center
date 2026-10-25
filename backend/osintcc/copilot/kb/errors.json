@@ -633,5 +633,40 @@
   "code": "nothing_to_report",
   "meaning": "There are no verification runs to put in a report yet.",
   "fix": "Approve and run a plan first, then create the report."
+ },
+ {
+  "code": "invalid_address",
+  "meaning": "That is not a valid email address.",
+  "fix": "Check the spelling; use the form name@domain."
+ },
+ {
+  "code": "not_confirmed",
+  "meaning": "Only a confirmed address can be added as an input.",
+  "fix": "Confirm it first with the owner's attestation or independent corroboration."
+ },
+ {
+  "code": "merge_conflict",
+  "meaning": "Addresses with different decisions cannot be merged.",
+  "fix": "Resolve the decisions first (reopen the rejected one, or confirm both)."
+ },
+ {
+  "code": "not_expandable",
+  "meaning": "A selected research step is not available in the plan (blocked, already done, beyond the depth limit, or it needs its own approval).",
+  "fix": "Open the plan, read each step's status, and tick only ready steps."
+ },
+ {
+  "code": "out_of_range",
+  "meaning": "An expansion limit is outside what is allowed.",
+  "fix": "Use whole numbers: depth 1 to 4, total runs 1 to 100, runs per pass 1 to 20."
+ },
+ {
+  "code": "unknown_setting",
+  "meaning": "That expansion setting does not exist.",
+  "fix": "Use max_depth, max_runs, max_per_pass or auto_passive."
+ },
+ {
+  "code": "already_an_input",
+  "meaning": "That address is already one of the subject's own inputs.",
+  "fix": "Nothing to do: it is researched as an input."
  }
 ]

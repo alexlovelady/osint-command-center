@@ -1163,87 +1163,6 @@
     "title": "LinkIn",
     "type": "object"
    },
-   "ManualIn": {
-    "additionalProperties": false,
-    "properties": {
-     "categories": {
-      "items": {
-       "type": "string"
-      },
-      "maxItems": 20,
-      "title": "Categories",
-      "type": "array"
-     },
-     "claim_status": {
-      "default": "reported",
-      "enum": [
-       "reported",
-       "corroborated",
-       "disputed"
-      ],
-      "title": "Claim Status",
-      "type": "string"
-     },
-     "event_type": {
-      "default": "manual_report",
-      "enum": [
-       "breach",
-       "paste",
-       "darkweb_mention",
-       "ransomware_listing",
-       "advisory",
-       "manual_report"
-      ],
-      "title": "Event Type",
-      "type": "string"
-     },
-     "identifier_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Identifier Id"
-     },
-     "reported_at": {
-      "anyOf": [
-       {
-        "maxLength": 40,
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Reported At"
-     },
-     "source_url": {
-      "default": "",
-      "maxLength": 300,
-      "title": "Source Url",
-      "type": "string"
-     },
-     "subject_id": {
-      "title": "Subject Id",
-      "type": "string"
-     },
-     "title": {
-      "maxLength": 200,
-      "minLength": 3,
-      "title": "Title",
-      "type": "string"
-     }
-    },
-    "required": [
-     "subject_id",
-     "title"
-    ],
-    "title": "ManualIn",
-    "type": "object"
-   },
    "MemberIn": {
     "properties": {
      "access_role": {
@@ -1265,6 +1184,30 @@
      "user_id"
     ],
     "title": "MemberIn",
+    "type": "object"
+   },
+   "MergeIn": {
+    "additionalProperties": false,
+    "properties": {
+     "keep_id": {
+      "title": "Keep Id",
+      "type": "string"
+     },
+     "merge_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Merge Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "keep_id",
+     "merge_ids"
+    ],
+    "title": "MergeIn",
     "type": "object"
    },
    "MockIn": {
@@ -1422,43 +1365,6 @@
     "title": "NextIn",
     "type": "object"
    },
-   "NoteIn": {
-    "properties": {
-     "body_markdown": {
-      "maxLength": 20000,
-      "minLength": 1,
-      "title": "Body Markdown",
-      "type": "string"
-     },
-     "entity_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Entity Id"
-     },
-     "evidence_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Evidence Id"
-     }
-    },
-    "required": [
-     "body_markdown"
-    ],
-    "title": "NoteIn",
-    "type": "object"
-   },
    "NotePatch": {
     "properties": {
      "acknowledge": {
@@ -1521,27 +1427,6 @@
      "definition"
     ],
     "title": "PatchIn",
-    "type": "object"
-   },
-   "PolicyIn": {
-    "properties": {
-     "allow_cloud": {
-      "default": false,
-      "title": "Allow Cloud",
-      "type": "boolean"
-     },
-     "deny_sensitive_cloud": {
-      "default": true,
-      "title": "Deny Sensitive Cloud",
-      "type": "boolean"
-     },
-     "require_preview": {
-      "default": true,
-      "title": "Require Preview",
-      "type": "boolean"
-     }
-    },
-    "title": "PolicyIn",
     "type": "object"
    },
    "PreflightIn": {
@@ -2384,6 +2269,22 @@
     "title": "SpecIn",
     "type": "object"
    },
+   "SpeculativeIn": {
+    "additionalProperties": false,
+    "properties": {
+     "address": {
+      "maxLength": 254,
+      "minLength": 3,
+      "title": "Address",
+      "type": "string"
+     }
+    },
+    "required": [
+     "address"
+    ],
+    "title": "SpeculativeIn",
+    "type": "object"
+   },
    "SubjectIn": {
     "properties": {
      "display_name": {
@@ -2616,6 +2517,27 @@
      "type"
     ],
     "title": "ValidationError",
+    "type": "object"
+   },
+   "osintcc__api__v1__ai__PolicyIn": {
+    "properties": {
+     "allow_cloud": {
+      "default": false,
+      "title": "Allow Cloud",
+      "type": "boolean"
+     },
+     "deny_sensitive_cloud": {
+      "default": true,
+      "title": "Deny Sensitive Cloud",
+      "type": "boolean"
+     },
+     "require_preview": {
+      "default": true,
+      "title": "Require Preview",
+      "type": "boolean"
+     }
+    },
+    "title": "PolicyIn",
     "type": "object"
    },
    "osintcc__api__v1__aiv__ApproveIn": {
@@ -3217,6 +3139,87 @@
      "content"
     ],
     "title": "ImportIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__darkint__ManualIn": {
+    "additionalProperties": false,
+    "properties": {
+     "categories": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Categories",
+      "type": "array"
+     },
+     "claim_status": {
+      "default": "reported",
+      "enum": [
+       "reported",
+       "corroborated",
+       "disputed"
+      ],
+      "title": "Claim Status",
+      "type": "string"
+     },
+     "event_type": {
+      "default": "manual_report",
+      "enum": [
+       "breach",
+       "paste",
+       "darkweb_mention",
+       "ransomware_listing",
+       "advisory",
+       "manual_report"
+      ],
+      "title": "Event Type",
+      "type": "string"
+     },
+     "identifier_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Identifier Id"
+     },
+     "reported_at": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reported At"
+     },
+     "source_url": {
+      "default": "",
+      "maxLength": 300,
+      "title": "Source Url",
+      "type": "string"
+     },
+     "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+     },
+     "title": {
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "subject_id",
+     "title"
+    ],
+    "title": "ManualIn",
     "type": "object"
    },
    "osintcc__api__v1__darkint__RemediationIn": {
@@ -4018,6 +4021,204 @@
     "title": "VerifyIn",
     "type": "object"
    },
+   "osintcc__api__v1__profile_emails__ManualIn": {
+    "additionalProperties": false,
+    "properties": {
+     "address": {
+      "maxLength": 254,
+      "minLength": 3,
+      "title": "Address",
+      "type": "string"
+     },
+     "evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Evidence Id"
+     },
+     "note": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Note",
+      "type": "string"
+     },
+     "url": {
+      "default": "",
+      "maxLength": 300,
+      "title": "Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "address"
+    ],
+    "title": "ManualIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile_emails__NoteIn": {
+    "additionalProperties": false,
+    "properties": {
+     "note": {
+      "maxLength": 1000,
+      "title": "Note",
+      "type": "string"
+     }
+    },
+    "required": [
+     "note"
+    ],
+    "title": "NoteIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile_emails__PolicyIn": {
+    "additionalProperties": false,
+    "properties": {
+     "auto_passive": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Passive"
+     },
+     "max_depth": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Max Depth"
+     },
+     "max_per_pass": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Max Per Pass"
+     },
+     "max_runs": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Max Runs"
+     }
+    },
+    "title": "PolicyIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile_emails__ReviewIn": {
+    "additionalProperties": false,
+    "properties": {
+     "attestation": {
+      "default": "none",
+      "enum": [
+       "none",
+       "subject"
+      ],
+      "title": "Attestation",
+      "type": "string"
+     },
+     "basis": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Basis",
+      "type": "string"
+     },
+     "evidence_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Evidence Ids",
+      "type": "array"
+     },
+     "ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "title": "Ids",
+      "type": "array"
+     },
+     "to_state": {
+      "enum": [
+       "confirmed",
+       "rejected",
+       "candidate"
+      ],
+      "title": "To State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "ids",
+     "to_state",
+     "basis"
+    ],
+    "title": "ReviewIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile_emails__RunIn": {
+    "additionalProperties": false,
+    "properties": {
+     "confirmed_sources": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Confirmed Sources",
+      "type": "array"
+     },
+     "keys": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 40,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Keys"
+     },
+     "promote_confirmed": {
+      "default": false,
+      "title": "Promote Confirmed",
+      "type": "boolean"
+     },
+     "wait": {
+      "default": false,
+      "title": "Wait",
+      "type": "boolean"
+     }
+    },
+    "title": "RunIn",
+    "type": "object"
+   },
    "osintcc__api__v1__profile_exposure__PurgeIn": {
     "additionalProperties": false,
     "properties": {
@@ -4250,6 +4451,43 @@
      "decision"
     ],
     "title": "DecisionIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__routes__NoteIn": {
+    "properties": {
+     "body_markdown": {
+      "maxLength": 20000,
+      "minLength": 1,
+      "title": "Body Markdown",
+      "type": "string"
+     },
+     "entity_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Entity Id"
+     },
+     "evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Evidence Id"
+     }
+    },
+    "required": [
+     "body_markdown"
+    ],
+    "title": "NoteIn",
     "type": "object"
    },
    "osintcc__api__v1__routes__PurgeIn": {
@@ -7899,7 +8137,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/PolicyIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__ai__PolicyIn"
        }
       }
      },
@@ -9000,7 +9238,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/ManualIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__darkint__ManualIn"
        }
       }
      },
@@ -10451,7 +10689,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/NoteIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__routes__NoteIn"
        }
       }
      },
@@ -14985,6 +15223,407 @@
     "summary": "Patch Subject"
    }
   },
+  "/api/v1/subjects/{subject_id}/associated-emails": {
+   "get": {
+    "operationId": "list_emails_api_v1_subjects__subject_id__associated_emails_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Emails"
+   },
+   "post": {
+    "operationId": "add_email_api_v1_subjects__subject_id__associated_emails_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_emails__ManualIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Email"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/associated-emails/count": {
+   "get": {
+    "operationId": "count_api_v1_subjects__subject_id__associated_emails_count_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Count"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/associated-emails/discover": {
+   "post": {
+    "description": "Folds addresses that stored evidence already shows into candidates (no network) and previews the expansion plan that could find more.",
+    "operationId": "discover_api_v1_subjects__subject_id__associated_emails_discover_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Discover"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/associated-emails/merge": {
+   "post": {
+    "operationId": "merge_emails_api_v1_subjects__subject_id__associated_emails_merge_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MergeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Merge Emails"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/associated-emails/review": {
+   "post": {
+    "operationId": "review_emails_api_v1_subjects__subject_id__associated_emails_review_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_emails__ReviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Review Emails"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/associated-emails/speculative": {
+   "post": {
+    "operationId": "accept_speculative_api_v1_subjects__subject_id__associated_emails_speculative_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SpeculativeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Accept Speculative"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/associated-emails/{email_id}": {
+   "patch": {
+    "operationId": "annotate_email_api_v1_subjects__subject_id__associated_emails__email_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "email_id",
+      "required": true,
+      "schema": {
+       "title": "Email Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_emails__NoteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Annotate Email"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/associated-emails/{email_id}/promote": {
+   "post": {
+    "description": "Adds a CONFIRMED address as one of the subject's inputs. It is then covered by research and exposure checks only if the authorization covers it.",
+    "operationId": "promote_email_api_v1_subjects__subject_id__associated_emails__email_id__promote_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "email_id",
+      "required": true,
+      "schema": {
+       "title": "Email Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Promote Email"
+   }
+  },
   "/api/v1/subjects/{subject_id}/candidates": {
    "get": {
     "operationId": "list_candidates_api_v1_subjects__subject_id__candidates_get",
@@ -15537,6 +16176,137 @@
      }
     },
     "summary": "Get Coverage"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/expansion": {
+   "get": {
+    "operationId": "expansion_plan_api_v1_subjects__subject_id__expansion_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Expansion Plan"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/expansion/policy": {
+   "put": {
+    "operationId": "expansion_policy_api_v1_subjects__subject_id__expansion_policy_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_emails__PolicyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Expansion Policy"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/expansion/run": {
+   "post": {
+    "operationId": "expansion_run_api_v1_subjects__subject_id__expansion_run_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_emails__RunIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Expansion Run"
    }
   },
   "/api/v1/subjects/{subject_id}/exposure": {

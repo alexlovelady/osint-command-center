@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db.models import (
+    AssociatedEmail,
     ExposureIndicator,
     ImageMatch,
     ProfileCandidateLink,
@@ -37,6 +38,11 @@ def build(db: Session, subject: Subject, *, include_restricted: bool = True) -> 
             add(c.revoked_at, "authorization", "Authorization revoked", "recorded", id=c.id)
     for k in db.scalars(select(ProfileCandidateLink).where(ProfileCandidateLink.subject_id == subject.id)):
         add(k.first_seen_at, "candidate", f"Candidate account first seen ({k.site or 'unknown site'})", "observed", k.evidence_ids, id=k.id, url=k.canonical_url)
+    for em in db.scalars(select(AssociatedEmail).where(AssociatedEmail.subject_id == subject.id)):
+        ev_ids = sorted({x["evidence_id"] for x in em.sources if x.get("evidence_id")})
+        add(em.discovered_at, "email", f"Associated email {em.classification}: first shown by {', '.join(sorted({x.get('adapter') or x.get('kind', '') for x in em.sources})) or 'an analyst'}", "observed", ev_ids, id=em.id)
+        if em.reviewed_at:
+            add(em.reviewed_at, "email", f"Associated email {em.state} by {em.reviewed_by}", "decision", ev_ids, id=em.id)
     for e in db.scalars(select(ProfileReviewEvent).where(ProfileReviewEvent.subject_id == subject.id)):
         add(e.created_at, "review", f"{e.target_type} {e.from_state} → {e.to_state} by {e.reviewer}", "decision", e.evidence_ids, id=e.id)
     for cl in db.scalars(select(ProfileClaim).where(ProfileClaim.subject_id == subject.id)):

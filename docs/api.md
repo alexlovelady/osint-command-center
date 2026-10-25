@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-310 operations in 41 groups.
+322 operations in 41 groups.
 
 ## ai
 
@@ -436,6 +436,15 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 |---|---|---|
 | GET | `/api/v1/subjects/{subject_id}` | Get Subject |
 | PATCH | `/api/v1/subjects/{subject_id}` | Patch Subject |
+| GET | `/api/v1/subjects/{subject_id}/associated-emails` | List Emails |
+| POST | `/api/v1/subjects/{subject_id}/associated-emails` | Add Email |
+| GET | `/api/v1/subjects/{subject_id}/associated-emails/count` | Count |
+| POST | `/api/v1/subjects/{subject_id}/associated-emails/discover` | Folds addresses that stored evidence already shows into candidates (no network) and previews the expansion plan that could find more. |
+| POST | `/api/v1/subjects/{subject_id}/associated-emails/merge` | Merge Emails |
+| POST | `/api/v1/subjects/{subject_id}/associated-emails/review` | Review Emails |
+| POST | `/api/v1/subjects/{subject_id}/associated-emails/speculative` | Accept Speculative |
+| PATCH | `/api/v1/subjects/{subject_id}/associated-emails/{email_id}` | Annotate Email |
+| POST | `/api/v1/subjects/{subject_id}/associated-emails/{email_id}/promote` | Adds a CONFIRMED address as one of the subject's inputs. It is then covered by research and exposure checks only if the authorization covers |
 | GET | `/api/v1/subjects/{subject_id}/candidates` | List Candidates |
 | POST | `/api/v1/subjects/{subject_id}/candidates/bulk-review` | Bulk Review |
 | POST | `/api/v1/subjects/{subject_id}/candidates/reverse` | Reverse Review |
@@ -448,6 +457,9 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | POST | `/api/v1/subjects/{subject_id}/corrections` | Request Correction |
 | POST | `/api/v1/subjects/{subject_id}/corrections/{correction_id}/resolve` | Resolve Correction |
 | GET | `/api/v1/subjects/{subject_id}/coverage` | Get Coverage |
+| GET | `/api/v1/subjects/{subject_id}/expansion` | Expansion Plan |
+| PUT | `/api/v1/subjects/{subject_id}/expansion/policy` | Expansion Policy |
+| POST | `/api/v1/subjects/{subject_id}/expansion/run` | Expansion Run |
 | GET | `/api/v1/subjects/{subject_id}/exposure` | List Exposure |
 | POST | `/api/v1/subjects/{subject_id}/exposure` | Record Exposure |
 | POST | `/api/v1/subjects/{subject_id}/exposure/approve` | Exposure Approve |

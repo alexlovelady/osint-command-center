@@ -92,10 +92,10 @@ def test_exactly_the_30_catalog_templates_exist_with_the_specified_ids():
     keys = [t["key"] for t in catalog.load_all()]
     expect = (["CY-01", "CY-02", "CY-03", "CY-04", "CY-05", "CY-06", "CY-07", "ID-01", "ID-02", "ID-03", "ID-04", "ID-05", "ID-06", "CO-01", "CO-02", "CO-03", "CO-04", "CO-05",
                "GEO-01", "GEO-02", "GEO-03", "GEO-04", "GEO-05", "GEO-06", "CASE-01", "CASE-02", "CASE-03", "CASE-04", "CASE-05", "CASE-06"])
-    expect += [f"TP-{i:02d}" for i in range(1, 13)]                                  # addendum TP-1.0: twelve Target-profile templates
+    expect += [f"TP-{i:02d}" for i in range(1, 14)]                                  # addendum TP-1.0 (twelve) plus the associated-email template
     expect += [f"AIV-{i:02d}" for i in range(1, 6)]                                  # addendum v1.1: five Active Intelligence & Verification templates
     expect += [f"DARK-{i:02d}" for i in range(1, 6)]                                 # addendum v1.1 section 14: five DARKINT exposure templates
-    assert sorted(keys) == sorted(expect) and len(keys) == 52
+    assert sorted(keys) == sorted(expect) and len(keys) == 53
     assert sum(1 for t in catalog.load_all() if t["category"] not in ("Target profile", "Verification", "Exposure")) == 30
 
 
@@ -155,7 +155,7 @@ async def test_watch_templates_show_new_and_changed_in_their_dry_run(api, slug):
 
 async def test_template_library_lists_availability_honestly_and_installs_disabled(api):
     j = (await api.get(f"{B}/templates")).json()
-    assert j["total"] == 52 and all(t["installed_disabled"] for t in j["items"])
+    assert j["total"] == 53 and all(t["installed_disabled"] for t in j["items"])
     by = {t["key"]: t for t in j["items"]}
     assert by["CY-01"]["availability"]["state"] == "ready"                                           # rdap, dns, crtsh are built in
     assert by["ID-01"]["availability"]["state"] == "setup_required"                                  # sherlock is not installed in tests

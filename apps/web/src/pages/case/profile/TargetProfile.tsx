@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Empty, ErrorBox, Loading, fmt } from "../../../components/ui";
 import { api } from "../../../lib/api";
 import type { ProfileT, SubjectT } from "../../../lib/profileApi";
+import AssociatedEmails from "./AssociatedEmails";
 import Authorization, { AuthIndicator } from "./Authorization";
 import ProfileOverview, { StateBadge } from "./ProfileOverview";
 import Darkint from "./Darkint";
@@ -17,7 +18,7 @@ import SubjectWorkflows from "./SubjectWorkflows";
 import Verification from "./Verification";
 
 // Sub-tabs are listed here only when the feature behind them exists and is tested.
-export const SUBTABS = ["Profile", "Review queue", "Research", "Images", "Exposure", "DARKINT", "Remediation", "Verification", "Reports", "Workflows", "Authorization", "Privacy & data"] as const;
+export const SUBTABS = ["Profile", "Review queue", "Associated emails", "Research", "Images", "Exposure", "DARKINT", "Remediation", "Verification", "Reports", "Workflows", "Authorization", "Privacy & data"] as const;
 
 function NewSubject({ caseId, purpose, onDone }: { caseId: string; purpose: string; onDone: () => void }) {
   const [f, setF] = useState({ display_name: "", mode: "self", purpose });
@@ -80,6 +81,7 @@ export default function TargetProfile({ caseId }: { caseId: string }) {
       </div>
       {sub === "Profile" && <ProfileOverview p={p} onGo={setSub} tabs={[...SUBTABS]} />}
       {sub === "Review queue" && <ReviewQueue p={p} />}
+      {sub === "Associated emails" && <AssociatedEmails p={p} />}
       {sub === "Research" && <Research p={p} />}
       {sub === "Images" && <Images p={p} />}
       {sub === "Exposure" && <Exposure p={p} />}

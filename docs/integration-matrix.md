@@ -89,3 +89,13 @@ Full evidence tables: `docs/aiv-darkint-status.md`. None of the rows below was e
 | Intelligence X | DARKINT | commercial licence | **Not implemented**; manual intake only |
 | MISP | DARKINT | an export file | File import **fixture-tested**; live connector **not implemented** |
 | Manual intake, CSV / JSON import | DARKINT | – | **Fixture-tested** |
+
+## Associated email discovery
+
+| Source | Kind | Needs | Evidence |
+|---|---|---|---|
+| `github_public` | HTTP (public API, anonymous) | a username input; explicit confirmation each run | **Fixture-tested**, not live-verified. Commit author fields are self-declared; 60 requests per hour anonymously |
+| `page_contacts` | HTTP (one public page) | a page URL input (confirmed profile or business contact page) | **Fixture-tested**, not live-verified |
+| Existing case evidence (findings from theHarvester and the two sources above, imported records that also name the subject) | local | nothing | **Fixture-tested** |
+| Search engines, social graphs, people-search sites | – | – | **Not implemented**: no permitted automation interface was verified |
+| Breach providers | DARKINT | confirmed address added as an input; provider enabled | exposure of confirmed inputs only (see the DARKINT rows) |

@@ -149,6 +149,19 @@ class DarkintRemediation(Strict):
     max_tasks: int = Field(default=20, ge=1, le=50)
 
 
+EmailClassLit = Literal["confirmed", "likely", "possible"]
+
+
+def _default_classes() -> list[EmailClassLit]:
+    return ["confirmed", "likely", "possible"]
+
+
+class AssociatedEmailsNode(Strict):
+    """Read-only: associated email candidates of the case's target, with the classification a person or the evidence gave them. Rejected addresses are never returned."""
+    classes: list[EmailClassLit] = Field(default_factory=_default_classes, min_length=1, max_length=3)
+    limit: int = Field(default=200, ge=1, le=1000)
+
+
 class Delay(Strict):
     seconds: int = Field(ge=1, le=300)
 
@@ -168,12 +181,12 @@ CONFIGS: dict[str, type[Strict]] = {
     "deduplicate": Deduplicate, "correlate": Correlate, "snapshot_diff": SnapshotDiff, "condition": Condition,
     "analyst_review": AnalystReview, "evidence_save": EvidenceSave, "notification": Notification, "report": Report,
     "case_findings": CaseFindings, "sensor_health": SensorHealth, "case_gaps": CaseGaps, "aiv_authorizations": AivAuthorizations, "aiv_observations": AivObservations,
-    "darkint_check": DarkintCheck, "darkint_events": DarkintEvents, "darkint_remediation": DarkintRemediation,
+    "darkint_check": DarkintCheck, "darkint_events": DarkintEvents, "darkint_remediation": DarkintRemediation, "associated_emails": AssociatedEmailsNode,
     "delay": Delay, "file_ingest": FileIngest, "error_handler": ErrorHandler,
 }
 NodeType = Literal["authorization_check", "adapter_query", "enrich", "transform", "deduplicate", "correlate", "snapshot_diff", "condition",
                    "analyst_review", "evidence_save", "notification", "report", "delay", "file_ingest", "error_handler", "case_findings", "sensor_health", "case_gaps",
-                   "aiv_authorizations", "aiv_observations", "darkint_check", "darkint_events", "darkint_remediation"]
+                   "aiv_authorizations", "aiv_observations", "darkint_check", "darkint_events", "darkint_remediation", "associated_emails"]
 
 
 # ---------------------------------------------------------------------------------------------------------------- the definition

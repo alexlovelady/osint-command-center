@@ -125,3 +125,9 @@ from . import darkint_tools as _dark
 PROFILE_INTENTS.update(_dark.INTENTS)
 PROFILE_PATTERNS[:0] = _dark.PATTERNS
 RENDERERS.update(_dark.RENDERERS)
+
+from . import email_tools as _emails
+
+PROFILE_INTENTS.update(_emails.INTENTS)
+PROFILE_PATTERNS[:0] = _emails.PATTERNS
+RENDERERS.update(_emails.RENDERERS)

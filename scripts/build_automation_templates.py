@@ -1,4 +1,4 @@
-"""Generate the 52 bundled automation templates (30 general + 12 Target-profile + 5 AIV + 5 DARKINT) into backend/osintcc/automations/templates/*.json.
+"""Generate the 53 bundled automation templates (30 general + 13 Target-profile + 5 AIV + 5 DARKINT) into backend/osintcc/automations/templates/*.json.
 
     uv run python scripts/build_automation_templates.py [--check]
 
@@ -493,9 +493,16 @@ add("DARK-05", "Exposure Remediation Tracker", "Exposure", "Manual", "Creates ta
     [], inputs={}, tags=["darkint", "remediation"], legal=DARK_LEGAL, gaps=["Nothing is sent from this application: notifications and takedown requests are tracked as tasks and carried out by a person."], fixture_extra=DARK_FIXTURE,
     example="Open tasks per reported incident with practical guidance and a follow-up re-check.")
 
+add("TP-13", "Associated Email Discovery and Review", "Target profile", "Manual", "Folds the addresses stored evidence already shows into evidence-linked candidates, lists them as confirmed, likely or possible, and routes every decision to a person.",
+    [N("emails", "associated_emails", [], classes=["confirmed", "likely", "possible"]), N("gaps", "case_gaps", ["emails"]),
+     N("review", "analyst_review", ["emails", "gaps"], prompt="Open Target profile > Associated emails. Confirm only with the owner's attestation or independent corroboration; reject matches that belong to someone else. A candidate is not an input and is never researched until you confirm it.", timeout_hours=168),
+     N("report", "report", ["review"], profile="executive", format="html")], [], inputs={}, tags=["target-profile", "email"], legal=TP_LEGAL,
+    gaps=["Discovery from GitHub and public pages needs an explicit run from the Associated emails screen (it contacts those sites); this workflow only reads what is already stored.", TP_GAPS_MANUAL],
+    fixture_extra={"associated_emails": [{"address": "j***@acme-example.com", "classification": "likely"}, {"address": "p***@jane-example.org", "classification": "possible"}], "gaps": ["Two addresses are not yet confirmed or rejected"]})
+
 
 def main(check: bool) -> int:
-    assert len(T) == 52, len(T)
+    assert len(T) == 53, len(T)
     problems = []
     for t in T:
         rep = validate(t["definition"], ADAPTERS)

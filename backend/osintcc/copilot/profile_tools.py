@@ -32,9 +32,11 @@ AIV_READ_TOOLS = ("aiv_status", "explain_aiv_plan", "explain_aiv_observation")  
 AIV_ACTION_TOOLS = ("propose_aiv_plan",)
 DARK_READ_TOOLS = ("darkint_summary", "explain_exposure_event")                     # defined in darkint_tools
 DARK_ACTION_TOOLS = ("propose_darkint_workflow",)
+EMAIL_READ_TOOLS = ("associated_emails_summary", "plan_cross_int")                  # defined in email_tools
+EMAIL_ACTION_TOOLS = ("propose_expansion_run",)
 READ_TOOLS = ("summarize_profile", "recommend_research_plan", "explain_claim", "create_verification_queue", "explain_exposure", "guide_image_search", "why_not_searched",
-              "explain_image_match", *AIV_READ_TOOLS, *DARK_READ_TOOLS)
-ACTION_TOOLS = ("propose_enrichment_workflow", "draft_subject_report", *AIV_ACTION_TOOLS, *DARK_ACTION_TOOLS)
+              "explain_image_match", *AIV_READ_TOOLS, *DARK_READ_TOOLS, *EMAIL_READ_TOOLS)
+ACTION_TOOLS = ("propose_enrichment_workflow", "draft_subject_report", *AIV_ACTION_TOOLS, *DARK_ACTION_TOOLS, *EMAIL_ACTION_TOOLS)
 ROLE_RANK = {"viewer": 1, "editor": 2, "owner": 3}
 CAT_WEIGHT = {"username_footprint": 3, "domain_infrastructure": 3, "organization_filings": 2, "public_mentions": 1, "professional_history": 2, "published_documents": 2, "images": 2, "exposure": 3}
 MATURITY_BONUS = {"live_tested": 2, "partially_verified": 1, "mocked_only": 0, "manual": 1}
@@ -88,6 +90,9 @@ def read(db: Session, st: Any, user: str, case_id: str, name: str, args: dict[st
     if name in DARK_READ_TOOLS:
         from . import darkint_tools
         return darkint_tools.read(db, st, user, case_id, name, args)
+    if name in EMAIL_READ_TOOLS:
+        from . import email_tools
+        return email_tools.read(db, st, user, case_id, name, args)
     role = _role(db, user, case_id)
     s = _subject(db, case_id, args)
     if name == "summarize_profile":
@@ -303,6 +308,9 @@ def cloud_view(name: str, r: dict[str, Any]) -> dict[str, Any]:
     if name in DARK_READ_TOOLS:
         from . import darkint_tools
         return darkint_tools.cloud_view(name, r)
+    if name in EMAIL_READ_TOOLS:
+        from . import email_tools
+        return email_tools.cloud_view(name, r)
     notice = "Profile details are withheld from cloud models; only counts and generic text are shown."
     if name == "summarize_profile":
         return {"counts": {"verified": len(r["verified"]), "confirmed_accounts": len(r["confirmed_accounts"]), "unverified_leads": len(r["unverified_leads"]), "contradictions": len(r["contradictions"])},
@@ -333,6 +341,9 @@ def propose(db: Session, st: Any, user: str, case_id: str, name: str, args: dict
     if name in DARK_ACTION_TOOLS:
         from . import darkint_tools
         return darkint_tools.propose(db, st, user, case_id, args)
+    if name in EMAIL_ACTION_TOOLS:
+        from . import email_tools
+        return email_tools.propose(db, st, user, case_id, args)
     role = _role(db, user, case_id)
     _need(role, "editor", name.replace("_", " "))
     s = _subject(db, case_id, args)

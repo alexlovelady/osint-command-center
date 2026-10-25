@@ -2,7 +2,7 @@
 
 Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mode with foreign keys on; schema changes only through Alembic migrations (`backend/osintcc/db/migrations`). FTS5 `search_index` is maintained by triggers and is not an ORM table.
 
-85 tables.
+87 tables.
 
 ## ai_calls
 
@@ -173,6 +173,37 @@ A reviewed signature template, pinned by id AND content hash. Anything else is r
 | notes | TEXT | no |  |
 | created_by | VARCHAR(80) | no |  |
 | created_at | DATETIME | no |  |
+
+## associated_emails
+
+An email address that sources associate with the subject. Evidence-linked and never a fact until a person decides.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| address | VARCHAR(254) | no |  |
+| dedupe_key | VARCHAR(254) | no |  |
+| origin | VARCHAR(16) | no |  |
+| state | VARCHAR(12) | no |  |
+| classification | VARCHAR(10) | no |  |
+| explanation | JSON | no |  |
+| confirmation_kind | VARCHAR(24) | yes |  |
+| sources | JSON | no |  |
+| associations | JSON | no |  |
+| conflicts | JSON | no |  |
+| aliases | JSON | no |  |
+| depth | INTEGER | no |  |
+| origin_path | JSON | no |  |
+| entity_id | VARCHAR(36) | yes |  |
+| identifier_id | VARCHAR(36) | yes |  |
+| note | TEXT | no |  |
+| discovered_at | DATETIME | no |  |
+| last_verified_at | DATETIME | yes |  |
+| reviewed_by | VARCHAR(80) | yes |  |
+| reviewed_at | DATETIME | yes |  |
+| review_basis | TEXT | no |  |
 
 ## audit_events
 
@@ -598,6 +629,24 @@ Reversible analyst merge decision: `entity_id` is treated as `canonical_entity_i
 | sensitivity | VARCHAR(20) | no |  |
 | redacted | BOOLEAN | no |  |
 | chain_of_custody_json | JSON | no |  |
+| created_at | DATETIME | no |  |
+
+## expansion_runs
+
+One pass of the shared cross-INT expansion: which identifiers were considered, what was planned, what ran, and why it stopped.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| depth | INTEGER | no |  |
+| policy_json | JSON | no |  |
+| plan_json | JSON | no |  |
+| status | VARCHAR(12) | no |  |
+| stop_reason | VARCHAR(40) | no |  |
+| started | INTEGER | no |  |
+| created_by | VARCHAR(80) | no |  |
 | created_at | DATETIME | no |  |
 
 ## exposure_checks

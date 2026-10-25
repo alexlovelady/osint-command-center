@@ -286,3 +286,56 @@ class RetentionAction(Base):
     performed_by: Mapped[str] = mapped_column(String(80), default="local")
     event_time: Mapped[datetime] = ts()
     audit_seq: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class AssociatedEmail(Base):
+    """An email address that sources associate with the subject. Evidence-linked and never a fact until a person decides.
+
+    `classification` is derived (confirmed / likely / possible / rejected) from the stored sources by `profile.emails.classify`; `state` is the analyst's decision.
+    No column holds a password, hash or token: the address itself is the only sensitive value, and breach exposure lives in DARKINT events.
+    """
+    __tablename__ = "associated_emails"
+    id: Mapped[str] = pk()
+    subject_id: Mapped[str] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    case_id: Mapped[str] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    address: Mapped[str] = mapped_column(String(254))
+    dedupe_key: Mapped[str] = mapped_column(String(254))
+    origin: Mapped[str] = mapped_column(String(16), default="observed")                  # observed | analyst_entered | speculative
+    state: Mapped[str] = mapped_column(String(12), default="candidate")                 # candidate | confirmed | rejected
+    classification: Mapped[str] = mapped_column(String(10), default="possible")         # confirmed | likely | possible | rejected
+    explanation: Mapped[list[str]] = mapped_column(JSON, default=list)
+    confirmation_kind: Mapped[str | None] = mapped_column(String(24), nullable=True)    # analyst_attested | independently_corroborated
+    sources: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    associations: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)            # usernames, domains, documents, accounts
+    conflicts: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    aliases: Mapped[list[str]] = mapped_column(JSON, default=list)
+    depth: Mapped[int] = mapped_column(Integer, default=0)
+    origin_path: Mapped[list[str]] = mapped_column(JSON, default=list)
+    entity_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    identifier_id: Mapped[str | None] = mapped_column(String(36), nullable=True)        # set when a confirmed address was added as an input
+    note: Mapped[str] = mapped_column(Text, default="")
+    discovered_at: Mapped[datetime] = ts()
+    last_verified_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    reviewed_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    reviewed_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    review_basis: Mapped[str] = mapped_column(Text, default="")
+    __table_args__ = (
+        UniqueConstraint("subject_id", "dedupe_key", name="uq_associated_email"),
+        CheckConstraint("state IN ('candidate','confirmed','rejected')", name="ck_associated_email_state"),
+    )
+
+
+class ExpansionRun(Base):
+    """One pass of the shared cross-INT expansion: which identifiers were considered, what was planned, what ran, and why it stopped."""
+    __tablename__ = "expansion_runs"
+    id: Mapped[str] = pk()
+    subject_id: Mapped[str] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    case_id: Mapped[str] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    depth: Mapped[int] = mapped_column(Integer, default=0)
+    policy_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    plan_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String(12), default="planned")                  # planned | executed | stopped
+    stop_reason: Mapped[str] = mapped_column(String(40), default="")
+    started: Mapped[int] = mapped_column(Integer, default=0)
+    created_by: Mapped[str] = mapped_column(String(80), default="local")
+    created_at: Mapped[datetime] = ts()

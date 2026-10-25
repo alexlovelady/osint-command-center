@@ -61,6 +61,8 @@ SPECS: dict[str, NodeSpec] = {s.type: s for s in [
              fields=({"name": "exclude_dismissed", "kind": "bool"}, {"name": "event_types", "kind": "list"}, {"name": "limit", "kind": "int", "min": 1, "max": 1000})),
     NodeSpec("darkint_remediation", "Create remediation tasks", "Creates remediation tasks (MFA, password reset, domain hygiene, takedown, notification, follow-up check) for reported events that have none. Sends nothing and submits nothing.", FINDINGS,
              "write_local", "low", {}, replay_safe=False, fields=({"name": "actions", "kind": "list"}, {"name": "max_tasks", "kind": "int", "min": 1, "max": 50})),
+    NodeSpec("associated_emails", "Read associated emails", "Reads the email addresses sources associate with this case's target (confirmed, likely, possible; never rejected) as masked items with evidence ids. Read only: it cannot confirm anything or start research.",
+             FINDINGS, "none", "low", {}, fields=({"name": "classes", "kind": "list"}, {"name": "limit", "kind": "int", "min": 1, "max": 1000})),
     NodeSpec("deduplicate", "Deduplicate", "Removes repeated findings by a stable key. Pure and local.", FINDINGS, "none", "low", {"ref": (FINDINGS,)},
              fields=({"name": "ref", "kind": "ref"}, {"name": "key", "kind": "enum", "options": ["entity_predicate_value", "entity_predicate"]})),
     NodeSpec("correlate", "Correlate", "Suggests links between datasets that share a value. Suggestions only: nothing is merged.", LINKS, "none", "low", {"refs": (FINDINGS,)},

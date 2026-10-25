@@ -815,7 +815,7 @@
   "where": {
    "route": "automations"
   },
-  "summary": "Reusable workflows for repeated OSINT work. Five tabs: Library (52 bundled templates), My automations, Runs (execution console), Inbox (notifications, suggestions, approvals waiting) and Settings. Everything starts disabled; nothing collects data on a schedule until you approve and activate it.",
+  "summary": "Reusable workflows for repeated OSINT work. Five tabs: Library (53 bundled templates), My automations, Runs (execution console), Inbox (notifications, suggestions, approvals waiting) and Settings. Everything starts disabled; nothing collects data on a schedule until you approve and activate it.",
   "how_to": [
    "Left menu: Automations.",
    "Library: search or filter templates, press Details, read availability and what is missing, then 'Create from template' (this makes a disabled draft).",
@@ -839,7 +839,7 @@
    "route": "automations",
    "tab": "Library"
   },
-  "summary": "52 bundled templates in nine groups: Cyber (CY-01..07), Identity (ID-01..06), Corporate (CO-01..05), GEOINT and Sensors (GEO-01..06), Case and Evidence (CASE-01..06), Target profile (TP-01..12), Verification (AIV-01..05) and Exposure (DARK-01..05). Each shows its purpose, sources, availability (ready, partial, or setup required with exact instructions), quota estimate, legal notes, example output and any capability gaps. Templates are installed disabled. Maturity is stated: fixture-tested means its dry run passes on synthetic data; runtime-tested means it was run end to end through the engine (CY-01, ID-05, CASE-01).",
+  "summary": "53 bundled templates in nine groups: Cyber (CY-01..07), Identity (ID-01..06), Corporate (CO-01..05), GEOINT and Sensors (GEO-01..06), Case and Evidence (CASE-01..06), Target profile (TP-01..13), Verification (AIV-01..05) and Exposure (DARK-01..05). Each shows its purpose, sources, availability (ready, partial, or setup required with exact instructions), quota estimate, legal notes, example output and any capability gaps. Templates are installed disabled. Maturity is stated: fixture-tested means its dry run passes on synthetic data; runtime-tested means it was run end to end through the engine (CY-01, ID-05, CASE-01).",
   "notes": [
    "A template marked 'partial' has a documented gap, for example CVE Intelligence has no advisory feed connector.",
    "Setup required means a tool or key is missing; nothing pretends it worked."
@@ -1094,6 +1094,37 @@
    "fusion",
    "name",
    "branding"
+  ]
+ },
+ {
+  "id": "tab-associated-emails",
+  "title": "Associated emails (target profile)",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Profile"
+  },
+  "summary": "Email addresses that sources associate with the target: evidence-linked candidates with an explainable classification (Confirmed, Likely, Possible, Rejected), the sources and passages that show them, conflicts, associated accounts and exposure state, and controls to confirm, reject, annotate, merge and add an address. Below it, the cross-discipline research plan: prioritized steps from your inputs and confirmed addresses, within depth and budget limits, with exposure checks and active verification marked as needing their own approval.",
+  "how_to": [
+   "Press 'Find in stored evidence' to fold in addresses that evidence in this case already shows (nothing is sent).",
+   "Open 'Why' on a row to read the reasons, conflicts, sources and the chain that led to it.",
+   "Select rows, give a reason, then Confirm (owner attestation or independent corroboration) or Reject. A rejected address is never researched.",
+   "A confirmed address can be added as an input; research then runs only if the authorization covers it.",
+   "In the plan, tick ready steps and run them. Likely and possible addresses are listed but never researched."
+  ],
+  "keywords": [
+   "associated email",
+   "email",
+   "candidate",
+   "likely",
+   "possible",
+   "confirmed",
+   "rejected",
+   "expansion",
+   "cross-int",
+   "github",
+   "contact address",
+   "correlation"
   ]
  }
 ]
