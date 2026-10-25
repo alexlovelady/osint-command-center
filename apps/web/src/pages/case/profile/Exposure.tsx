@@ -4,7 +4,6 @@ import { Empty, ErrorBox, fmt } from "../../../components/ui";
 import { api } from "../../../lib/api";
 import type { ProfileT } from "../../../lib/profileApi";
 import { kAnonymitySplit, sha1Hex } from "../../../lib/sha1";
-import { AuthIndicator } from "./Authorization";
 import { StateBadge } from "./ProfileOverview";
 
 interface Indicator { id: string; class: string; class_label: string; redacted?: boolean; status?: string; status_label?: string; risk?: string; descriptor?: string; provider?: string;
@@ -63,7 +62,6 @@ export default function Exposure({ p }: { p: ProfileT }) {
   const run = useMutation({ mutationFn: () => api<{ status: string; message: string }>(`/subjects/${sid}/exposure/approve`, { method: "POST", json: { identifier_id: ident || emails[0]?.id, confirm: true } }), onSuccess: () => { setOk(false); inv(); } });
   return (
     <>
-      <AuthIndicator a={p.authorization} />
       <div className="banner warn">This screen records <b>status, category, date and remediation</b> only. Passwords, password hashes, tokens, recovery secrets, full government identifiers and breach dumps are never requested or stored.
         <b> Not assessed</b>, <b>not found in checked sources</b> and <b>confirmed exposure</b> are different results; the middle one never proves safety.</div>
       {list.data?.redacted && <div className="banner">Your role shows that exposure records exist, not their contents.</div>}

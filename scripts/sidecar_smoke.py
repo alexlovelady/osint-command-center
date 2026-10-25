@@ -114,7 +114,7 @@ def run_checks(encrypted: bool) -> None:
         cfin = next((e for e in cev if e["type"] == "final"), None)
         check("Copilot answers from the bundled knowledge base", cop.status_code == 200 and bool(cfin) and "Create case" in cfin["text"] and any(x["source"] == "tutorial:create-case" for x in cfin["sources"]), (cfin["text"][:50] if cfin else cop.text[:80]))
         tpl = c.get("/automations/templates")
-        check("30 automation templates ship in the bundle", tpl.status_code == 200 and tpl.json()["total"] == 30, str(tpl.status_code))
+        check("42 automation templates ship in the bundle (30 general + 12 Target-profile)", tpl.status_code == 200 and tpl.json()["total"] == 42, str(tpl.status_code))
         wfr = c.post("/automations/from-template", json={"slug": "cy-02-domain-change-watch", "inputs": {"domain": "example.org"}})
         val = c.post(f"/automations/workflows/{wfr.json()['id']}/validate") if wfr.status_code == 201 else None
         check("cron + IANA time zone validation works in the bundle (tzdata)", val is not None and val.status_code == 200 and val.json()["valid"], (val.text[:80] if val is not None else wfr.text[:80]))
@@ -122,6 +122,17 @@ def run_checks(encrypted: bool) -> None:
         check("automation dry run (simulated) in the bundle", dry is not None and dry.status_code == 201 and dry.json()["run"]["state"] in ("completed", "completed_with_warnings"), (dry.text[:80] if dry is not None else ""))
         tut = c.get("/copilot/tutorials/first-search")
         check("Copilot tutorials ship in the bundle", tut.status_code == 200 and len(tut.json()["steps"]) >= 4, str(tut.status_code))
+        import datetime as _dt
+        pc = c.post("/cases", json={"title": "Smoke person", "category": "people", "purpose": "frozen build smoke test"}).json()["id"]
+        ps = c.post(f"/cases/{pc}/subjects", json={"display_name": "Smoke Subject"}).json()["id"]
+        gr = c.post(f"/subjects/{ps}/consent", json={"verification_method": "email_confirmation", "verifier": "smoke", "source_classes": ["image_analysis", "exposure_check", "public_passive"],
+                                                      "permitted_purposes": ["smoke"], "expires_at": (_dt.datetime.now(_dt.UTC) + _dt.timedelta(days=2)).isoformat()})
+        png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
+        im = c.post(f"/subjects/{ps}/images", params={"filename": "p.png", "confirm_rights": "true"}, content=png)
+        check("Target profile: consent, image import (Pillow) and perceptual hashes work in the bundle", gr.status_code == 201 and im.status_code == 201 and len(im.json()["hashes"]["phash"]) == 16, f"{gr.status_code} {im.status_code} {im.text[:80]}")
+        check("Target profile: password check rejects anything but a five-character prefix", c.post(f"/subjects/{ps}/exposure/password-range", json={"prefix": "5BAA61E4C9B93F3F"}).status_code == 422)
+        rp = c.post(f"/subjects/{ps}/report/preview", json={"audience": "subject"})
+        check("Target profile: report preview with citation check", rp.status_code == 200 and rp.json()["citation_check"]["ok"] is True, rp.text[:80])
         check("keyring backend importable in the bundle", k.returncode == 0 and k.stdout.strip() != "", k.stdout.strip() or k.stderr[-200:])
 
         r = c.post("/system/shutdown")

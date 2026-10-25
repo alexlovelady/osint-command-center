@@ -9,6 +9,8 @@ all exist and have passing automated tests. Some things are **unverified or not 
 and a clean-machine install — and are listed in [`docs/progress.md`](docs/progress.md), [`docs/integration-matrix.md`](docs/integration-matrix.md)
 and [`docs/packaging.md`](docs/packaging.md). Read those before trusting a feature.
 
+**Target Profile (addendum TP-1.0):** a people case opens on a consent-gated, evidence-grounded profile with a review queue, bounded research plans, an image workbench, exposure and remediation tracking and citation-checked reports. Guide and honest limits: [`docs/profile-guide.md`](docs/profile-guide.md); acceptance evidence: [`docs/profile-test-results.md`](docs/profile-test-results.md).
+
 ## Run (Windows or Linux; no WSL, Docker, hardware or cloud needed)
 
 ```bash

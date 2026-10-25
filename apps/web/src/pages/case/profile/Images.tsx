@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { ErrorBox, Empty, fmt } from "../../../components/ui";
 import { api, apiUrl, authHeader } from "../../../lib/api";
 import type { ProfileT } from "../../../lib/profileApi";
-import { AuthIndicator } from "./Authorization";
 import { StateBadge } from "./ProfileOverview";
 
 interface Asset { id: string; created_at: string; evidence_id: string; sha256: string; format: string; width: number; height: number; ownership: string; source_url: string | null; has_gps: boolean;
@@ -113,7 +112,6 @@ export default function Images({ p }: { p: ProfileT }) {
   });
   return (
     <>
-      <AuthIndicator a={p.authorization} />
       <div className="banner">Images are decoded locally and stored unchanged as evidence; previews are re-encoded pixel-only copies. Matching runs only against images already in this case.
         This workbench does not recognise or identify people, and reverse-image providers are used by hand, never automatically.</div>
       {canEdit && (

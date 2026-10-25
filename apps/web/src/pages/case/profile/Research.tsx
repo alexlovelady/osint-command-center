@@ -3,7 +3,6 @@ import { useState } from "react";
 import { ErrorBox, fmt } from "../../../components/ui";
 import { api } from "../../../lib/api";
 import type { CoverageT, ProfileT, ResearchPlanT, TaskT } from "../../../lib/profileApi";
-import { AuthIndicator } from "./Authorization";
 import { StateBadge } from "./ProfileOverview";
 
 /** Research coverage grid: completed methods against the approved plan. It is deliberately not a percentage of what exists. */
@@ -45,7 +44,6 @@ export default function Research({ p }: { p: ProfileT }) {
   const unconfirmed = needConfirm.filter((s) => !conf.includes(s));
   return (
     <>
-      <AuthIndicator a={p.authorization} />
       {cov.data && <CoverageGrid cov={cov.data} />}
       {cov.data && <p className="muted"><b>Next:</b> {cov.data.next_action}</p>}
       {canEdit && (
@@ -67,7 +65,7 @@ export default function Research({ p }: { p: ProfileT }) {
                       <td><input type="checkbox" style={{ width: "auto" }} aria-label={`Run ${e.name} on ${e.identifier}`} disabled={!e.runnable} checked={sel.includes(e.key)}
                         onChange={(ev) => setSel(ev.target.checked ? [...sel, e.key] : sel.filter((x) => x !== e.key))} /></td>
                       <td>{e.name}<div className="muted">{e.maturity.replace(/_/g, " ")}{e.health ? ` · ${e.health === "healthy" ? "installed · healthy" : e.health.replace(/_/g, " ")}` : ""}</div></td>
-                      <td><code>{e.identifier}</code><div className="muted">{e.identifier_kind}</div></td>
+                      <td style={{ minWidth: 150, wordBreak: "normal", overflowWrap: "anywhere" }}><code>{e.identifier}</code><div className="muted">{e.identifier_kind}</div></td>
                       <td>{e.endpoints.map((x) => <div key={x}><code>{x}</code></div>)}</td>
                       <td>{e.consent_class.replace(/_/g, " ")} · {e.privacy.replace(/_/g, " ")}<div className="muted">cost {e.cost}{e.needs_key ? ` (${e.needs_key})` : ""} · {e.rate_limit_per_minute ? `${e.rate_limit_per_minute}/min` : "no declared limit"}</div></td>
                       <td>{!e.runnable && <div className="muted">Blocked: {e.reason}</div>}

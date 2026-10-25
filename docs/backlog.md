@@ -17,3 +17,10 @@ Items agreed to do later. Each says why it is waiting and what finishing it invo
 | B-011 | Real physical-device test for Sensor Health Monitor and RF Spectrum Baseline | No hardware attached | Run against an owned receiver |
 | B-012 | Advisory/CVE feed connector, imagery change detection, fuzzy duplicate matching | Not implemented; the templates say so | Connector + handler + tests |
 | B-013 | Retire the older `workflows` module once the new engine covers its cases | Existing cases may use it | Migration + removal |
+| B-014 | Live check of Have I Been Pwned (account) and Pwned Passwords (range) | Needs the owner's paid HIBP key; both were mock-tested only | One real call each, recorded in `docs/integration-matrix.md`; label changed from mocked to live |
+| B-015 | Physical Kali desktop smoke check of the Target Profile screens | Needs the owner's external SSD | Open a person case, run one approved passive plan, import an image, export a subject report, revoke authorization |
+| B-016 | OCR and local image description (optional) | Not implemented; no OCR engine is bundled | Optional local engine behind a switch; output labelled a lead; same review rules |
+| B-017 | Public-document URL import and published-document disclosure scoring | Not implemented; files are imported by hand | Fetch through the SSRF guard, static inspection only, consent class `documents` |
+| B-018 | Link organisation locations (Overpass) to subjects with owner-approved precision | Not implemented | Coarse by default; exact only with an explicit approval |
+| B-019 | Subject-facing correction request portal | Needs a design decision: the app runs no inbound listener | A signed, expiring link or exported form; requests land in the same table |
+| B-020 | Image matching beyond perceptual hashes (rotation, mirror, composites) | Deliberately omitted: no OpenCV (D-069) | Optional feature matching with documented false-positive rates; still no face features |
