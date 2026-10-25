@@ -75,8 +75,12 @@ def test_public_site_query_needs_confirmation_and_is_not_default(sm, settings):
             service.create_run(db, c, parsed, plan, confirmed=[])  # unconfirmed => refused
         run = service.create_run(db, c, parsed, plan, confirmed=["sherlock"])
         assert run.selected_adapters_json == ["sherlock"]
-        # default plan for a username must not silently include public-site queries
-        assert service.build_plan(db, c, parsed, default_adapters(), settings)["steps"] == []
+        # the default plan only OFFERS public-site tools: never default-selected, and it cannot be launched as-is
+        default = service.build_plan(db, c, parsed, default_adapters(), settings)
+        assert {s["adapter_id"] for s in default["steps"]} == {"sherlock", "maigret"}
+        assert all(s["offered"] and not s["default_selected"] for s in default["steps"])
+        with pytest.raises(service.PlanError):
+            service.create_run(db, c, parsed, default, confirmed=["sherlock", "maigret"])
 
 
 def test_people_case_requires_purpose(sm, settings):

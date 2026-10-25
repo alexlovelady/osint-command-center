@@ -81,14 +81,22 @@ def build_plan(db: Session, case: Case, parsed: ParsedTarget, adapters: dict[str
             continue
         d = policy.evaluate(db, case_id=case.id, manifest=m, target_canonical=parsed.canonical, target_domain=dom,
                             mode=mode, offline=settings.offline)
-        if selected is None and (m.operation_class in ("public_site_query", "active") or not d.allowed):
+        # Public-site tools (Sherlock, Maigret...) are OFFERED in an automatic preview so the analyst can pick them,
+        # but never preselected and never run without being named and confirmed. Active tools still need an explicit request.
+        offered = selected is None and m.operation_class == "public_site_query" and parsed.type == "username"
+        if selected is None and not offered and (m.operation_class in ("public_site_query", "active") or not d.allowed):
             continue  # shown only when asked for explicitly (they need confirmation / authorization)
         steps.append({"adapter_id": aid, "name": m.name, "operation_class": m.operation_class,
                       "runnable": d.allowed, "reason": d.reason, "requires_confirmation": d.requires_confirmation,
                       "endpoints": m.endpoints, "needs_network": m.needs_network, "license": m.license,
-                      "rate_limit_per_minute": m.rate_limit_per_minute, "warnings": d.warnings, "cost": "free", "default_selected": m.default_selected})
+                      "rate_limit_per_minute": m.rate_limit_per_minute, "warnings": d.warnings, "cost": "free",
+                      "default_selected": False if offered else m.default_selected, "offered": offered})
         warnings.extend(d.warnings)
-    return {"target": parsed.as_dict(), "mode": mode, "steps": steps, "warnings": sorted(set(warnings)),
+    notices = []
+    if parsed.type == "username" and selected is None and not any(s.get("offered") for s in steps):
+        notices.append("No username tools (Sherlock, Maigret) are installed and enabled. Install or enable one under "
+                       "Tools, then preview again. Username lookups only run through those tools.")
+    return {"target": parsed.as_dict(), "mode": mode, "steps": steps, "warnings": sorted(set(warnings)), "notices": notices,
             "explicit": selected is not None,
             "offline": settings.offline,
             "note": "Nothing has been sent. Confirm to launch; each request is recorded with provenance."}

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { api, type Plan, type RunT } from "../lib/api";
+import { api, type Plan, type PlanStep, type RunT } from "../lib/api";
 import { Badge, ErrorBox } from "./ui";
 
 const TYPES = ["auto-detect", "domain", "ip", "url", "email", "username"] as const;
@@ -14,10 +14,14 @@ export default function SearchComposer({ caseId }: { caseId: string }) {
   const [confirmed, setConfirmed] = useState<string[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
 
+  // Only sources that are both selected and confirmed count as confirmed.
+  const confirmedSel = confirmed.filter((a) => selected?.includes(a));
   const body = () => ({
     target, target_type: type === "auto-detect" ? null : type,
-    adapters: selected, mode: confirmed.length ? "public_site_query" : "passive", confirmed_adapters: confirmed,
+    adapters: selected, mode: confirmedSel.length ? "public_site_query" : "passive", confirmed_adapters: confirmedSel,
   });
+  /** A different target or type is a different plan: drop the preview, selections and confirmations. */
+  const resetPlan = () => { preview.reset(); launch.reset(); setSelected(null); setConfirmed([]); setRunId(null); };
   const preview = useMutation({
     mutationFn: () => api<Plan>(`/cases/${caseId}/searches/preview`, { method: "POST", json: body() }),
     onSuccess: (p) => setSelected(selected ?? p.steps.filter((s) => s.runnable && !s.requires_confirmation && (s.health ?? "healthy") === "healthy").map((s) => s.adapter_id)),
@@ -37,12 +41,14 @@ export default function SearchComposer({ caseId }: { caseId: string }) {
     qc.invalidateQueries({ queryKey: ["graph", caseId] });
   }
   const plan = preview.data;
+  const usable = (s: PlanStep) => s.runnable && (s.health ?? "healthy") === "healthy";
+  const unconfirmed = (plan?.steps ?? []).filter((s) => s.requires_confirmation && selected?.includes(s.adapter_id) && !confirmed.includes(s.adapter_id));
   return (
     <section aria-label="Search composer">
       <form className="row" onSubmit={(e) => { e.preventDefault(); setSelected(null); setConfirmed([]); setRunId(null); preview.mutate(); }}>
         <input data-tour="search-target" aria-label="Target" placeholder="domain, IP, URL, email — or pick 'username' explicitly" value={target}
-          onChange={(e) => setTarget(e.target.value)} style={{ flex: 1, minWidth: 260 }} maxLength={2048} />
-        <select aria-label="Target type" value={type} onChange={(e) => setType(e.target.value as typeof type)} style={{ width: 150 }}>
+          onChange={(e) => { setTarget(e.target.value); resetPlan(); }} style={{ flex: 1, minWidth: 260 }} maxLength={2048} />
+        <select aria-label="Target type" value={type} onChange={(e) => { setType(e.target.value as typeof type); resetPlan(); }} style={{ width: 150 }}>
           {TYPES.map((t) => <option key={t}>{t}</option>)}
         </select>
         <button data-tour="search-preview" className="primary" disabled={!target.trim() || preview.isPending}>Preview</button>
@@ -62,17 +68,21 @@ export default function SearchComposer({ caseId }: { caseId: string }) {
               {plan.steps.map((s) => (
                 <tr key={s.adapter_id}>
                   <td>
-                    <input type="checkbox" aria-label={`Run ${s.name}`} style={{ width: "auto" }} disabled={!s.runnable}
+                    <input type="checkbox" aria-label={`Run ${s.name}`} style={{ width: "auto" }} disabled={!usable(s)}
                       checked={!!selected?.includes(s.adapter_id)}
-                      onChange={(e) => setSelected((cur) => (e.target.checked ? [...(cur ?? []), s.adapter_id] : (cur ?? []).filter((x) => x !== s.adapter_id)))} />
+                      onChange={(e) => {
+                        setSelected((cur) => (e.target.checked ? [...(cur ?? []), s.adapter_id] : (cur ?? []).filter((x) => x !== s.adapter_id)));
+                        if (!e.target.checked) setConfirmed((c) => c.filter((x) => x !== s.adapter_id));
+                      }} />
                   </td>
-                  <td>{s.name} {s.health && s.health !== "healthy" && <Badge v={s.health} />}</td>
+                  <td>{s.name} {s.health && <Badge v={s.health === "healthy" ? "installed · healthy" : s.health} />}</td>
                   <td><Badge v={s.operation_class ?? "n/a"} /></td>
                   <td>{(s.endpoints ?? []).map((e) => <div key={e}><code>{e}</code></div>)}</td>
                   <td>
                     {!s.runnable && <span className="muted">{s.reason}</span>}
                     {s.requires_confirmation && (
-                      <label><input type="checkbox" style={{ width: "auto" }} checked={confirmed.includes(s.adapter_id)}
+                      <label><input type="checkbox" style={{ width: "auto" }} aria-label={`Confirm ${s.name} contacts third-party sites`}
+                        disabled={!usable(s) || !selected?.includes(s.adapter_id)} checked={confirmed.includes(s.adapter_id)}
                         onChange={(e) => setConfirmed((c) => (e.target.checked ? [...c, s.adapter_id] : c.filter((x) => x !== s.adapter_id)))} /> I confirm this contacts third-party public sites</label>
                     )}
                     {(s.warnings ?? []).map((w) => <div key={w} className="muted">{w}</div>)}
@@ -83,8 +93,10 @@ export default function SearchComposer({ caseId }: { caseId: string }) {
             </tbody>
           </table>
           {plan.steps.length === 0 && <div className="banner warn">No sources can run for this target right now.</div>}
+          {(plan.notices ?? []).map((n) => <div key={n} className="banner warn">{n}</div>)}
+          {unconfirmed.length > 0 && <div className="muted">Tick the confirmation for {unconfirmed.map((s) => s.name).join(", ")} before running: it contacts third-party websites with this handle.</div>}
           <div className="row" style={{ marginTop: 8 }}>
-            <button data-tour="search-confirm" className="primary" disabled={launch.isPending || !selected?.length || !!runId} onClick={() => launch.mutate()}>
+            <button data-tour="search-confirm" className="primary" disabled={launch.isPending || !selected?.length || !!runId || unconfirmed.length > 0} onClick={() => launch.mutate()}>
               Confirm and run {selected?.length ?? 0} source(s)
             </button>
             <span className="muted">{plan.note}</span>

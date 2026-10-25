@@ -452,7 +452,7 @@ def _plan_json(db, st, case, body: PlanIn):
         raise ApiError(422, "invalid_target", str(exc)) from exc
     except service.PlanError as exc:
         raise ApiError(422, "plan_rejected", str(exc)) from exc
-    steps = plan["steps"]
+    steps = [s for s in plan["steps"] if not s.get("offered")]  # offered tools are only candidates until named explicitly
     status = ("denied" if not any(s["runnable"] for s in steps) else
               "needs_confirmation" if any(s.get("requires_confirmation") and s["runnable"] for s in steps) else "allowed")
     plan.update({"reason": body.reason, "data_sensitivity": body.data_sensitivity,
@@ -469,6 +469,11 @@ async def plan_preview(request: Request, body: PlanIn):
     with st.sm() as db:
         case = case_for(db, request, body.case_id, "viewer")
         _, plan, status = _plan_json(db, st, case, body)
+    for step in plan["steps"]:  # local smoke test only (--version); never contacts targets
+        h = await st.adapters[step["adapter_id"]].health()
+        step["health"] = h["status"]
+        if h["status"] != "healthy":
+            step["warnings"] = [*step.get("warnings", []), f"Tool state: {h['status'].replace('_', ' ')}; it will be skipped."]
     return {**plan, "policy_status": status}
 
 
@@ -483,6 +488,8 @@ async def plan_create(request: Request, body: PlanIn):
         db.add(p)
         db.flush()
         for s in plan["steps"]:
+            if s.get("offered"):
+                continue
             db.add(CollectionStep(plan_id=p.id, adapter_id=s["adapter_id"],
                                   scope_json={"target": parsed.canonical, "runnable": s["runnable"]},
                                   status="planned" if s["runnable"] else "blocked"))

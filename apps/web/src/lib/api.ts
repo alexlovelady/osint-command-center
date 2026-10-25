@@ -89,9 +89,9 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
 export interface CaseT { id: string; title: string; category: string; status: string; purpose: string; description: string;
   updated_at: string; finding_count?: number; }
 export interface PlanStep { adapter_id: string; name: string; runnable: boolean; reason: string; requires_confirmation?: boolean;
-  endpoints?: string[]; operation_class?: string; warnings?: string[]; rate_limit_per_minute?: number | null; cost?: string; health?: string; }
+  endpoints?: string[]; operation_class?: string; warnings?: string[]; rate_limit_per_minute?: number | null; cost?: string; health?: string; offered?: boolean; }
 export interface Plan { target: { type: string; canonical: string; ambiguous_with: string[] }; steps: PlanStep[];
-  warnings: string[]; offline: boolean; note: string; }
+  warnings: string[]; notices?: string[]; offline: boolean; note: string; }
 export interface FindingT { id: string; subject: string; subject_type: string; predicate: string; value: unknown; confidence: string;
   confidence_reason: string; adapter: string; adapter_version: string; evidence_id: string; source_url: string | null;
   observed_at: string; source_published_at: string | null; }
