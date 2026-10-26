@@ -45,7 +45,10 @@ Error codes: `UNSUPPORTED_ADAPTER`, `INVALID_GRAPH`, `SCOPE_EXPIRED`, `APPROVAL_
 | `dns` | passive | domain, email | — | on |
 | `dnstwist` | local_only | domain | — | explicit only |
 | `gdelt` | passive | domain | — | explicit only |
+| `github_email_search` | public_site_query | email | — | explicit only |
 | `github_public` | public_site_query | username | — | explicit only |
+| `gravatar_email` | public_site_query | email | — | explicit only |
+| `keyserver_email` | public_site_query | email | — | explicit only |
 | `lookalike` | local_only | domain | — | explicit only |
 | `maigret` | public_site_query | username | — | on |
 | `opencorporates` | passive | company | opencorporates | explicit only |
@@ -60,6 +63,7 @@ Error codes: `UNSUPPORTED_ADAPTER`, `INVALID_GRAPH`, `SCOPE_EXPIRED`, `APPROVAL_
 | `urlscan` | passive | domain | urlscan | explicit only |
 | `virustotal` | passive | domain, ip | virustotal | explicit only |
 | `wayback` | passive | domain, url | — | on |
+| `web_search_email` | public_site_query | email | brave_search | explicit only |
 
 ## Template catalog (42: 30 general + 12 Target-profile)
 

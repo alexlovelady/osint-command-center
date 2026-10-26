@@ -224,6 +224,56 @@
     "title": "BackupPathIn",
     "type": "object"
    },
+   "BatchIn": {
+    "additionalProperties": false,
+    "properties": {
+     "content": {
+      "anyOf": [
+       {
+        "maxLength": 1000000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Content"
+     },
+     "kind": {
+      "anyOf": [
+       {
+        "enum": [
+         "csv",
+         "json"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind"
+     },
+     "rows": {
+      "anyOf": [
+       {
+        "items": {
+         "additionalProperties": true,
+         "type": "object"
+        },
+        "maxItems": 500,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rows"
+     }
+    },
+    "title": "BatchIn",
+    "type": "object"
+   },
    "BrandingIn": {
     "additionalProperties": false,
     "properties": {
@@ -632,6 +682,22 @@
     "title": "CheckIn",
     "type": "object"
    },
+   "CompareIn": {
+    "additionalProperties": false,
+    "properties": {
+     "candidate": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Candidate",
+      "type": "string"
+     }
+    },
+    "required": [
+     "candidate"
+    ],
+    "title": "CompareIn",
+    "type": "object"
+   },
    "Confirm": {
     "properties": {
      "confirm": {
@@ -744,6 +810,22 @@
     "title": "DiagIn",
     "type": "object"
    },
+   "DomainIn": {
+    "additionalProperties": false,
+    "properties": {
+     "domain": {
+      "maxLength": 253,
+      "minLength": 3,
+      "title": "Domain",
+      "type": "string"
+     }
+    },
+    "required": [
+     "domain"
+    ],
+    "title": "DomainIn",
+    "type": "object"
+   },
    "DownloadIn": {
     "properties": {
      "confirm": {
@@ -775,6 +857,93 @@
      }
     },
     "title": "DryRunIn",
+    "type": "object"
+   },
+   "EditIn": {
+    "additionalProperties": false,
+    "properties": {
+     "attributes": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Attributes"
+     },
+     "confidence": {
+      "anyOf": [
+       {
+        "enum": [
+         "unknown",
+         "low",
+         "medium",
+         "high"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Confidence"
+     },
+     "evidence_ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 20,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Evidence Ids"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 1000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "observed_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Observed At"
+     },
+     "value": {
+      "anyOf": [
+       {
+        "maxLength": 600,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Value"
+     }
+    },
+    "title": "EditIn",
     "type": "object"
    },
    "ExplainIn": {
@@ -1138,6 +1307,98 @@
     "title": "IdentifierIn",
     "type": "object"
    },
+   "ItemIn": {
+    "additionalProperties": false,
+    "properties": {
+     "attributes": {
+      "additionalProperties": true,
+      "title": "Attributes",
+      "type": "object"
+     },
+     "confidence": {
+      "default": "unknown",
+      "enum": [
+       "unknown",
+       "low",
+       "medium",
+       "high"
+      ],
+      "title": "Confidence",
+      "type": "string"
+     },
+     "custom_type": {
+      "default": "",
+      "maxLength": 60,
+      "title": "Custom Type",
+      "type": "string"
+     },
+     "evidence_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Evidence Ids",
+      "type": "array"
+     },
+     "need_to_know": {
+      "default": "",
+      "maxLength": 500,
+      "title": "Need To Know",
+      "type": "string"
+     },
+     "note": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Note",
+      "type": "string"
+     },
+     "observed_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Observed At"
+     },
+     "origin": {
+      "default": "analyst_supplied",
+      "enum": [
+       "subject_provided",
+       "analyst_supplied",
+       "published_source",
+       "verified_provider"
+      ],
+      "title": "Origin",
+      "type": "string"
+     },
+     "source": {
+      "default": "",
+      "maxLength": 80,
+      "title": "Source",
+      "type": "string"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     },
+     "value": {
+      "maxLength": 600,
+      "minLength": 1,
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "type",
+     "value"
+    ],
+    "title": "ItemIn",
+    "type": "object"
+   },
    "LinkIn": {
     "properties": {
      "canonical_entity_id": {
@@ -1184,30 +1445,6 @@
      "user_id"
     ],
     "title": "MemberIn",
-    "type": "object"
-   },
-   "MergeIn": {
-    "additionalProperties": false,
-    "properties": {
-     "keep_id": {
-      "title": "Keep Id",
-      "type": "string"
-     },
-     "merge_ids": {
-      "items": {
-       "type": "string"
-      },
-      "maxItems": 20,
-      "minItems": 1,
-      "title": "Merge Ids",
-      "type": "array"
-     }
-    },
-    "required": [
-     "keep_id",
-     "merge_ids"
-    ],
-    "title": "MergeIn",
     "type": "object"
    },
    "MockIn": {
@@ -1541,6 +1778,19 @@
      "model_id"
     ],
     "title": "ProfileIn",
+    "type": "object"
+   },
+   "PromoteIn": {
+    "additionalProperties": false,
+    "properties": {
+     "basis": {
+      "default": "",
+      "maxLength": 900,
+      "title": "Basis",
+      "type": "string"
+     }
+    },
+    "title": "PromoteIn",
     "type": "object"
    },
    "ProposalIn": {
@@ -1953,6 +2203,22 @@
     "title": "RestoreIn",
     "type": "object"
    },
+   "RevealIn": {
+    "additionalProperties": false,
+    "properties": {
+     "reason": {
+      "maxLength": 500,
+      "minLength": 10,
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "reason"
+    ],
+    "title": "RevealIn",
+    "type": "object"
+   },
    "ReverseIn": {
     "properties": {
      "bulk_id": {
@@ -2283,6 +2549,48 @@
      "address"
     ],
     "title": "SpeculativeIn",
+    "type": "object"
+   },
+   "StateIn": {
+    "additionalProperties": false,
+    "properties": {
+     "basis": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Basis",
+      "type": "string"
+     },
+     "evidence_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Evidence Ids",
+      "type": "array"
+     },
+     "independent": {
+      "default": false,
+      "title": "Independent",
+      "type": "boolean"
+     },
+     "to_state": {
+      "enum": [
+       "unassessed",
+       "candidate",
+       "corroborated",
+       "conflicting",
+       "rejected",
+       "not_available"
+      ],
+      "title": "To State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "to_state",
+     "basis"
+    ],
+    "title": "StateIn",
     "type": "object"
    },
    "SubjectIn": {
@@ -4060,6 +4368,30 @@
     "title": "ManualIn",
     "type": "object"
    },
+   "osintcc__api__v1__profile_emails__MergeIn": {
+    "additionalProperties": false,
+    "properties": {
+     "keep_id": {
+      "title": "Keep Id",
+      "type": "string"
+     },
+     "merge_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Merge Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "keep_id",
+     "merge_ids"
+    ],
+    "title": "MergeIn",
+    "type": "object"
+   },
    "osintcc__api__v1__profile_emails__NoteIn": {
     "additionalProperties": false,
     "properties": {
@@ -4330,6 +4662,37 @@
      "note"
     ],
     "title": "ReviewIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__profile_master__MergeIn": {
+    "additionalProperties": false,
+    "properties": {
+     "keep_id": {
+      "title": "Keep Id",
+      "type": "string"
+     },
+     "merge_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Merge Ids",
+      "type": "array"
+     },
+     "reason": {
+      "maxLength": 900,
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "keep_id",
+     "merge_ids",
+     "reason"
+    ],
+    "title": "MergeIn",
     "type": "object"
    },
    "osintcc__api__v1__profile_reports__ReportIn": {
@@ -14219,6 +14582,56 @@
     "summary": "Retention Due"
    }
   },
+  "/api/v1/profile/shared-email-providers": {
+   "get": {
+    "operationId": "shared_providers_api_v1_profile_shared_email_providers_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Shared Providers"
+   },
+   "post": {
+    "operationId": "add_shared_provider_api_v1_profile_shared_email_providers_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DomainIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Shared Provider"
+   }
+  },
   "/api/v1/profile/sources": {
    "get": {
     "description": "The capability matrix for subject research: what each method needs, produces, costs and how well it has been exercised.",
@@ -15398,7 +15811,7 @@
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/MergeIn"
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_emails__MergeIn"
        }
       }
      },
@@ -17137,6 +17550,663 @@
      }
     },
     "summary": "Thumbnail"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master": {
+   "get": {
+    "description": "Sections, the research gaps panel and the next actions in one document.",
+    "operationId": "get_master_api_v1_subjects__subject_id__master_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "state",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "State"
+      }
+     },
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Q"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Master"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/export": {
+   "get": {
+    "description": "Redacted export: restricted values are omitted, evidence is referenced by id and hash.",
+    "operationId": "export_api_v1_subjects__subject_id__master_export_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Export"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/gaps": {
+   "get": {
+    "operationId": "get_gaps_api_v1_subjects__subject_id__master_gaps_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Gaps"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items": {
+   "post": {
+    "operationId": "add_item_api_v1_subjects__subject_id__master_items_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ItemIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Item"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/batch": {
+   "post": {
+    "description": "Several values at once, as rows or as a CSV / JSON file (columns: type, value, origin, source, evidence_ids, note). Bad rows are reported; good rows are kept.",
+    "operationId": "batch_items_api_v1_subjects__subject_id__master_items_batch_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BatchIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Batch Items"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/{item_id}": {
+   "delete": {
+    "operationId": "retire_item_api_v1_subjects__subject_id__master_items__item_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Retire Item"
+   },
+   "patch": {
+    "operationId": "edit_item_api_v1_subjects__subject_id__master_items__item_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EditIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Edit Item"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/{item_id}/compare": {
+   "post": {
+    "operationId": "compare_api_v1_subjects__subject_id__master_items__item_id__compare_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CompareIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Compare"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/{item_id}/reveal": {
+   "post": {
+    "operationId": "reveal_api_v1_subjects__subject_id__master_items__item_id__reveal_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RevealIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reveal"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/{item_id}/state": {
+   "post": {
+    "operationId": "set_state_api_v1_subjects__subject_id__master_items__item_id__state_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StateIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Set State"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/{item_id}/unmerge": {
+   "post": {
+    "operationId": "unmerge_api_v1_subjects__subject_id__master_items__item_id__unmerge_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Unmerge"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/{item_id}/use-as-input": {
+   "post": {
+    "operationId": "promote_api_v1_subjects__subject_id__master_items__item_id__use_as_input_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PromoteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Promote"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/merge": {
+   "post": {
+    "operationId": "merge_api_v1_subjects__subject_id__master_merge_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__profile_master__MergeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Merge"
    }
   },
   "/api/v1/subjects/{subject_id}/profile": {

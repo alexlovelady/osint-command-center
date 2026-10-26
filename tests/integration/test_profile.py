@@ -299,7 +299,7 @@ async def test_tp10_no_model_path_can_change_candidate_or_claim_state():
     import osintcc.profile.service as svc
     src = pathlib.Path(__file__).resolve().parents[2] / "backend" / "osintcc"
     users = [p.name for p in src.rglob("*.py") if ("candidates.review(" in p.read_text(encoding="utf8") or "review_claim(" in p.read_text(encoding="utf8"))]
-    assert set(users) <= {"profile.py", "candidates.py", "service.py", "lifecycle.py"}, users   # lifecycle: a person resolving a subject correction
+    assert set(users) <= {"profile.py", "candidates.py", "service.py", "lifecycle.py", "master.py"}, users   # lifecycle: a person resolving a correction; master: the editor, behind a human API call
     assert callable(cand.review) and callable(svc.review_claim)
 
 

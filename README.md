@@ -13,6 +13,8 @@ and [`docs/packaging.md`](docs/packaging.md). Read those before trusting a featu
 
 **Active verification (AIV) and exposure intelligence (DARKINT), addendum v1.1:** bounded, disclosed checks of assets someone authorized (off by default; every plan is previewed and approved once) and a consent-gated exposure workspace with honest provider states and four distinct coverage states (Unknown, Not checked, No match from checked sources, Match reported). No third-party service or tool was exercised live in this build: see [`docs/aiv-darkint-status.md`](docs/aiv-darkint-status.md) for what is fixture-tested, simulated, mocked or not implemented, and for the test matrix. The display name is unchanged until you approve a change in Settings.
 
+**Master profile editor and email-first research:** the Profile tab now holds an editable master profile (13 categories, states, provenance, masked restricted values, batch import, reversible merges, per-category research gaps). Email-first research no longer treats a mailbox provider's or an unlisted domain as something to probe. See [`docs/master-profile-status.md`](docs/master-profile-status.md).
+
 **Associated emails and cross-INT correlation:** the target profile lists email addresses that sources associate with the target as evidence-linked candidates (Confirmed / Likely / Possible / Rejected, with reasons, conflicts and analyst controls), and a bounded, inspectable cross-discipline research plan that starts only from your inputs and addresses you confirmed. See [`docs/associated-email-status.md`](docs/associated-email-status.md) for what is fixture-tested and what is not built.
 
 ## Run (Windows or Linux; no WSL, Docker, hardware or cloud needed)

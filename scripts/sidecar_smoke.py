@@ -131,6 +131,12 @@ def run_checks(encrypted: bool) -> None:
         im = c.post(f"/subjects/{ps}/images", params={"filename": "p.png", "confirm_rights": "true"}, content=png)
         check("Target profile: consent, image import (Pillow) and perceptual hashes work in the bundle", gr.status_code == 201 and im.status_code == 201 and len(im.json()["hashes"]["phash"]) == 16, f"{gr.status_code} {im.status_code} {im.text[:80]}")
         check("Target profile: password check rejects anything but a five-character prefix", c.post(f"/subjects/{ps}/exposure/password-range", json={"prefix": "5BAA61E4C9B93F3F"}).status_code == 422)
+        mi = c.post(f"/subjects/{ps}/master/items", json={"type": "email", "value": "smoke@gmail.com", "origin": "subject_provided"})
+        md = c.get(f"/subjects/{ps}/master")
+        mrd = c.post(f"/subjects/{ps}/research/preview", json={})
+        srcs = {e["source_id"] for e in (mrd.json().get("entries", []) if mrd.status_code == 200 else []) if e.get("identifier_kind") == "email"}
+        check("Master profile: an email entered once feeds research, and a mailbox provider's domain is never researched", mi.status_code == 201 and md.status_code == 200 and "gravatar_email" in srcs
+              and not {"rdap", "dns", "crtsh"} & srcs, f"{mi.status_code} {md.status_code} {sorted(srcs)}")
         rp = c.post(f"/subjects/{ps}/report/preview", json={"audience": "subject"})
         check("Target profile: report preview with citation check", rp.status_code == 200 and rp.json()["citation_check"]["ok"] is True, rp.text[:80])
         check("keyring backend importable in the bundle", k.returncode == 0 and k.stdout.strip() != "", k.stdout.strip() or k.stderr[-200:])

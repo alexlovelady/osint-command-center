@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-322 operations in 41 groups.
+337 operations in 41 groups.
 
 ## ai
 
@@ -367,6 +367,8 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 |---|---|---|
 | GET | `/api/v1/profile/exposure/providers` | Exposure Providers |
 | GET | `/api/v1/profile/retention/due` | Subjects past their retention period in cases you own. Nothing is deleted automatically. |
+| GET | `/api/v1/profile/shared-email-providers` | Shared Providers |
+| POST | `/api/v1/profile/shared-email-providers` | Add Shared Provider |
 | GET | `/api/v1/profile/sources` | The capability matrix for subject research: what each method needs, produces, costs and how well it has been exercised. |
 
 ## reports
@@ -477,6 +479,19 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/subjects/{subject_id}/images/{image_id}/reverse-search` | Reverse Search |
 | POST | `/api/v1/subjects/{subject_id}/images/{image_id}/review` | Review |
 | GET | `/api/v1/subjects/{subject_id}/images/{image_id}/thumbnail` | A pixel-only re-encoded PNG. The original bytes are never served to the browser. |
+| GET | `/api/v1/subjects/{subject_id}/master` | Sections, the research gaps panel and the next actions in one document. |
+| GET | `/api/v1/subjects/{subject_id}/master/export` | Redacted export: restricted values are omitted, evidence is referenced by id and hash. |
+| GET | `/api/v1/subjects/{subject_id}/master/gaps` | Get Gaps |
+| POST | `/api/v1/subjects/{subject_id}/master/items` | Add Item |
+| POST | `/api/v1/subjects/{subject_id}/master/items/batch` | Several values at once, as rows or as a CSV / JSON file (columns: type, value, origin, source, evidence_ids, note). Bad rows are reported; g |
+| DELETE | `/api/v1/subjects/{subject_id}/master/items/{item_id}` | Retire Item |
+| PATCH | `/api/v1/subjects/{subject_id}/master/items/{item_id}` | Edit Item |
+| POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/compare` | Compare |
+| POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/reveal` | Reveal |
+| POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/state` | Set State |
+| POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/unmerge` | Unmerge |
+| POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/use-as-input` | Promote |
+| POST | `/api/v1/subjects/{subject_id}/master/merge` | Merge |
 | GET | `/api/v1/subjects/{subject_id}/profile` | Get Profile |
 | GET | `/api/v1/subjects/{subject_id}/remediations` | List Remediations |
 | POST | `/api/v1/subjects/{subject_id}/remediations` | Create Remediation |

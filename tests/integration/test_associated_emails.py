@@ -60,6 +60,12 @@ async def api(settings, calls, world):
     def handler(request: httpx.Request) -> httpx.Response:
         u = str(request.url)
         world["seen"].append(u)
+        if u.startswith("https://api.gravatar.com/v3/profiles/"):
+            return httpx.Response(200, json={"display_name": "Jane Doe", "profile_url": "https://gravatar.com/janedoe", "verified_accounts": [{"service_label": "GitHub", "url": "https://github.com/janedoe"}]})
+        if u.startswith("https://api.github.com/search/"):
+            return httpx.Response(200, json={"items": []})
+        if u.startswith("https://keys.openpgp.org/"):
+            return httpx.Response(404, text="not found")
         if u.startswith("https://api.github.com/users/janedoe/events/public"):
             return httpx.Response(world["events_status"], json=EVENTS if world["events_status"] == 200 else {})
         if u.startswith("https://api.github.com/users/janedoe"):
@@ -122,21 +128,26 @@ async def discover_via_github_and_page(api, p):
 async def test_email_only_investigation_initiates_permitted_discovery(api, world):
     p = await make(api, email="jane@acme-example.com")
     d = (await api.post(f"{B}/subjects/{p['sid']}/associated-emails/discover")).json()
-    assert d["executable_now"] >= 1 and "Nothing was sent" in d["note"] and not world["seen"]              # discovery is planned, and planning sends nothing
+    assert d["plan_steps"] >= 3 and "Nothing was sent" in d["note"] and not world["seen"]                  # discovery is planned, and planning sends nothing
     plan = (await api.get(f"{B}/subjects/{p['sid']}/expansion")).json()
-    srcs = {s["source_id"] for s in plan["steps"] if s["executable_now"]}
-    assert {"rdap", "dns"} <= srcs and all(s["depth"] == 0 for s in plan["steps"])
-    out = (await api.post(f"{B}/subjects/{p['sid']}/expansion/run", json={"keys": [f"{p['ids']['email']}:rdap"], "wait": True})).json()
-    assert out["status"] == "executed" and out["started_runs"] == 1 and any("rdap" in u or "example" in u for u in world["seen"])
+    mine = [s for s in plan["steps"] if s["identifier_id"] == p["ids"]["email"] and s["module"] == "OSINT"]
+    assert {"gravatar_email", "github_email_search", "keyserver_email"} <= {s["source_id"] for s in mine}      # exact-email public-reference sources
+    assert not {"rdap", "dns", "crtsh"} & {s["source_id"] for s in mine}                                   # the address's domain is not researched from an email string
+    assert all(s["needs"] in ("confirmation", "blocked") for s in mine)                                    # each sends the address to a third party, so each needs a confirmation
+    out = await api.post(f"{B}/subjects/{p['sid']}/expansion/run", json={"keys": [f"{p['ids']['email']}:gravatar_email"], "confirmed_sources": ["gravatar_email"], "wait": True})
+    assert out.status_code == 202 and out.json()["started_runs"] == 1
+    assert any(u.startswith("https://api.gravatar.com/v3/profiles/") for u in world["seen"]) and not any("rdap" in u for u in world["seen"])
+    assert "jane@acme-example.com" not in " ".join(world["seen"])                                         # Gravatar was asked about a hash, not the address
     with api.app.state.core.sm() as db:
-        assert db.scalars(select(ResearchTask).where(ResearchTask.source_id == "rdap")).first().identifier_id == p["ids"]["email"]
+        assert db.scalars(select(ResearchTask).where(ResearchTask.source_id == "gravatar_email")).first().identifier_id == p["ids"]["email"]
 
 
 async def test_a_free_mail_address_does_not_trigger_domain_lookups(api, world):
     p = await make(api, email="jane.doe@gmail.com")
     plan = (await api.get(f"{B}/subjects/{p['sid']}/expansion")).json()
-    assert not [s for s in plan["steps"] if s["executable_now"]] and plan["stop_reason"] == "no_new_leads"
-    assert any("free-mail provider" in s["reason"] for s in plan["steps"])
+    mine = [s for s in plan["steps"] if s["identifier_id"] == p["ids"]["email"]]
+    assert not {"rdap", "dns", "crtsh"} & {s["source_id"] for s in mine}
+    assert {s["source_id"] for s in mine if s["needs"] == "confirmation"} >= {"gravatar_email"}
 
 
 # ---- 2/12. evidence-backed candidates; adapters report what really happened ---------------------------------------------------------------------
@@ -228,7 +239,7 @@ async def test_unconfirmed_matches_never_trigger_expansion_and_confirmed_ones_do
     assert (await api.post(f"{B}/subjects/{p['sid']}/associated-emails/{work['id']}/promote")).status_code == 200
     plan3 = (await api.get(f"{B}/subjects/{p['sid']}/expansion")).json()
     mine = [s for s in plan3["steps"] if s["identifier_kind"] == "email" and s["depth"] == 1 and s["module"] == "OSINT"]
-    assert {s["source_id"] for s in mine if s["executable_now"]} >= {"rdap", "dns"} and mine[0]["origin_path"]       # follow-up tasks exist, with the chain that led to them
+    assert {s["source_id"] for s in mine if s["needs"] == "confirmation"} >= {"gravatar_email", "keyserver_email"} and mine[0]["origin_path"]       # follow-up tasks exist, with the chain that led to them
 
 
 async def test_rejected_associations_stop_generating_work_and_stay_rejected(api, world):
@@ -297,7 +308,7 @@ async def confirmed_promoted(api, p):
 
 
 async def test_recursion_respects_depth_budget_per_pass_and_ends_with_a_stop_reason(api, world):
-    p = await make(api, kinds=("email", "username", "url"))
+    p = await make(api, kinds=("email", "username", "url", "domain"))
     await discover_via_github_and_page(api, p)
     await confirmed_promoted(api, p)
     assert (await api.put(f"{B}/subjects/{p['sid']}/expansion/policy", json={"max_depth": 1})).json()["max_depth"] == 1

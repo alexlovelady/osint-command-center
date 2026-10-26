@@ -912,6 +912,7 @@ from .profile import (  # noqa: F401  (target-profile tables, addendum TP-1.0)
     ImageMatch,
     ProfileCandidateLink,
     ProfileClaim,
+    ProfileItem,
     ProfileReviewEvent,
     RemediationTask,
     ResearchTask,

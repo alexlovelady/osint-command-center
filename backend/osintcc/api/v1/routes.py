@@ -1323,6 +1323,9 @@ router.include_router(_darkint.router)
 from . import profile_emails as _profile_emails
 
 router.include_router(_profile_emails.router)
+from . import profile_master as _profile_master
+
+router.include_router(_profile_master.router)
 from . import branding as _branding
 
 router.include_router(_branding.router)

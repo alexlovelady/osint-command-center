@@ -16,7 +16,10 @@ from .http import (
     DnsAdapter,
     EdgarAdapter,
     GdeltAdapter,
+    GithubEmailSearchAdapter,
     GithubPublicAdapter,
+    GravatarEmailAdapter,
+    KeyserverEmailAdapter,
     OpenCorporatesAdapter,
     OverpassAdapter,
     PageContactsAdapter,
@@ -25,6 +28,7 @@ from .http import (
     UrlscanAdapter,
     VirusTotalAdapter,
     WaybackAdapter,
+    WebSearchEmailAdapter,
 )
 from .local import LookalikeAdapter
 
@@ -35,7 +39,8 @@ def default_adapters(settings: Settings | None = None) -> dict[str, IntelAdapter
                                  SherlockAdapter(state_path=sp), MaigretAdapter(state_path=sp), LookalikeAdapter(), EdgarAdapter(),
                                  VirusTotalAdapter(), UrlscanAdapter(), ShodanAdapter(), OverpassAdapter(), GdeltAdapter(), OpenCorporatesAdapter(), CensysAdapter(),
                                  AmassAdapter(state_path=sp), TheHarvesterAdapter(state_path=sp), DnstwistAdapter(state_path=sp),
-                                 GithubPublicAdapter(), PageContactsAdapter()]
+                                 GithubPublicAdapter(), PageContactsAdapter(),
+                                 GravatarEmailAdapter(), GithubEmailSearchAdapter(), KeyserverEmailAdapter(), WebSearchEmailAdapter()]
     if settings is not None and settings.enable_active_module:
         from .active import TcpConnectAdapter
         items.append(TcpConnectAdapter())

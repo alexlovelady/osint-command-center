@@ -35,6 +35,7 @@ from ..db.models import (
 from ..jobs.runner import upsert_entity
 from ..telemetry import audit
 from .normalize import mask_value
+from .providers import BUILTIN as BUILTIN_SHARED
 from .service import ProfileError, add_identifier, evidence_refs
 
 ADDRESS = re.compile(r"^[a-z0-9._%+-]{1,64}@[a-z0-9-]{1,63}(?:\.[a-z0-9-]{1,63}){1,5}$")
@@ -43,7 +44,7 @@ CLASSES = ("confirmed", "likely", "possible", "rejected")
 OBSERVED_PREDICATES = ("email.observed", "theharvester.email")
 STRONG_KINDS = {"profile_field", "subject_page", "owner_provided", "analyst_evidence"}
 GMAIL = {"gmail.com", "googlemail.com"}
-FREEMAIL = GMAIL | {"outlook.com", "hotmail.com", "live.com", "yahoo.com", "icloud.com", "me.com", "proton.me", "protonmail.com", "aol.com", "gmx.com", "mail.com", "yandex.com"}
+FREEMAIL = frozenset(BUILTIN_SHARED)
 REL_STATUS = {"confirmed": "manual", "rejected": "rejected", "candidate": "unverified"}
 LABEL = {"confirmed": "Confirmed", "likely": "Likely", "possible": "Possible", "rejected": "Rejected"}
 
@@ -534,7 +535,11 @@ def list_for(db: Session, st: Any, subject: Subject, *, role: str) -> dict[str, 
     order = {c: i for i, c in enumerate(CLASSES)}
     rows.sort(key=lambda r: (order[r.classification], r.discovered_at))
     counts = {c: sum(1 for r in rows if r.classification == c) for c in CLASSES}
-    return {"items": [email_dict(db, st, subject, r, redact=redact) for r in rows], "counts": counts, "duplicates": duplicate_groups(db, subject) if not redact else [],
+    inputs = [{"id": f"input:{i.id}", "address": mask_value("email", i.value) if redact else i.value, "masked": redact, "label": "Your input", "origin": "input", "identifier_id": i.id,
+               "note": "An address you provided. It is researched as an input where the authorization allows; it is not an associated address and not a verified claim.",
+               "domain_research": "none: a mailbox provider's or a custom domain's records are not researched from an email address alone"}
+              for i in db.scalars(select(SubjectIdentifier).where(SubjectIdentifier.subject_id == subject.id, SubjectIdentifier.kind == "email", SubjectIdentifier.status == "active"))]
+    return {"inputs": inputs, "items": [email_dict(db, st, subject, r, redact=redact) for r in rows], "counts": counts, "duplicates": duplicate_groups(db, subject) if not redact else [],
             "legend": {"confirmed": "A person confirmed it with the owner's attestation or independent corroboration.", "likely": "Two independent sources explicitly tie it to the subject.",
                        "possible": "Seen in evidence, but not tied to the subject by enough independent sources, or the evidence conflicts.", "rejected": "A person decided it does not belong to the subject. Nothing is researched from it."},
             "notice": "An address found in a source is a candidate, never a fact. Guessed patterns are never presented as discoveries."}

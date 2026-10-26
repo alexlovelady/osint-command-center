@@ -339,3 +339,54 @@ class ExpansionRun(Base):
     started: Mapped[int] = mapped_column(Integer, default=0)
     created_by: Mapped[str] = mapped_column(String(80), default="local")
     created_at: Mapped[datetime] = ts()
+
+
+ITEM_STATES = ("unassessed", "candidate", "corroborated", "conflicting", "rejected", "not_available")
+
+
+class ProfileItem(Base):
+    """One fact in the Master Profile Editor. Inputs, claims and discovered leads share this shape; competing and contradictory items are all kept.
+
+    An item may be backed by an existing record (`backing_kind`/`backing_id`: a subject identifier or a profile claim) so the research planner and the claim review keep working
+    exactly as before. Restricted values are masked unless a reveal is granted; a reference-only value (an identity-document or SSN reference) is stored only as a keyed
+    token and a masked form, never as the number.
+    """
+    __tablename__ = "profile_items"
+    id: Mapped[str] = pk()
+    subject_id: Mapped[str] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    case_id: Mapped[str] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    category: Mapped[str] = mapped_column(String(24))
+    type: Mapped[str] = mapped_column(String(32))
+    custom_type: Mapped[str] = mapped_column(String(60), default="")
+    value: Mapped[str] = mapped_column(Text, default="")                                 # masked form for reference-only values
+    normalized_value: Mapped[str] = mapped_column(String(600), default="")
+    attributes: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)               # structured detail (device asset id, hostname, period, ...)
+    source_id: Mapped[str] = mapped_column(String(80), default="manual")
+    evidence_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    collection_method: Mapped[str] = mapped_column(String(40), default="manual")        # manual | import | adapter:<id> | provider:<id>
+    origin: Mapped[str] = mapped_column(String(20), default="analyst_supplied")         # subject_provided | analyst_supplied | published_source | verified_provider | discovered
+    recorded_by: Mapped[str] = mapped_column(String(80), default="local")
+    observed_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    last_verified_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    confidence: Mapped[str] = mapped_column(String(10), default="unknown")
+    verification_state: Mapped[str] = mapped_column(String(14), default="unassessed")
+    self_attested: Mapped[bool] = mapped_column(Boolean, default=False)
+    sensitivity: Mapped[str] = mapped_column(String(12), default="INTERNAL")
+    scope_id: Mapped[str | None] = mapped_column(String(36), nullable=True)             # the authorization this item was recorded under
+    retention_policy: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    is_input: Mapped[bool] = mapped_column(Boolean, default=False)
+    backing_kind: Mapped[str | None] = mapped_column(String(12), nullable=True)         # identifier | claim
+    backing_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    reference_token: Mapped[str | None] = mapped_column(String(64), nullable=True)      # keyed, non-reversible (reference-only types)
+    merged_into: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    supersedes_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(10), default="active")                   # active | retired | merged
+    note: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = ts()
+    updated_at: Mapped[datetime] = ts()
+    __table_args__ = (
+        CheckConstraint("verification_state IN ('unassessed','candidate','corroborated','conflicting','rejected','not_available')", name="ck_profile_item_state"),
+        Index("ix_profile_item_lookup", "subject_id", "category", "type"),
+        Index("ix_profile_item_backing", "backing_kind", "backing_id"),
+    )

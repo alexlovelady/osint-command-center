@@ -124,6 +124,9 @@ export default function AssociatedEmails({ p }: { p: ProfileT }) {
       {discover.data && <div className="banner" role="status">{discover.data.swept.created} new candidate(s) from stored evidence. Nothing was sent.
         {discover.data.speculative.length > 0 && <> Pattern guesses (speculative, not observed): {discover.data.speculative.slice(0, 4).map((g) => (
           <button key={g.address} onClick={() => guess.mutate(g.address)} title={g.label} style={{ marginLeft: 4 }}>track {g.address}</button>))}</>}</div>}
+      {(d.inputs ?? []).length > 0 && (
+        <div className="card" aria-label="Your email inputs"><b>Your inputs</b>
+          <ul>{(d.inputs ?? []).map((i) => <li key={i.id}><code>{i.address}</code> · {i.label}<div className="muted">{i.note} {i.domain_research}</div></li>)}</ul></div>)}
       {!shown.length && <Empty title="No associated addresses yet" hint="Run a discovery step below (GitHub profile, a public contact page) or add an address with the evidence that shows it." />}
       {shown.length > 0 && (
         <table aria-label="Associated emails"><thead><tr><th /><th>Address</th><th>Ownership</th><th>Source</th><th>Dates</th><th>Exposure</th><th /></tr></thead>

@@ -206,5 +206,17 @@
  {
   "term": "Expansion plan",
   "definition": "The prioritized, inspectable list of research steps that start from your inputs and confirmed addresses, across disciplines, inside depth, budget and authorization limits."
+ },
+ {
+  "term": "Self-attested",
+  "definition": "A value that rests only on the subject's own statement. It is recorded as such and is never counted as independent corroboration."
+ },
+ {
+  "term": "Email-first discovery",
+  "definition": "Looking up an exact email address in public references (a public profile, a code-hosting search, a key server, an optional keyed web search). It never treats the address's domain as something the subject owns, and it never probes password-reset or login pages."
+ },
+ {
+  "term": "Shared mailbox provider",
+  "definition": "A domain such as gmail.com that thousands of unrelated people use. An address there says nothing about who owns the domain, so domain, DNS and certificate lookups are never run from it."
  }
 ]

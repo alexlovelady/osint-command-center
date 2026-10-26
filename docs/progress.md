@@ -185,3 +185,7 @@ Baseline before this work: tag `pre-aiv-darkint` (797 backend tests, 57 vitest, 
 2. Test the installer and the Linux tarball on a clean PC and a stock Ubuntu desktop.
 3. Enter real API keys in Setup and run the keyed services once; connect a real MCP client later.
 4. Back up the update-signing private key.
+
+## Master Target Profile Enrichment (2026-10-26)
+
+Implemented per `docs/master-profile-status.md`: Master Profile Editor (migration 0016 `profile_items`, `profile/master.py`, `profile/gaps.py`, `/subjects/{id}/master*`, UI in the Profile tab), the email-first research fix (domain sources no longer accept email; shared-provider list; four exact-email adapters, fixture-tested), per-category research gaps and next actions, restricted-value handling and token-only identity references. Verified: ruff, mypy, 1057 backend tests, 77 vitest tests, Playwright (with axe), frozen-sidecar smoke 62/62. Not live-verified against any third-party service.

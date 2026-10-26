@@ -94,7 +94,7 @@ test("the password check hashes in the browser and sends only five characters", 
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ suffixes: ["1E4C9B93F3F0682250B6CF8331B7EE68FD8:3861493"], padded: true, note: "x" }) });
   });
   await page.goto(`/#/case/${caseId}`);
-  await page.getByRole("tab", { name: "Exposure" }).click();
+  await page.getByRole("tab", { name: "Exposure", exact: true }).click();
   await page.getByLabel("Password to check").fill("password");
   await page.getByRole("button", { name: "Check", exact: true }).click();
   await expect(page.getByText(/appears 3,861,493 time/)).toBeVisible();

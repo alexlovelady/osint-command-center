@@ -5,6 +5,7 @@ import { api } from "../../../lib/api";
 import type { ProfileT, SubjectT } from "../../../lib/profileApi";
 import AssociatedEmails from "./AssociatedEmails";
 import Authorization, { AuthIndicator } from "./Authorization";
+import MasterProfile from "./MasterProfile";
 import ProfileOverview, { StateBadge } from "./ProfileOverview";
 import Darkint from "./Darkint";
 import Exposure from "./Exposure";
@@ -79,7 +80,7 @@ export default function TargetProfile({ caseId }: { caseId: string }) {
       <div className="tabs" role="tablist" aria-label="Profile sections">
         {SUBTABS.map((t) => <button key={t} role="tab" aria-selected={sub === t} onClick={() => setSub(t)}>{t}{t === "Review queue" && p.unresolved_leads.length ? ` (${p.unresolved_leads.length})` : ""}</button>)}
       </div>
-      {sub === "Profile" && <ProfileOverview p={p} onGo={setSub} tabs={[...SUBTABS]} />}
+      {sub === "Profile" && <><MasterProfile p={p} onGo={setSub} /><ProfileOverview p={p} onGo={setSub} tabs={[...SUBTABS]} /></>}
       {sub === "Review queue" && <ReviewQueue p={p} />}
       {sub === "Associated emails" && <AssociatedEmails p={p} />}
       {sub === "Research" && <Research p={p} />}

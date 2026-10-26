@@ -668,5 +668,105 @@
   "code": "already_an_input",
   "meaning": "That address is already one of the subject's own inputs.",
   "fix": "Nothing to do: it is researched as an input."
+ },
+ {
+  "code": "invalid_domain",
+  "meaning": "The shared-provider list entry is not a plain domain name.",
+  "fix": "Enter a domain such as mail.example.net, without a path or an @."
+ },
+ {
+  "code": "invalid_state",
+  "meaning": "The state filter or requested state is not one of Unassessed, Candidate, Corroborated, Conflicting, Rejected or Not available.",
+  "fix": "Pick one of the listed states."
+ },
+ {
+  "code": "self_attestation_only",
+  "meaning": "The only support is the subject's own statement, which is recorded as self-attestation and is never independent corroboration.",
+  "fix": "Add evidence from an independent source and tick 'independent of the subject', or leave the item as a candidate."
+ },
+ {
+  "code": "owner_required",
+  "meaning": "Revealing or recording a restricted value is limited to the case owner.",
+  "fix": "Ask the case owner, or work with the masked value."
+ },
+ {
+  "code": "need_to_know_required",
+  "meaning": "A restricted field (date of birth, phone, address, identity reference) needs a stated reason it is required.",
+  "fix": "Type why the value is needed; the reason is recorded."
+ },
+ {
+  "code": "authorization_required",
+  "meaning": "There is no current authorization for this subject, so restricted values cannot be recorded or revealed.",
+  "fix": "Record or renew the authorization in the Authorization tab."
+ },
+ {
+  "code": "reference_only",
+  "meaning": "This value is stored only as a masked form and a keyed token, so it cannot be revealed.",
+  "fix": "Use Compare to check a number against the stored token."
+ },
+ {
+  "code": "not_reference",
+  "meaning": "Compare works only on identity-document or SSN reference items.",
+  "fix": "Choose a reference item."
+ },
+ {
+  "code": "not_restricted",
+  "meaning": "Reveal applies only to restricted items.",
+  "fix": "This value is not masked; read it directly."
+ },
+ {
+  "code": "reason_required",
+  "meaning": "A reveal needs a reason of at least ten characters, which is audited.",
+  "fix": "Describe why you need to see the value."
+ },
+ {
+  "code": "input_value_fixed",
+  "meaning": "An input's value cannot be edited in place because research is tied to it.",
+  "fix": "Retire it and add the corrected value."
+ },
+ {
+  "code": "not_an_input_type",
+  "meaning": "This type of item cannot be used as a research input.",
+  "fix": "Only emails, usernames, domains, URLs, names, aliases and organizations can be inputs."
+ },
+ {
+  "code": "invalid_origin",
+  "meaning": "The origin is not one of the supported ones.",
+  "fix": "Choose subject provided, analyst supplied, published source or verified provider."
+ },
+ {
+  "code": "invalid_type",
+  "meaning": "The item type is not in the Master Profile catalog.",
+  "fix": "Pick a listed type, or use a custom attribute."
+ },
+ {
+  "code": "invalid_confidence",
+  "meaning": "Confidence must be unknown, low, medium or high.",
+  "fix": "Pick one of the four."
+ },
+ {
+  "code": "invalid_value",
+  "meaning": "The value is not valid for this type of item.",
+  "fix": "Check the format, for example a date as YYYY-MM-DD or a phone number with digits."
+ },
+ {
+  "code": "evidence_not_in_case",
+  "meaning": "That evidence belongs to a different case.",
+  "fix": "Use evidence stored in this case."
+ },
+ {
+  "code": "custom_type_required",
+  "meaning": "A custom attribute needs a name.",
+  "fix": "Type the attribute name."
+ },
+ {
+  "code": "too_many_rows",
+  "meaning": "The import has more rows than one batch allows.",
+  "fix": "Split the file into smaller parts."
+ },
+ {
+  "code": "unreadable_import",
+  "meaning": "The file could not be read as CSV or JSON, or is not a list of objects with type and value.",
+  "fix": "Check the format and the header row."
  }
 ]

@@ -14,6 +14,7 @@ from ..db.models import Case, Job, SearchRun, Target
 from ..policy import engine as policy
 from ..policy.ssrf import ip_is_public
 from ..policy.targets import ParsedTarget, detect_target, domain_of
+from ..profile.providers import is_shared_provider
 from ..telemetry import audit
 
 
@@ -80,6 +81,10 @@ def build_plan(db: Session, case: Case, parsed: ParsedTarget, adapters: dict[str
             if selected is not None:
                 steps.append({"adapter_id": aid, "name": m.name, "runnable": False,
                               "reason": f"does not support target type {parsed.type}"})
+            continue
+        if parsed.type == "email" and aid in ("rdap", "dns", "crtsh") and is_shared_provider(parsed.canonical.partition("@")[2], db):
+            if selected is not None:
+                steps.append({"adapter_id": aid, "name": m.name, "runnable": False, "reason": "the address is at a shared mailbox provider; records about its domain say nothing about the person"})
             continue
         d = policy.evaluate(db, case_id=case.id, manifest=m, target_canonical=parsed.canonical, target_domain=dom,
                             mode=mode, offline=settings.offline)

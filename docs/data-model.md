@@ -2,7 +2,7 @@
 
 Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mode with foreign keys on; schema changes only through Alembic migrations (`backend/osintcc/db/migrations`). FTS5 `search_index` is maintained by triggers and is not an ORM table.
 
-87 tables.
+88 tables.
 
 ## ai_calls
 
@@ -1075,6 +1075,46 @@ A hypothesis that a public account/page belongs to the subject. Never a fact unt
 | reviewer | VARCHAR(80) | yes |  |
 | reviewed_at | DATETIME | yes |  |
 | reason | TEXT | no |  |
+| created_at | DATETIME | no |  |
+| updated_at | DATETIME | no |  |
+
+## profile_items
+
+One fact in the Master Profile Editor. Inputs, claims and discovered leads share this shape; competing and contradictory items are all kept.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| case_id | VARCHAR(36) | no | FK → cases |
+| category | VARCHAR(24) | no |  |
+| type | VARCHAR(32) | no |  |
+| custom_type | VARCHAR(60) | no |  |
+| value | TEXT | no |  |
+| normalized_value | VARCHAR(600) | no |  |
+| attributes | JSON | no |  |
+| source_id | VARCHAR(80) | no |  |
+| evidence_ids | JSON | no |  |
+| collection_method | VARCHAR(40) | no |  |
+| origin | VARCHAR(20) | no |  |
+| recorded_by | VARCHAR(80) | no |  |
+| observed_at | DATETIME | yes |  |
+| last_verified_at | DATETIME | yes |  |
+| confidence | VARCHAR(10) | no |  |
+| verification_state | VARCHAR(14) | no |  |
+| self_attested | BOOLEAN | no |  |
+| sensitivity | VARCHAR(12) | no |  |
+| scope_id | VARCHAR(36) | yes |  |
+| retention_policy | JSON | no |  |
+| is_input | BOOLEAN | no |  |
+| backing_kind | VARCHAR(12) | yes |  |
+| backing_id | VARCHAR(36) | yes |  |
+| reference_token | VARCHAR(64) | yes |  |
+| merged_into | VARCHAR(36) | yes |  |
+| supersedes_id | VARCHAR(36) | yes |  |
+| version | INTEGER | no |  |
+| status | VARCHAR(10) | no |  |
+| note | TEXT | no |  |
 | created_at | DATETIME | no |  |
 | updated_at | DATETIME | no |  |
 

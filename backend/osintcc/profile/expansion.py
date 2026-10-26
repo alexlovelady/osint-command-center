@@ -35,6 +35,7 @@ from ..db.models import (
 from ..telemetry import audit
 from . import consent, emails, research
 from .normalize import mask_value
+from .providers import is_shared_provider
 from .registry import SOURCES
 from .service import ProfileError
 
@@ -129,13 +130,13 @@ def plan(db: Session, subject: Subject, case: Case, adapters: dict[str, IntelAda
         elif e["requires_confirmation"]:
             needs = "confirmation"
         beyond = seed["depth"] >= pol["max_depth"]
-        if e["identifier_kind"] == "email" and e["runnable"] and src and src.category == "domain_infrastructure" and _domain(db, e["identifier_id"]) in emails.FREEMAIL:
+        if e["identifier_kind"] == "email" and e["runnable"] and src and src.category == "domain_infrastructure" and is_shared_provider(_domain(db, e["identifier_id"]), db):
             e = {**e, "runnable": False, "reason": "the address is at a free-mail provider, so records about its domain say nothing about the subject"}
             needs = "blocked"
         steps.append({"key": e["key"], "module": "OSINT" if not src or src.category != "exposure" else "DARKINT", "identifier_id": e["identifier_id"], "identifier": e["identifier"],
                       "identifier_kind": e["identifier_kind"], "source_id": e["source_id"], "source": e["name"], "depth": seed["depth"], "origin_path": seed["origin_path"],
-                      "priority": _priority(e["source_id"], seed["depth"]), "runnable": e["runnable"] and not beyond, "needs": "depth_limit" if beyond and needs == "none" else needs,
-                      "reason": ("beyond the depth limit" if beyond and needs == "none" else e["reason"]), "warnings": e["warnings"], "privacy": e["privacy"], "consent_class": e["consent_class"],
+                      "priority": _priority(e["source_id"], seed["depth"]), "runnable": e["runnable"] and not beyond, "needs": "depth_limit" if beyond and needs in ("none", "confirmation") else needs,
+                      "reason": ("beyond the depth limit" if beyond and needs in ("none", "confirmation") else e["reason"]), "warnings": e["warnings"], "privacy": e["privacy"], "consent_class": e["consent_class"],
                       "executable_now": needs == "none" and e["runnable"] and not beyond, "endpoints": e["endpoints"], "maturity": e["maturity"], "data_classes": list(src.data_classes) if src else []})
     # other disciplines: shown as proposals that need their own approval. This engine never starts them.
     for s in sd["inputs"]:

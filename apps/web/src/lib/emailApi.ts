@@ -6,7 +6,8 @@ export interface AssociatedEmailT { id: string; address: string; masked: boolean
   depth: number; origin_path: string[]; discovered_at: string; last_verified_at: string | null; reviewed_by: string | null; review_basis: string; note: string; is_input: boolean;
   exposure: { state: string; label: string; note: string; categories?: string[]; credential_indicator?: boolean; reports?: number; recommend?: string[] };
   sources: EmailSource[]; evidence: { id: string; title: string; kind: string; sha256: string; url: string | null }[] }
-export interface EmailList { items: AssociatedEmailT[]; counts: Record<EmailClass, number>; duplicates: { key: string; ids: string[]; addresses: string[] }[]; legend: Record<EmailClass, string>; notice: string; role: string }
+export interface EmailInputT { id: string; address: string; masked: boolean; label: string; note: string; domain_research: string }
+export interface EmailList { inputs?: EmailInputT[]; items: AssociatedEmailT[]; counts: Record<EmailClass, number>; duplicates: { key: string; ids: string[]; addresses: string[] }[]; legend: Record<EmailClass, string>; notice: string; role: string }
 export interface PlanStep { key: string; module: string; identifier: string; source_id: string; source: string; depth: number; origin_path: string[]; priority: number; runnable: boolean; needs: string;
   reason: string; executable_now: boolean; endpoints: string[]; privacy: string }
 export interface ExpansionPlan { policy: { max_depth: number; max_runs: number; max_per_pass: number; auto_passive: boolean }; steps: PlanStep[];

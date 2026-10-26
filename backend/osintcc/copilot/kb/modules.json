@@ -1126,5 +1126,41 @@
    "contact address",
    "correlation"
   ]
+ },
+ {
+  "id": "tab-master-profile",
+  "title": "Master profile editor (target profile)",
+  "kind": "tab",
+  "where": {
+   "route": "case",
+   "tab": "Profile"
+  },
+  "summary": "One editable place for everything known about the target, in 13 categories: identity, contact, locations, education, employment, online footprint, business, devices, images and documents, security exposure, relationships, timeline and custom attributes. Values you enter once feed the research plan and Associated emails; claims keep their review; images, exposure and discovered accounts are shown from their own tabs. Each item shows its state (Unassessed, Candidate, Corroborated, Conflicting, Rejected, Not available), source, evidence and confidence. An empty category means not researched, never 'nothing exists'. Restricted values (date of birth, phone, address, identity references) are masked, reveal needs a reason and is audited, and references are kept only as a token. A side panel lists research gaps per category with the reason each is missing and the next actions, including the email-first status.",
+  "how_to": [
+   "Pick a category, then use the add form: choose the type, enter the value and where it came from.",
+   "Use Batch input to paste or upload a CSV or JSON file; rows that fail are listed and the rest are kept.",
+   "Corroborate needs independent evidence: the subject's own statement stays self-attested.",
+   "Use Reject or Needs review for discovered leads; only 'Use as input' makes a value a research starting point, with a reason.",
+   "Merge duplicates from the duplicates panel; Undo merge restores every entry.",
+   "Open 'Research gaps and next actions' to see why a category is empty and what to run next.",
+   "Export omits restricted values and references evidence by id and hash."
+  ],
+  "keywords": [
+   "master profile",
+   "profile editor",
+   "email first",
+   "gaps",
+   "why missing",
+   "restricted",
+   "self attested",
+   "corroborated",
+   "batch import",
+   "csv",
+   "duplicates",
+   "merge",
+   "reveal",
+   "shared provider",
+   "gmail"
+  ]
  }
 ]
