@@ -1501,6 +1501,20 @@
     "title": "ItemIn",
     "type": "object"
    },
+   "LicenceIn": {
+    "additionalProperties": false,
+    "properties": {
+     "commercial_licensed": {
+      "title": "Commercial Licensed",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "commercial_licensed"
+    ],
+    "title": "LicenceIn",
+    "type": "object"
+   },
    "LinkIn": {
     "properties": {
      "canonical_entity_id": {
@@ -15639,6 +15653,23 @@
     "summary": "Profile Sources"
    }
   },
+  "/api/v1/providers/cancel-queued": {
+   "post": {
+    "description": "Cancel every queued or waiting provider task (the global Cancel). Finished work is untouched; cancelled checks can be started again with Refresh.",
+    "operationId": "cancel_queued_api_v1_providers_cancel_queued_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Cancel Queued"
+   }
+  },
   "/api/v1/providers/ledger": {
    "get": {
     "description": "The audit-friendly activity ledger: one row per request that was reserved, with its provider, action, timing and result. It never holds a key or a target.",
@@ -15863,6 +15894,54 @@
      }
     },
     "summary": "Enable Provider"
+   }
+  },
+  "/api/v1/providers/{pid}/licence": {
+   "post": {
+    "description": "Record that you hold a licence covering business or client use of a free API. Fusion cannot check it; it only stops blocking that use.",
+    "operationId": "confirm_licence_api_v1_providers__pid__licence_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pid",
+      "required": true,
+      "schema": {
+       "title": "Pid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LicenceIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Confirm Licence"
    }
   },
   "/api/v1/providers/{pid}/recheck": {

@@ -31,7 +31,7 @@ dropped, never shown as finished, and never turned into a "no match".
 
 ## Setting up each provider
 
-1. **VirusTotal.** Settings → API keys → VirusTotal. Public (free) API only, which VirusTotal restricts to personal, non-commercial use. Fusion paces it at 4 per rolling minute, ≥16 s apart, 500 per UTC day. Twelve lookups take about three minutes.
+1. **VirusTotal.** Settings → API keys → VirusTotal. Public (free) API only, which VirusTotal restricts to personal, non-commercial use. Fusion therefore uses it automatically only for a personal self-audit; a business, client or organization investigation shows it as **blocked** until you tick *I hold a VirusTotal licence that covers business or client use* (Fusion cannot check that; it only stops blocking). The tick is re-checked when queued work resumes. Pacing: 4 per rolling minute, ≥16 s apart, 500 per UTC day. Twelve lookups take about three minutes.
 2. **urlscan.io.** Add the key, then **Test**: this reads *your account's* quota table and replaces the default limits with your real ones. Searches, result retrievals and (never used) scans have separate budgets. Fusion never submits a scan.
 3. **Censys.** Create a **Personal Access Token** (Censys account menu → API Access) and paste it under *Censys*. Fusion sends it as `Authorization: Bearer …` to `api.platform.censys.io`. It is never converted into an ID:secret pair; a legacy `API_ID:API_SECRET` still works through the older endpoint if you have one. Free plan: 100 credits per month, one request at a time, lookups only; search is never called.
 4. **Brave Search.** Add the key. Brave reports your plan's per-second and per-month limits in the response headers, so *quota available* stays "unknown" until the first request. Paid overflow is never enabled.
@@ -43,8 +43,9 @@ dropped, never shown as finished, and never turned into a "no match".
 
 - **Pause all provider work** holds every queued task (nothing is lost) until you press Resume.
 - **Turn off** a single provider. Queued tasks for it show `disabled` and are not sent.
-- **Stop** an investigation cancels its queued provider tasks.
+- **Stop** an investigation cancels its queued provider tasks. **Cancel queued work** (Provider usage) cancels every waiting check in every investigation, after a confirmation; those investigations finish *complete with limits* ("queued checks were cancelled"), never "complete", and **Refresh results** runs the cancelled checks again.
 - A queued task is **re-authorized when it runs**: if the case is closed, offline mode is on, or the authorization was withdrawn or expired meanwhile, it is not sent and shows *awaiting authorization*.
+- **Caching.** Fusion does not ask a source about the same input again unless you press *Check for more* or *Refresh results*; every answer is stored as evidence with its retrieval time, so repeating a question only to see the same answer never spends quota.
 - Nothing ever purchases credits, upgrades a plan, or enables overflow. There is no code path that could.
 
 ## Task statuses
@@ -100,6 +101,8 @@ Run on 2026-10-27 with the fake clock and mock transports described below.
 | Censys PAT format, one concurrent, 100-credit ceiling, paid operation blocked | `test_censys_*` | fixture |
 | 401 / 403 / 402 / 429 / timeout / 5xx / no-match / disabled / expired authorization → distinct states, bounded retries, no false completion | `test_each_virustotal_answer…`, `test_a_rejected_key…`, `test_timeouts…`, `test_a_provider_the_operator_turned_off…`, `test_authorization_is_checked_again…` | fixture |
 | EDGAR contact: validated, saved, read back, persists across restart, blocks when missing, sent as User-Agent, paced | `test_edgar_*`, web `quota.test.tsx`, e2e `settings: the SEC contact…` | fixture |
+| VirusTotal public API blocked for business or client use until a licence is confirmed; re-checked at dispatch | `test_virustotal_public_api_is_blocked…` | fixture |
+| Global cancel; cancelled work never runs and the investigation says so | `test_cancel_queued_work…` | fixture |
 | Shodan never planned or contacted by default | `test_shodan_is_disabled_by_default…` | fixture |
 | One-click dashboard shows why it is partial, what waits, when it resumes | `test_one_click_investigation_shows…`, web `Investigations waiting for limits` | fixture |
 | Migration 0018 additive, keeps data, rolls back | `test_migration_0018_…` | real SQLite file |

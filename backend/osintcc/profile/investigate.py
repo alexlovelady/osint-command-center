@@ -122,16 +122,19 @@ def _key_missing(st: Any, ad: Any) -> str | None:
     return None
 
 
-def _classify(step: dict[str, Any], st: Any) -> tuple[str, str]:
+def _classify(step: dict[str, Any], st: Any, subject: Subject | None = None) -> tuple[str, str]:
     ad = st.adapters.get(step["source_id"])
     reason = step.get("reason", "")
     needs = step["needs"]
     if needs == "already_done":
         return "already_done", "This source already ran for this input."
-    notice = st.quota.notice(step["source_id"]) if getattr(st, "quota", None) is not None else None
+    quota = getattr(st, "quota", None)
+    if quota is not None and step["source_id"] == "virustotal" and subject is not None and subject.mode != "self" and not quota.licensed("virustotal"):
+        return "blocked", "VirusTotal's public API is limited to personal, non-commercial use, and this investigation is not a personal self-audit. If you hold a VirusTotal licence that covers this use, confirm it in Settings → Provider usage; otherwise this source is not used. Nothing was sent."
+    notice = quota.notice(step["source_id"]) if quota is not None else None
     if notice and notice["state"] == "disabled":
         return "blocked", notice["text"]
-    if notice and notice["state"] in ("rejected", "plan_restricted"):
+    if notice and notice["state"] in ("rejected", "plan_restricted", "missing_config"):
         return "needs_key", notice["text"]
     if ad is not None and (k := _key_missing(st, ad)) and needs != "blocked":
         return "needs_key", f"No '{k}' key is stored. Add it in Settings to enable this source; nothing was sent."
@@ -156,7 +159,7 @@ def build_manifest(db: Session, st: Any, subject: Subject, case: Case) -> dict[s
     rows: list[dict[str, Any]] = []
     covered: set[str] = set()
     for s in plan["steps"]:
-        status, why = _classify(s, st)
+        status, why = _classify(s, st, subject)
         src = SOURCES.get(s["source_id"])
         hosts = sorted({u.split("/")[2] for u in s.get("endpoints", []) if u.startswith("http")})
         covered.add(s["identifier_id"])
@@ -334,7 +337,7 @@ def advance(st: Any, run_id: str) -> dict[str, Any]:
         for s in plan["steps"]:
             if s["module"] != "OSINT" or s["source_id"] in excluded:
                 continue
-            status, _why = _classify(s, st)
+            status, _why = _classify(s, st, subject)
             if status == "needs_key":
                 skipped_keys.add(s["source"])
                 continue
@@ -392,6 +395,8 @@ def advance(st: Any, run_id: str) -> dict[str, Any]:
             limits.append("provider_blocked")            # a credential was rejected, a plan does not include the operation, or the provider is switched off
         if any(t.status == "failed" for t in end_tasks):
             limits.append("source_errors")               # a source errored or timed out: that is a gap in coverage, never a clean result
+        if any(t.status == "cancelled" for t in end_tasks):
+            limits.append("work_cancelled")              # queued checks were cancelled (all provider work, or an authorization that ended): the investigation did not do them
         if any(t.status == "unavailable" for t in end_tasks):
             limits.append("coverage_gaps")               # a source could not run here (not installed, unsupported input): also a gap, reported as such
         man = build_manifest(db, st, subject, case)
@@ -613,10 +618,10 @@ def _task_limits(db: Session, subject: Subject) -> list[dict[str, str]]:
     """One line per check that did not produce a result, with the provider's reason. Nothing here is a 'no match'."""
     out = []
     for t in _tasks(db, subject):
-        if t.status in ("waiting_limits", "blocked", "failed", "unavailable"):
+        if t.status in ("waiting_limits", "blocked", "failed", "unavailable", "cancelled"):
             label = SOURCES[t.source_id].label if t.source_id in SOURCES else t.source_id
-            code = {"waiting_limits": "waiting_limits", "blocked": "provider_blocked", "unavailable": "not_available"}.get(t.status, "source_error")
-            out.append({"code": code, "source": label, "input": "", "text": (t.limitations or {"waiting_limits": "Waiting for a provider limit to reset.", "blocked": "Blocked."}.get(t.status, "The source did not answer."))[:300]})
+            code = {"waiting_limits": "waiting_limits", "blocked": "provider_blocked", "unavailable": "not_available", "cancelled": "work_cancelled"}.get(t.status, "source_error")
+            out.append({"code": code, "source": label, "input": "", "text": (t.limitations or {"waiting_limits": "Waiting for a provider limit to reset.", "blocked": "Blocked.", "cancelled": "Cancelled before it ran."}.get(t.status, "The source did not answer."))[:300]})
     return out
 
 

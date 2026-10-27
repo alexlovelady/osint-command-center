@@ -5,6 +5,7 @@ No response, here or in the ledger, contains a key, a token or a target identifi
 """
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
@@ -102,6 +103,46 @@ async def enable_provider(request: Request, pid: str, body: ConfirmIn):
         audit.record(db, "providers.enable", actor=actor(request), metadata={"provider": pid, "paid": prov.paid_only})
         db.commit()
     return usage_view(st)
+
+
+class LicenceIn(Strict):
+    commercial_licensed: bool
+
+
+@router.post("/providers/{pid}/licence", dependencies=[Depends(require_admin)])
+async def confirm_licence(request: Request, pid: str, body: LicenceIn):
+    """Record that you hold a licence covering business or client use of a free API. Fusion cannot check it; it only stops blocking that use."""
+    if pid != "virustotal":
+        raise ApiError(404, "not_found", "only VirusTotal's public API needs a licence confirmation")
+    st = S(request)
+    st.quota.set_licensed(pid, body.commercial_licensed)
+    with st.sm() as db:
+        audit.record(db, "providers.licence", actor=actor(request), metadata={"provider": pid, "confirmed": body.commercial_licensed})
+        db.commit()
+    return usage_view(st)
+
+
+@router.post("/providers/cancel-queued", dependencies=[Depends(require_admin)])
+async def cancel_queued(request: Request):
+    """Cancel every queued or waiting provider task (the global Cancel). Finished work is untouched; cancelled checks can be started again with Refresh."""
+    from ...db.models import InvestigationRun, ResearchTask
+    from ...profile import investigate
+    st = S(request)
+    n = 0
+    with st.sm() as db:
+        subjects: set[str] = set()
+        for job in db.scalars(select(Job).where(Job.status.in_(("queued", "deferred")))):
+            job.status, job.quota_status, job.finished_at = "cancelled", "cancelled", datetime.now(UTC)
+            n += 1
+            for t in db.scalars(select(ResearchTask).where(ResearchTask.run_id == job.run_id, ResearchTask.source_id == job.adapter_id,
+                                                           ResearchTask.status.in_(("approved", "waiting_limits", "running")))):
+                t.status, t.limitations = "cancelled", "Cancelled with all queued provider work."
+                subjects.add(t.subject_id)
+        for run in db.scalars(select(InvestigationRun).where(InvestigationRun.subject_id.in_(subjects), InvestigationRun.status.in_((*investigate.ACTIVE, investigate.WAITING)))):
+            investigate._finish(db, run, "complete_with_limits", "work_cancelled", "Queued provider checks were cancelled by you. Results already collected are kept; use Refresh results to run the cancelled checks.")
+        audit.record(db, "providers.cancel_queued", actor=actor(request), metadata={"cancelled": n})
+        db.commit()
+    return {**usage_view(st), "cancelled": n}
 
 
 @router.post("/providers/{pid}/recheck", dependencies=[Depends(require_admin)])

@@ -37,6 +37,7 @@ from .catalog import (
     Window,
     classify,
 )
+from .credentials import validate_contact
 
 LEASE_SECONDS = 90
 MAX_BACKOFF = 3600
@@ -169,6 +170,17 @@ class QuotaService:
 
     def classify(self, url: str) -> Route | None:
         return classify(url)
+
+    def licensed(self, provider: str) -> bool:
+        """Whether the operator confirmed they hold a licence that covers business or client use of a free API (only VirusTotal needs one). Fusion cannot verify it and says so."""
+        with self.sm() as db:
+            row = db.get(Setting, f"quota.licensed.{provider}")
+            return bool(row and row.value_json)
+
+    def set_licensed(self, provider: str, value: bool) -> None:
+        with self.sm() as db:
+            db.merge(Setting(key=f"quota.licensed.{provider}", value_json=bool(value)))
+            db.commit()
 
     def is_paused(self) -> bool:
         with self.sm() as db:
@@ -544,6 +556,8 @@ class QuotaService:
                 return {"state": "disabled", "text": prov.disabled}
             if st.disabled:
                 return {"state": "disabled", "text": st.disabled_reason or "Turned off by you"}
+            if pid == "sec_edgar" and (why := validate_contact(self._contact())[0]):
+                return {"state": "missing_config", "text": f"The SEC needs your contact before any request is sent. {why} Set it under SEC EDGAR contact in Settings."}
             if st.verified_state == "rejected":
                 return {"state": "rejected", "text": f"{prov.label} rejected the stored key. Replace it in Settings; nothing was sent."}
             if st.verified_state == "plan_restricted":
@@ -599,7 +613,8 @@ class QuotaService:
                             "last_status": st.last_status, "last_error": st.last_error, "last_response_at": _iso(_aw(st.last_response_at)),
                             "blocked_until": _iso(bu) if (bu := _aw(st.blocked_until)) is not None and bu > now else None,
                             "operations": ops, "queued": queued, "reset_note": prov.reset_note, "limitations": list(prov.limitations), "terms": prov.terms,
-                            "verified_live": prov.verified_live, "local_estimate": True})
+                            "verified_live": prov.verified_live, "local_estimate": True,
+                            "licence": ({"needed_for": "business or client use", "confirmed": self.licensed(prov.id)} if prov.id == "virustotal" else None)})
         return out
 
 

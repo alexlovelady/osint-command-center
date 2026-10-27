@@ -97,6 +97,7 @@ def main() -> None:
                     break
                 await asyncio.sleep(0.05)
             # A second, fictional business: three owned domains. VirusTotal's public API is paced (4 per minute, 16 s apart), so the later lookups genuinely wait.
+            a.state.core.quota.set_licensed("virustotal", True)          # the fictional operator holds a licence that covers business use of VirusTotal
             b = (await c.post("/api/v1/investigations", json={"kind": "business", "display_name": "Acme Example LLC", "purpose": "synthetic demonstration of a business self-audit; fictional company",
                                                               "inputs": [{"kind": "domain", "value": f"{n}.example.com"} for n in ("acme", "shop", "mail")],
                                                               "authorization": {"verification_method": "self_attestation", "verifier": "demo operator"}, "start": True, "approved_sources": "listed"})).json()

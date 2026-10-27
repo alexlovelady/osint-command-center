@@ -611,6 +611,7 @@ async def test_the_test_button_needs_confirmation_is_accounted_and_reads_the_url
 # =============================================================================================== one-click: partial, queued, resumed
 async def test_one_click_investigation_shows_why_it_is_partial_what_waits_and_when_it_resumes(env, world, clock):
     from test_investigation import AUTH, finish, prepare
+    env.quota.set_licensed("virustotal", True)                                                        # a business investigation: the operator confirmed a covering VirusTotal licence
     inputs = [{"kind": "domain", "value": f"{n}.example.org"} for n in ("alpha", "beta", "gamma")]
     p = await prepare(env, inputs, kind="business", start=True, approved_sources="listed")
     rid = p["run"]["id"]
@@ -646,6 +647,7 @@ async def test_one_click_investigation_shows_why_it_is_partial_what_waits_and_wh
 
 async def test_authorization_is_checked_again_when_deferred_work_resumes(env, world, clock):
     from test_investigation import prepare
+    env.quota.set_licensed("virustotal", True)
     world["vt"] = (429, {})
     p = await prepare(env, [{"kind": "domain", "value": "alpha.example.org"}], kind="business", start=True, approved_sources="listed")
     rid = p["run"]["id"]
@@ -743,3 +745,79 @@ def test_migration_0018_is_additive_keeps_existing_jobs_and_downgrades_cleanly(t
     with eng.begin() as conn:
         assert conn.execute(text("SELECT count(*) FROM jobs")).scalar() == 1                          # rollback keeps the work
     eng.dispose()
+
+
+# =============================================================================================== licensing, global cancel, scope reference
+async def test_virustotal_public_api_is_blocked_for_business_use_until_a_licence_is_confirmed_and_rechecked_when_work_resumes(env, world, clock):
+    from test_investigation import prepare
+    biz = await prepare(env, [{"kind": "domain", "value": "alpha.example.org"}], kind="business")
+    row = next(r for r in biz["manifest"]["rows"] if r["source_id"] == "virustotal")
+    assert row["status"] == "blocked" and "non-commercial" in row["reason"]                           # the plan says so; nothing is sent
+    me = await prepare(env, [{"kind": "domain", "value": "mine.example.org"}], kind="person")
+    assert next(r for r in me["manifest"]["rows"] if r["source_id"] == "virustotal")["status"] == "needs_approval"   # a personal self-audit is the licensed use
+    u = (await env.post("/api/v1/providers/virustotal/licence", json={"commercial_licensed": True})).json()
+    assert next(p for p in u["providers"] if p["provider"] == "virustotal")["licence"]["confirmed"] is True
+    assert (await env.post("/api/v1/providers/shodan/licence", json={"commercial_licensed": True})).status_code == 404
+    again = await prepare(env, [{"kind": "domain", "value": "beta.example.org"}], kind="business")
+    assert next(r for r in again["manifest"]["rows"] if r["source_id"] == "virustotal")["status"] == "needs_approval"
+    world["vt"] = (429, {})
+    p = await prepare(env, [{"kind": "domain", "value": "gamma.example.org"}], kind="business", start=True, approved_sources="listed")
+    for _ in range(40):
+        st = (await env.get(f"{B}/investigations/{p['run']['id']}")).json()
+        if st["status"] == "waiting_limits":
+            break
+        await asyncio.sleep(0.05)
+    assert st["status"] == "waiting_limits"
+    env.quota.set_licensed("virustotal", False)                                                       # withdrawn while the work waits
+    world["vt"] = (200, vt_body())
+    sent = len(env.seen("www.virustotal.com"))
+    clock.advance(3600)
+    await env.st.quota_resumer.tick()
+    assert len(env.seen("www.virustotal.com")) == sent                                                # re-checked at dispatch: nothing was sent
+    assert [j.quota_status for j in env.jobs("virustotal") if j.status != "succeeded"][-1] == "awaiting_authorization"
+
+
+async def test_cancel_queued_work_cancels_every_waiting_check_and_the_investigation_says_so(env, world, clock):
+    from test_investigation import prepare
+    env.quota.set_licensed("virustotal", True)
+    world["vt"] = (429, {})
+    p = await prepare(env, [{"kind": "domain", "value": "alpha.example.org"}], kind="business", start=True, approved_sources="listed")
+    rid = p["run"]["id"]
+    for _ in range(40):
+        st = (await env.get(f"{B}/investigations/{rid}")).json()
+        if st["status"] == "waiting_limits":
+            break
+        await asyncio.sleep(0.05)
+    assert st["status"] == "waiting_limits"
+    r = await env.post("/api/v1/providers/cancel-queued")
+    assert r.status_code == 200 and r.json()["cancelled"] >= 1
+    assert all(j.status in ("cancelled", "succeeded", "failed", "skipped", "denied") for j in env.jobs())
+    world["vt"] = (200, vt_body())
+    before = len(env.seen("www.virustotal.com"))
+    for _ in range(30):
+        clock.advance(60)
+        await env.st.quota_resumer.tick()
+        await asyncio.sleep(0.05)
+        st = (await env.get(f"{B}/investigations/{rid}")).json()
+        if st["status"] not in ("waiting_limits", "queued", "collecting", "correlating", "expanding"):
+            break
+    assert len(env.seen("www.virustotal.com")) == before                                              # cancelled work never runs
+    summ = (await env.get(f"{B}/investigations/{rid}/summary")).json()
+    assert st["status"] in ("complete_with_limits", "awaiting_review") and any(x["code"] == "work_cancelled" for x in summ["limits"])   # not "complete"
+
+
+async def test_a_job_records_what_it_ran_under_and_the_sec_plan_row_needs_a_valid_contact(env, world):
+    from test_investigation import prepare
+    env.quota.set_licensed("virustotal", True)
+    p = await prepare(env, [{"kind": "domain", "value": "alpha.example.org"}], kind="business", start=True, approved_sources="listed")
+    for _ in range(40):
+        await env.post(f"{B}/investigations/{p['run']['id']}/advance")
+        if all(j.finished_at or j.status == "deferred" for j in env.jobs()):
+            break
+        await asyncio.sleep(0.05)
+    assert env.jobs() and all(j.scope_ref for j in env.jobs() if j.attempts)                           # every job that ran says which consent or run it ran under
+    assert any(j.scope_ref.startswith("task:") for j in env.jobs())
+    notice = env.quota.notice("sec_edgar")
+    assert notice and notice["state"] == "missing_config" and "contact" in notice["text"].lower()
+    assert (await env.put("/api/v1/settings", json={"values": {"edgar_contact": "Jane Analyst jane@example.org"}})).status_code == 200
+    assert env.quota.notice("sec_edgar") is None

@@ -21,6 +21,7 @@ from ..db.models import (
     ProfileClaim,
     ResearchTask,
     SearchRun,
+    Setting,
     Subject,
     SubjectIdentifier,
 )
@@ -220,6 +221,12 @@ def execution_gate(db: Session, run: SearchRun, job: Job) -> str | None:
     if not d.allowed:
         t.status, t.limitations = "blocked", d.reason
         return d.reason
+    if job.adapter_id == "virustotal" and subject.mode != "self":                     # the public API is personal and non-commercial; business or client use needs the operator's licence confirmation
+        lic = db.get(Setting, "quota.licensed.virustotal")
+        if not (lic and lic.value_json):
+            t.status, t.limitations = "blocked", "VirusTotal's public API is for personal, non-commercial use; confirm a covering licence in Settings to use it here."
+            return t.limitations
+    job.scope_ref = f"task:{t.id}"
     t.status, t.last_attempt = "running", _now()
     return None
 

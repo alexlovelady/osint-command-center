@@ -10,7 +10,7 @@ export interface ProviderEntry {
   provider: string; label: string; plan: string; credential_name: string | null; stored: boolean; paid_only: boolean; disabled: boolean; disabled_reason: string; verified_state: string; verified_at: string | null;
   last_status: number | null; last_error: string; last_response_at: string | null; blocked_until: string | null; operations: UsageOp[]; queued: Record<string, number>; reset_note: string; limitations: string[];
   state: { code: string; label: string; hint: string }; axes: { stored_credential: string; live_authentication: string; endpoint_supported: string; quota_available: string };
-  test: { what: string; cost: string; url_host: string } | null;
+  test: { what: string; cost: string; url_host: string } | null; licence?: { needed_for: string; confirmed: boolean } | null;
 }
 export interface UsageOut { providers: ProviderEntry[]; paused: boolean; waiting: number; enforced: boolean; spend_guard: { text: string; paid_spend_usd: number }; note: string; timezone: string }
 interface QueueRow { job_id: string; case: string | null; source: string; provider: string | null; operation: string | null; status: string; attempts: number; next_eligible_at: string | null; reason: string }
@@ -29,6 +29,7 @@ function Row({ p, advanced }: { p: ProviderEntry; advanced: boolean }) {
   const done = () => qc.invalidateQueries({ queryKey: ["provider-usage"] });
   const test = useMutation({ mutationFn: () => api<{ state: string; detail: string }>(`/providers/${p.provider}/test`, { method: "POST", json: { confirm: true } }), onSuccess: () => { setConfirm(false); done(); qc.invalidateQueries({ queryKey: ["secrets"] }); } });
   const recheck = useMutation({ mutationFn: () => api(`/providers/${p.provider}/recheck`, { method: "POST" }), onSuccess: done });
+  const licence = useMutation({ mutationFn: (v: boolean) => api(`/providers/${p.provider}/licence`, { method: "POST", json: { commercial_licensed: v } }), onSuccess: done });
   const toggle = useMutation({ mutationFn: (on: boolean) => api(`/providers/${p.provider}/${on ? "enable" : "disable"}`, { method: "POST", json: on ? { confirm: false, entitlement_verified: false } : undefined }), onSuccess: done });
   const queued = Object.entries(p.queued).filter(([k]) => k !== "running").reduce((a, [, n]) => a + n, 0);
   const wins = p.operations.filter((o) => !o.blocked).flatMap((o) => o.windows.map((w) => ({ ...w, op: o.label })));
@@ -53,6 +54,10 @@ function Row({ p, advanced }: { p: ProviderEntry; advanced: boolean }) {
         </div>
         {confirm && p.test && <div className="banner" role="alert">{p.test.what} It uses {p.test.cost} and sends one request to {p.test.url_host}.
           <div className="row"><button className="primary" onClick={() => test.mutate()} disabled={test.isPending}>{test.isPending ? "Testing…" : "Send the test"}</button><button onClick={() => setConfirm(false)}>Cancel</button></div></div>}
+        {p.licence && (
+          <label className="muted" style={{ display: "block", marginTop: 6 }}>
+            <input type="checkbox" style={{ width: "auto" }} checked={p.licence.confirmed} onChange={(e) => licence.mutate(e.target.checked)} /> I hold a {p.label} licence that covers {p.licence.needed_for} (Fusion cannot check this)
+          </label>)}
         {test.data && <div className="muted" role="status">{test.data.state === "verified" ? "The provider accepted the request." : test.data.detail}</div>}
         {(test.isError || recheck.isError || toggle.isError) && <ErrorBox error={test.error ?? recheck.error ?? toggle.error} />}
       </td>
@@ -85,13 +90,18 @@ export default function ProviderUsage() {
   const [advanced] = useAdvanced();
   const q = useQuery({ queryKey: ["provider-usage"], queryFn: () => api<UsageOut>("/providers/usage"), refetchInterval: 15000, retry: false });
   const pause = useMutation({ mutationFn: (p: boolean) => api(`/providers/${p ? "pause" : "resume"}`, { method: "POST" }), onSuccess: () => qc.invalidateQueries({ queryKey: ["provider-usage"] }) });
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const cancel = useMutation({ mutationFn: () => api<{ cancelled: number }>("/providers/cancel-queued", { method: "POST" }), onSuccess: () => { setConfirmCancel(false); qc.invalidateQueries({ queryKey: ["provider-usage"] }); qc.invalidateQueries({ queryKey: ["investigations"] }); } });
   if (q.isLoading) return <Loading what="provider usage" />;
   if (q.isError || !q.data) return <div className="card" aria-label="Provider usage"><h3 style={{ marginTop: 0 }}>Provider usage</h3><div className="muted">Provider usage could not be loaded.</div></div>;
   const u = q.data;
   return (
     <div className="card" aria-label="Provider usage">
       <div className="row"><h3 style={{ margin: 0 }}>Provider usage</h3><span className="grow" />
-        <button onClick={() => pause.mutate(!u.paused)} title="Holds all queued provider work without losing it">{u.paused ? "Resume all provider work" : "Pause all provider work"}</button></div>
+        <button onClick={() => pause.mutate(!u.paused)} title="Holds all queued provider work without losing it">{u.paused ? "Resume all provider work" : "Pause all provider work"}</button>
+        {u.waiting > 0 && !confirmCancel && <button onClick={() => setConfirmCancel(true)}>Cancel queued work</button>}</div>
+      {confirmCancel && <div className="banner warn" role="alert">This cancels every queued or waiting provider check, in all investigations. Finished results are kept; the checks can be started again with Refresh results.
+        <div className="row"><button className="primary" onClick={() => cancel.mutate()} disabled={cancel.isPending}>Cancel {u.waiting} queued check(s)</button><button onClick={() => setConfirmCancel(false)}>Keep them</button></div></div>}
       {u.paused && <div className="banner warn" role="status">Provider work is paused. Queued checks are kept and continue when you resume.</div>}
       {u.waiting > 0 && !u.paused && <div className="banner" role="status">{u.waiting} check(s) are waiting for a provider’s limit to reset. They continue by themselves; nothing needs you.</div>}
       <div className="banner" role="note"><b>Spend guard: $0.</b> {u.spend_guard.text}</div>

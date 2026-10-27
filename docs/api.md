@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-367 operations in 43 groups.
+369 operations in 43 groups.
 
 ## ai
 
@@ -393,6 +393,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 
 | Method | Path | Summary |
 |---|---|---|
+| POST | `/api/v1/providers/cancel-queued` | Cancel every queued or waiting provider task (the global Cancel). Finished work is untouched; cancelled checks can be started again with Ref |
 | GET | `/api/v1/providers/ledger` | The audit-friendly activity ledger: one row per request that was reserved, with its provider, action, timing and result. It never holds a ke |
 | POST | `/api/v1/providers/pause` | Pause All |
 | GET | `/api/v1/providers/queue` | Work that is waiting, running or blocked, with the reason and the earliest time it may run (an estimate). |
@@ -400,6 +401,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/providers/usage` | Providers Usage |
 | POST | `/api/v1/providers/{pid}/disable` | Disable Provider |
 | POST | `/api/v1/providers/{pid}/enable` | Enable Provider |
+| POST | `/api/v1/providers/{pid}/licence` | Record that you hold a licence covering business or client use of a free API. Fusion cannot check it; it only stops blocking that use. |
 | POST | `/api/v1/providers/{pid}/recheck` | Forget 'rejected', 'plan restricted' and back-off marks after you changed the key or the plan. Sends nothing. |
 | POST | `/api/v1/providers/{pid}/test` | Test Provider |
 

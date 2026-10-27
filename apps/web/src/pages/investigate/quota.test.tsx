@@ -125,6 +125,23 @@ describe("Provider usage", () => {
     expect(JSON.parse(String(calls.find((c) => c.url.startsWith("/providers/virustotal/test"))?.init?.body))).toEqual({ confirm: true });
   });
 
+  it("asks for a licence confirmation for business use of the public VirusTotal API, and cancels queued work only after confirmation", async () => {
+    const calls = mockApi({ "/providers/virustotal/licence": usage([entry({})]), "/providers/cancel-queued": { ...usage([entry({})]), cancelled: 2 },
+      "/providers/usage": usage([entry({ licence: { needed_for: "business or client use", confirmed: false } })]) });
+    wrap(<ProviderUsage />);
+    await waitFor(() => screen.getByLabelText("Provider VirusTotal"));
+    const box = screen.getByLabelText(/I hold a VirusTotal licence that covers business or client use/);
+    expect(box).not.toBeChecked();
+    fireEvent.click(box);
+    await waitFor(() => expect(calls.some((c) => c.url.startsWith("/providers/virustotal/licence"))).toBe(true));
+    expect(JSON.parse(String(calls.find((c) => c.url.startsWith("/providers/virustotal/licence"))?.init?.body))).toEqual({ commercial_licensed: true });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel queued work" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("cancels every queued or waiting provider check");
+    expect(calls.some((c) => c.url.startsWith("/providers/cancel-queued"))).toBe(false);                   // nothing is cancelled until confirmed
+    fireEvent.click(screen.getByRole("button", { name: /Cancel 2 queued check/ }));
+    await waitFor(() => expect(calls.some((c) => c.url.startsWith("/providers/cancel-queued"))).toBe(true));
+  });
+
   it("can pause and resume all provider work", async () => {
     const calls = mockApi({ "/providers/pause": usage([entry({})], true), "/providers/usage": usage([entry({})], true) });
     wrap(<ProviderUsage />);

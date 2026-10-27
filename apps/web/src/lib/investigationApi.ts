@@ -16,6 +16,7 @@ export const STOP_TEXT: Record<string, string> = {
   budget_exhausted: "Stopped at the source-call budget.", max_depth: "Stopped at the depth limit.", runtime_cap: "Stopped at the runtime limit.", authorization: "The authorization ended.",
   offline: "Offline mode is on.", case_not_open: "The case is not open.", no_new_leads: "No new leads remain.", coverage_gaps: "Some methods are unavailable (see Coverage).",
   cancelled: "Stopped by you.", provider_limits: "Every remaining check is waiting for a provider’s limit to reset. They continue by themselves.",
+  work_cancelled: "Some queued checks were cancelled, so they did not run. Use Refresh results to run them.",
   provider_blocked: "A provider refused (key rejected, plan restriction or switched off). See what could not be done.", source_errors: "Some sources had errors or timed out. See what could not be done.", stalled: "Stopped waiting for a check that did not finish. Use Check for more to continue.", internal_error: "Stopped on an internal error.", step_refused: "A step was refused by the safety checks.",
 };
 

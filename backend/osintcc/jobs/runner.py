@@ -259,6 +259,7 @@ class JobRunner:
                 adapter = self.adapters.get(job.adapter_id)
                 at = ATarget(type=target.type, raw=target.raw_input, canonical=target.canonical_value)
                 case_id, dom, mode = run.case_id, domain_of(target.type, target.canonical_value), run.mode
+                job.scope_ref = job.scope_ref or f"run:{run.id}:{mode}"                    # what this job runs under: the research task when there is one (set by the gate), else the search run and its mode
                 # Execution-time policy re-check (spec 12.2): scope enforced again at adapter execution.
                 if adapter is None:
                     return self._finish(db, job, "error", "unknown_adapter", ["adapter not registered"])
@@ -277,6 +278,7 @@ class JobRunner:
                                  decision="deny", metadata={"adapter": job.adapter_id, "reason": d.reason})
                     return self._finish(db, job, "denied", "policy_denied", [d.reason], quota_status="awaiting_authorization")
                 deferrals = job.deferrals
+                db.commit()                                                                # the scope reference (and the task now running) are recorded before anything is sent
             scope = JobScope(job_id=job_id, case_id=case_id)
             token = current_scope.set(scope)
             try:
