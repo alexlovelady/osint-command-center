@@ -362,7 +362,7 @@ async def run_contract_tests(root: Path, manifest: PluginManifest) -> dict[str, 
     results = []
     for i in range(2):  # run twice: determinism
         ad = PluginAdapter(manifest, root, tmp_hash, lambda *_: None)
-        results.append(await ad.run(Target(**target), AdapterContext(http=_FixtureHttp())))  # type: ignore[arg-type]
+        results.append(await ad.run(Target(**target), AdapterContext(http=_FixtureHttp())))
     r = results[0]
     add("runs to the expected status", r.status == expected["status"], f"status={r.status} codes={r.error_code} {r.warnings[:1]}")
     preds = {f.predicate.split(".", 1)[1] for f in r.findings}

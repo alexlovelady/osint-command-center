@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-358 operations in 42 groups.
+367 operations in 43 groups.
 
 ## ai
 
@@ -388,6 +388,20 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/profile/shared-email-providers` | Shared Providers |
 | POST | `/api/v1/profile/shared-email-providers` | Add Shared Provider |
 | GET | `/api/v1/profile/sources` | The capability matrix for subject research: what each method needs, produces, costs and how well it has been exercised. |
+
+## providers
+
+| Method | Path | Summary |
+|---|---|---|
+| GET | `/api/v1/providers/ledger` | The audit-friendly activity ledger: one row per request that was reserved, with its provider, action, timing and result. It never holds a ke |
+| POST | `/api/v1/providers/pause` | Pause All |
+| GET | `/api/v1/providers/queue` | Work that is waiting, running or blocked, with the reason and the earliest time it may run (an estimate). |
+| POST | `/api/v1/providers/resume` | Resume All |
+| GET | `/api/v1/providers/usage` | Providers Usage |
+| POST | `/api/v1/providers/{pid}/disable` | Disable Provider |
+| POST | `/api/v1/providers/{pid}/enable` | Enable Provider |
+| POST | `/api/v1/providers/{pid}/recheck` | Forget 'rejected', 'plan restricted' and back-off marks after you changed the key or the plan. Sends nothing. |
+| POST | `/api/v1/providers/{pid}/test` | Test Provider |
 
 ## reports
 

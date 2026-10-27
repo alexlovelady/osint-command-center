@@ -234,5 +234,17 @@
  {
   "term": "Investigation limits",
   "definition": "Bounds on one investigation: leads followed at most 2 steps out, at most 100 source runs, 10 per input, 30 minutes. Each stop is recorded with its reason."
+ },
+ {
+  "term": "waiting for provider limits",
+  "definition": "The state of an investigation whose remaining checks are queued because a provider's rate limit, daily quota or monthly credits are used up. It is not complete and not failed; it continues by itself after the reset, and the time shown is an estimate."
+ },
+ {
+  "term": "provider usage",
+  "definition": "Settings view of each provider's credential state (stored, verified by a real call, rejected, plan restricted), what is left in each limit window, when it resets (UTC), what is queued and the last response. Fusion's counts are its own estimate."
+ },
+ {
+  "term": "spend guard",
+  "definition": "The rule that Fusion never buys credits, upgrades a plan or enables paid overflow. A used-up quota means work waits for the reset."
  }
 ]

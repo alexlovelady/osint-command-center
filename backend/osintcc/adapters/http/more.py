@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
 
+from ...quota.credentials import censys_kind
 from ..base import (
     AdapterContext,
     AdapterManifest,
@@ -19,6 +20,7 @@ from ..base import (
     FindingDraft,
     RawArtifact,
     Target,
+    skipped,
 )
 from .reputation import _get, _requires_key
 
@@ -117,25 +119,38 @@ class OpenCorporatesAdapter:
 
 
 class CensysAdapter:
+    """Censys host lookup. Two authentication paths, never mixed:
+    * a Personal Access Token (the current Censys Platform): `Authorization: Bearer <token>` to api.platform.censys.io;
+    * a legacy `API_ID:API_SECRET` pair (the older Search API): HTTP Basic to search.censys.io, kept only because it is a genuinely separate, still-documented path.
+    A token is never turned into an ID:secret pair, and search endpoints (not part of the Free plan) are never called."""
     manifest = AdapterManifest(
-        id="censys", default_selected=False, name="Censys (host index)", version="1.0.0", supported_target_types=["ip"],
+        id="censys", default_selected=False, name="Censys (host lookup)", version="2.0.0", supported_target_types=["ip"],
         operation_class="passive", needs_network=True, api_key_name="censys", rate_limit_per_minute=20, timeout_seconds=30,
-        license="Censys API terms apply (plan dependent)", terms_url="https://search.censys.io/api",
-        endpoints=["https://search.censys.io/api/v2/hosts/<ip>"],
-        description="What Censys previously observed on an IP. Does not scan the target. Secret format: API_ID:API_SECRET.",
-        install_hint="Store 'API_ID:API_SECRET' via the secrets endpoint (name: censys).")
+        license="Censys terms apply (plan dependent); the Free plan has 100 credits per month and lookup endpoints only", terms_url="https://docs.censys.com/docs/platform-credits-free-starter",
+        endpoints=["https://api.platform.censys.io/v3/global/asset/host/<ip>", "https://search.censys.io/api/v2/hosts/<ip> (legacy ID-and-key pair only)"],
+        description="What Censys previously observed on one IP. Does not scan the target. Costs 1 credit per lookup; Fusion never buys credits. "
+                    "Credential: a Personal Access Token (preferred) or the legacy ID-and-key pair.",
+        install_hint="Store a Censys Personal Access Token (Censys account menu, API Access) under the name 'censys' in Settings.")
 
     async def health(self) -> dict:
-        return {"status": "healthy", "version": self.manifest.version, "detail": "needs credentials in the OS credential store"}
+        return {"status": "healthy", "version": self.manifest.version, "detail": "needs a Personal Access Token (or a legacy ID-and-key pair) in the credential store; "
+                "response parsing is fixture-tested, not verified against the live service"}
 
     async def run(self, target: Target, ctx: AdapterContext) -> AdapterResult:
         aid = self.manifest.id
-        key = ctx.secret("censys")
-        if not key or ":" not in key:
+        key = (ctx.secret("censys") or "").strip()
+        if not key:
             return _requires_key(aid, "censys")
-        url = f"https://search.censys.io/api/v2/hosts/{target.canonical}"
-        auth = "Basic " + base64.b64encode(key.encode()).decode()
-        res, err = await _get(ctx, aid, url, {"Authorization": auth})
+        kind = censys_kind(key)
+        if kind == "wrong_format":
+            return skipped(aid, "requires_config", "The stored Censys credential is not a Personal Access Token or an API_ID:API_SECRET pair, so no request was made. Replace it in Settings.")
+        if kind == "pat":
+            url = f"https://api.platform.censys.io/v3/global/asset/host/{quote(target.canonical, safe='')}"
+            headers = {"Authorization": f"Bearer {key}", "Accept": "application/vnd.censys.api.v3.host.v1+json"}
+        else:
+            url = f"https://search.censys.io/api/v2/hosts/{quote(target.canonical, safe='')}"
+            headers = {"Authorization": "Basic " + base64.b64encode(key.encode()).decode()}
+        res, err = await _get(ctx, aid, url, headers)
         if err:
             return err
         if res.status == 404:
@@ -145,13 +160,16 @@ class CensysAdapter:
             return AdapterResult(adapter_id=aid, status="error", error_code=f"http_{res.status}", retryable=res.status >= 500,
                                  warnings=[f"Censys HTTP {res.status}"])
         try:
-            r = json.loads(res.body)["result"]
-        except (ValueError, KeyError, TypeError):
-            return AdapterResult(adapter_id=aid, status="error", error_code="parse_error", warnings=["unexpected Censys structure"])
+            data = json.loads(res.body)["result"]
+            r = data.get("resource", data) if isinstance(data, dict) else {}
+            assert isinstance(r, dict)
+        except (ValueError, KeyError, TypeError, AssertionError):
+            return AdapterResult(adapter_id=aid, status="error", error_code="parse_error", warnings=["unexpected Censys structure"],
+                                 artifacts=[RawArtifact(name="censys-unparsed.bin", content=res.body, source_url=url, http_status=200)])
         art = RawArtifact(name=f"censys-{target.canonical}.json", content=res.body, source_url=url, http_status=200)
         subj = EntityRef(type="ip", key=target.canonical, display=target.canonical)
         why = "Censys's own earlier observation; services may have changed since the stated time"
-        svcs = [{"port": s.get("port"), "service": s.get("service_name"), "transport": s.get("transport_protocol")}
+        svcs = [{"port": s.get("port"), "service": s.get("service_name") or s.get("protocol"), "transport": s.get("transport_protocol")}
                 for s in r.get("services", []) if isinstance(s, dict)]
         f = [FindingDraft(subject=subj, predicate="censys.services", value=svcs, confidence="medium", confidence_reason=why)]
         asys = r.get("autonomous_system") or {}

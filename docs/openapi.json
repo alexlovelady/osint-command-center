@@ -709,6 +709,23 @@
     "title": "Confirm",
     "type": "object"
    },
+   "ConfirmIn": {
+    "additionalProperties": false,
+    "properties": {
+     "confirm": {
+      "default": false,
+      "title": "Confirm",
+      "type": "boolean"
+     },
+     "entitlement_verified": {
+      "default": false,
+      "title": "Entitlement Verified",
+      "type": "boolean"
+     }
+    },
+    "title": "ConfirmIn",
+    "type": "object"
+   },
    "CorrectionIn": {
     "additionalProperties": false,
     "properties": {
@@ -15620,6 +15637,317 @@
      }
     },
     "summary": "Profile Sources"
+   }
+  },
+  "/api/v1/providers/ledger": {
+   "get": {
+    "description": "The audit-friendly activity ledger: one row per request that was reserved, with its provider, action, timing and result. It never holds a key or a target.",
+    "operationId": "provider_ledger_api_v1_providers_ledger_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "provider",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Provider"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 200,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Provider Ledger"
+   }
+  },
+  "/api/v1/providers/pause": {
+   "post": {
+    "operationId": "pause_all_api_v1_providers_pause_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Pause All"
+   }
+  },
+  "/api/v1/providers/queue": {
+   "get": {
+    "description": "Work that is waiting, running or blocked, with the reason and the earliest time it may run (an estimate).",
+    "operationId": "provider_queue_api_v1_providers_queue_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 200,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Provider Queue"
+   }
+  },
+  "/api/v1/providers/resume": {
+   "post": {
+    "operationId": "resume_all_api_v1_providers_resume_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Resume All"
+   }
+  },
+  "/api/v1/providers/usage": {
+   "get": {
+    "operationId": "providers_usage_api_v1_providers_usage_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Providers Usage"
+   }
+  },
+  "/api/v1/providers/{pid}/disable": {
+   "post": {
+    "operationId": "disable_provider_api_v1_providers__pid__disable_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pid",
+      "required": true,
+      "schema": {
+       "title": "Pid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Disable Provider"
+   }
+  },
+  "/api/v1/providers/{pid}/enable": {
+   "post": {
+    "operationId": "enable_provider_api_v1_providers__pid__enable_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pid",
+      "required": true,
+      "schema": {
+       "title": "Pid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ConfirmIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Enable Provider"
+   }
+  },
+  "/api/v1/providers/{pid}/recheck": {
+   "post": {
+    "description": "Forget 'rejected', 'plan restricted' and back-off marks after you changed the key or the plan. Sends nothing.",
+    "operationId": "recheck_provider_api_v1_providers__pid__recheck_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pid",
+      "required": true,
+      "schema": {
+       "title": "Pid",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Recheck Provider"
+   }
+  },
+  "/api/v1/providers/{pid}/test": {
+   "post": {
+    "operationId": "test_provider_api_v1_providers__pid__test_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pid",
+      "required": true,
+      "schema": {
+       "title": "Pid",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ConfirmIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Test Provider"
    }
   },
   "/api/v1/reports/generate": {

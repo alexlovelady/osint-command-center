@@ -218,6 +218,14 @@ class Job(Base):
     created_at: Mapped[datetime] = ts()
     started_at: Mapped[datetime | None] = ts(nullable=True, default=False)
     finished_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    # Provider quota accounting (addendum PQ-1.0). `quota_status` is the spec's task status; `status` above remains the runner's state machine.
+    quota_status: Mapped[str] = mapped_column(String(28), default="queued", server_default="queued")
+    provider: Mapped[str] = mapped_column(String(40), default="", server_default="")
+    operation: Mapped[str] = mapped_column(String(40), default="", server_default="")
+    priority: Mapped[int] = mapped_column(Integer, default=5, server_default="5")
+    consumption_known: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    scope_ref: Mapped[str] = mapped_column(String(80), default="", server_default="")   # the research task / consent this job runs under
+    deferrals: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     __table_args__ = (Index("ix_jobs_status_retry", "status", "next_retry_at"),)
 
 
@@ -924,3 +932,4 @@ from .profile import (  # noqa: F401  (target-profile tables, addendum TP-1.0)
     SubjectCorrection,
     SubjectIdentifier,
 )
+from .quota import ProviderLedger, ProviderState  # noqa: F401  (provider quota tables, addendum PQ-1.0)

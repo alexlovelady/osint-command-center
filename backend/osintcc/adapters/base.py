@@ -9,7 +9,7 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel, Field
 
-from ..policy.ssrf import SafeHttp
+from ..policy.ssrf import HttpClient
 
 OPERATION_CLASSES = ("passive", "public_site_query", "active", "local_only")
 HEALTH_STATES = ("healthy", "disabled", "not_installed", "requires_key", "rate_limited", "unavailable",
@@ -92,7 +92,7 @@ class AdapterResult(BaseModel):
 
 @dataclass
 class AdapterContext:
-    http: SafeHttp
+    http: HttpClient
     dns_query: Callable[[str, str], Awaitable[list[str]]] | None = None
     now: Callable[[], datetime] = lambda: datetime.now(UTC)
     config: dict[str, Any] = field(default_factory=dict)

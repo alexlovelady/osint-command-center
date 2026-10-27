@@ -96,7 +96,7 @@ def _entries(db: Session, subject: Subject, case: Case, adapters: dict[str, Inte
             if not step or not step["runnable"]:
                 e["reason"] = (step or {}).get("reason", "this source does not support that input")
             else:
-                e.update(runnable=True, reason=step["reason"], requires_confirmation=bool(step.get("requires_confirmation")), warnings=step.get("warnings", []))
+                e.update(runnable=True, reason=step["reason"], requires_confirmation=bool(step.get("requires_confirmation")) or src.source_class == "public_site_query", warnings=step.get("warnings", []))   # anything that sends the identifier to a third party is approved by name
             out.append(e)
     return out
 
@@ -172,16 +172,23 @@ _JOB_TO_TASK = {"succeeded": "completed", "failed": "failed", "denied": "blocked
 def refresh_tasks(db: Session, subject: Subject) -> int:
     """Fold finished job outcomes back into the research tasks (idempotent)."""
     n = 0
-    for t in db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id, ResearchTask.status.in_(("approved", "running")))):
+    for t in db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id, ResearchTask.status.in_(("approved", "running", "waiting_limits")))):
         job = db.scalars(select(Job).where(Job.run_id == t.run_id, Job.adapter_id == t.source_id)).first()
         if job is None:
             continue
-        if job.status in ("queued", "deferred"):
+        if job.status == "deferred":
+            t.status, t.limitations = "waiting_limits", "; ".join(job.warnings_json)[:500] or "Waiting for a provider limit to reset."
+            continue
+        if job.status == "queued":
+            if t.status == "waiting_limits":
+                t.status = "approved"
             continue
         if job.status == "running":
             t.status = "running"
             continue
         new = _JOB_TO_TASK.get(job.status, "failed")
+        if job.quota_status in ("blocked_credentials", "blocked_plan", "disabled_provider", "awaiting_authorization"):
+            new = "blocked"
         if new == "completed" and (job.result_status == "partial" or any("partial" in w.lower() for w in job.warnings_json)):
             new = "partial"
         t.status, t.limitations = new, "; ".join(job.warnings_json)[:500] or (job.last_error_code or "")

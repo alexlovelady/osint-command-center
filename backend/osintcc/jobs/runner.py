@@ -6,6 +6,7 @@ import hashlib
 import json
 import random
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
@@ -28,9 +29,12 @@ from ..db.models import Target as DbTarget
 from ..evidence.vault import Vault
 from ..policy import engine as policy
 from ..policy.targets import domain_of
+from ..quota.gate import JobScope, current_scope
+from ..quota.outcome import job_outcome
 from ..telemetry import audit
 
 LEASE_SECONDS = 120
+LONG_WAIT_SECONDS = 5.0
 
 
 def _now() -> datetime:
@@ -152,6 +156,7 @@ class JobRunner:
         self.ctx_factory = ctx_factory
         self._sem = asyncio.Semaphore(settings.max_concurrency)
         self._cancel: set[str] = set()
+        self.quota: Any = None        # the shared QuotaService (set by create_app); None means no provider budgets (unit tests of the runner alone)
 
     # ---- recovery -------------------------------------------------------------------------------------------
     def recover_interrupted(self) -> int:
@@ -190,9 +195,11 @@ class JobRunner:
         self._finalize(run_id)
 
     # ---- execution ------------------------------------------------------------------------------------------
-    def _claim(self, db: Session, run_id: str | None) -> list[str]:
+    def _claim(self, db: Session, run_id: str | None, *, resume_only: bool = False) -> list[str]:
         now = _now()
-        q = select(Job).where(Job.status.in_(("queued", "deferred")))
+        if self.quota is not None and self.quota.is_paused():
+            return []                                   # the operator paused all provider work: nothing is claimed, nothing is lost
+        q = select(Job).where(Job.status.in_(("queued", "deferred"))).order_by(Job.priority, Job.created_at)
         if run_id:
             q = q.where(Job.run_id == run_id)
         ids = []
@@ -200,12 +207,23 @@ class JobRunner:
             nra = _aware(job.next_retry_at)
             if nra is not None and nra > now:
                 continue
-            job.status, job.lease_until, job.started_at = "running", now + timedelta(seconds=LEASE_SECONDS), now
+            if resume_only and job.status == "queued" and nra is None:
+                continue                                # fresh work belongs to the caller that created it
+            job.status, job.quota_status, job.lease_until, job.started_at = "running", "running", now + timedelta(seconds=LEASE_SECONDS), now
             job.attempts += 1
             emit(db, job, "started", {"attempt": job.attempts})
             ids.append(job.id)
         db.commit()
         return ids
+
+    async def run_due(self) -> int:
+        """Resume deferred work whose reset time has passed (any run, any case). Authorization and case state are re-checked as each job starts."""
+        with self.sm() as db:
+            ids = self._claim(db, None, resume_only=True)
+        await asyncio.gather(*(self._run_job(i) for i in ids))
+        for (r,) in {r for r in self._runs_for(ids)}:
+            self._finalize(r)
+        return len(ids)
 
     async def run_pending(self, run_id: str | None = None) -> None:
         with self.sm() as db:
@@ -228,6 +246,8 @@ class JobRunner:
                 if not active:
                     return
                 waits = [(nra - _now()).total_seconds() for j in active if (nra := _aware(j.next_retry_at)) is not None]
+            if waits and min(waits) > LONG_WAIT_SECONDS and not any(j.status in ("queued", "running") and _aware(j.next_retry_at) is None for j in active):
+                return                                   # a long wait for a provider reset is the durable resumer's job, not this call's
             await asyncio.sleep(max(0.0, min(waits)) if waits else 0)
 
     async def _run_job(self, job_id: str) -> None:
@@ -251,11 +271,14 @@ class JobRunner:
                 if (why := profile_research.execution_gate(db, run, job)) is not None:   # subject authorization re-checked as each source starts
                     audit.record(db, "adapter.denied", case_id=case_id, resource_type="job", resource_id=job.id, decision="deny",
                                  metadata={"adapter": job.adapter_id, "reason": why[:160], "gate": "subject_authorization"})
-                    return self._finish(db, job, "denied", "authorization_revoked", [why])
+                    return self._finish(db, job, "denied", "authorization_revoked", [why], quota_status="awaiting_authorization")
                 if not d.allowed:
                     audit.record(db, "adapter.denied", case_id=case_id, resource_type="job", resource_id=job.id,
                                  decision="deny", metadata={"adapter": job.adapter_id, "reason": d.reason})
-                    return self._finish(db, job, "denied", "policy_denied", [d.reason])
+                    return self._finish(db, job, "denied", "policy_denied", [d.reason], quota_status="awaiting_authorization")
+                deferrals = job.deferrals
+            scope = JobScope(job_id=job_id, case_id=case_id)
+            token = current_scope.set(scope)
             try:
                 result = await asyncio.wait_for(adapter.run(at, self.ctx_factory()),
                                                 adapter.manifest.timeout_seconds + 5)
@@ -265,33 +288,51 @@ class JobRunner:
             except Exception as exc:  # adapter bugs must never crash the app
                 result = AdapterResult(adapter_id=job.adapter_id, status="error", error_code="adapter_exception",
                                        warnings=[f"{type(exc).__name__}"])
+            finally:
+                current_scope.reset(token)
+            outcome = job_outcome(result, scope, _now(), deferrals=deferrals)
             with self.sm() as db:
                 job = db.get(Job, job_id)
                 run = db.get(SearchRun, job.run_id)
+                job.provider, job.operation = outcome.provider or job.provider, outcome.operation or job.operation
+                job.consumption_known = outcome.consumption_known
                 try:
                     counts = persist_result(db, self.vault, adapter.manifest, run, result)
                 except Exception as exc:
                     db.rollback()
                     job = db.get(Job, job_id)
-                    return self._finish(db, job, "error", "persist_error", [type(exc).__name__])
+                    return self._finish(db, job, "error", "persist_error", [type(exc).__name__], quota_status="permanent_error")
+                if outcome.defer_until is not None:        # the provider (or its dispatcher budget) says wait: keep the work, never report it as done
+                    job.status, job.quota_status = "deferred", outcome.quota_status
+                    job.next_retry_at = _now() + (outcome.defer_until - _now()) * self.settings.retry_scale
+                    job.attempts = max(0, job.attempts - 1)
+                    job.deferrals += 1
+                    job.last_error_code, job.warnings_json, job.lease_until = outcome.quota_status, [outcome.reason] if outcome.reason else [], None
+                    emit(db, job, "deferred", {"status": outcome.quota_status, "until": outcome.defer_until.isoformat(), "provider": outcome.provider})
+                    db.commit()
+                    return
+                if outcome.quota_status in ("blocked_credentials", "blocked_plan", "disabled_provider"):
+                    return self._finish(db, job, "skipped" if result.status == "skipped" else "error", (result.error_code if result.status == "skipped" else None) or outcome.quota_status,
+                                        [outcome.reason] if outcome.reason else result.warnings, quota_status=outcome.quota_status)
                 if result.status in ("success", "partial", "skipped"):
                     job.result_keys_json = counts.pop("result_keys", [])
                     emit(db, job, "result", counts)
-                    return self._finish(db, job, result.status, result.error_code, result.warnings)
+                    return self._finish(db, job, result.status, result.error_code, result.warnings, quota_status=outcome.quota_status)
                 if result.retryable and job.attempts < job.max_attempts:
                     delay = (result.retry_after_seconds or min(300, 2 ** job.attempts) + random.random()) * self.settings.retry_scale
-                    job.status = "deferred" if result.status == "rate_limited" else "queued"
+                    job.status = "queued"
+                    job.quota_status = "transient_error"
                     job.next_retry_at = _now() + timedelta(seconds=delay)
                     job.last_error_code, job.warnings_json = result.error_code, result.warnings
                     emit(db, job, "retry_scheduled", {"in_seconds": round(delay, 1), "code": result.error_code})
                     db.commit()
                     return
-                self._finish(db, job, "error" if result.status != "rate_limited" else "rate_limited",
-                             result.error_code, result.warnings)
+                self._finish(db, job, "error", result.error_code, result.warnings, quota_status=outcome.quota_status)
 
-    def _finish(self, db: Session, job: Job, result_status: str, code: str | None, warnings: list[str]) -> None:
+    def _finish(self, db: Session, job: Job, result_status: str, code: str | None, warnings: list[str], quota_status: str | None = None) -> None:
         job.status = {"success": "succeeded", "partial": "succeeded", "skipped": "skipped", "cancelled": "cancelled",
                       "denied": "denied"}.get(result_status, "failed")
+        job.quota_status = quota_status or ("cancelled" if result_status == "cancelled" else "permanent_error" if job.status == "failed" else job.quota_status)
         job.result_status, job.last_error_code, job.warnings_json = result_status, code, warnings
         job.finished_at, job.lease_until, job.next_retry_at = _now(), None, None
         emit(db, job, "finished", {"status": job.status, "code": code})

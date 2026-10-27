@@ -45,6 +45,9 @@ plainly what it found, what it could not check, and why.
   phone number) are stored masked. Merges are reversible.
 - **No overclaiming.** Coverage has distinct states (ran, needs a key, needs approval, unsupported input, not installed, blocked, already done). "Nothing found" is
   only said for a source that actually ran. A run that could not do everything finishes as **complete, with limits** and lists what is missing.
+- **Provider limits are obeyed, not guessed.** Every request to a metered provider (VirusTotal, urlscan.io, Censys, Brave, SEC EDGAR) is reserved in a shared, persistent budget before it is sent. A full limit queues the work
+  (it survives a restart and resumes by itself) and the investigation reads **Waiting for provider limits**, never "complete". Settings → **Provider usage** shows what is left and when it resets; a stored key is not called
+  "verified" until the provider accepts a real call. Nothing ever buys credits or upgrades a plan, and the paid provider Shodan is off. Details: [provider quotas](docs/provider-quotas.md).
 - **Self-attestation is never proof.** If you say "this account is mine", it is recorded as *self-attested*, kept separate from *independently corroborated*.
 - **Evidence you can trust later.** Every finding keeps its source, retrieval time and hash. Evidence lives in an AES-256-GCM vault; the database is SQLCipher
   encrypted; reports are encrypted at rest; the audit log is tamper-evident.
@@ -288,6 +291,7 @@ presenting a mocked source as live. No data leaves the machine except requests y
 
 ## Known limitations
 
+- **Provider quotas were tested with mock responses and a fake clock; no provider was contacted live.** Exact limits, reset rules and what is fixture-only are in [docs/provider-quotas.md](docs/provider-quotas.md).
 - **Most third-party sources are fixture- or mock-tested, not verified live.** Verified live: RDAP, DNS, crt.sh, Wayback, Subfinder, Sherlock/Maigret output
   parsing and ExifTool. See [docs/source-capability-matrix.md](docs/source-capability-matrix.md) and [docs/integration-matrix.md](docs/integration-matrix.md).
 - Retyping a raw finding in the case workbench is not supported (provenance is immutable); the linked profile entry carries the correction. Sherlock and
@@ -302,7 +306,7 @@ Full, dated lists: [docs/progress.md](docs/progress.md).
 ## Documentation index
 
 **Start here:** [quick start](docs/quick-start.md) · [one-click investigation guide](docs/one-click-investigation.md) · [troubleshooting](docs/troubleshooting.md) ·
-[source capability matrix](docs/source-capability-matrix.md)
+[source capability matrix](docs/source-capability-matrix.md) · [provider quotas](docs/provider-quotas.md) · [provider limit matrix](docs/provider-limit-matrix.md)
 
 **Operating:** [operator runbook](docs/operator-runbook.md) · [recovery](docs/recovery.md) · [packaging](docs/packaging.md) · [install matrix](docs/install-matrix.md)
 

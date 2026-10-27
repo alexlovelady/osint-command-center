@@ -9,6 +9,7 @@ import asyncio
 import ipaddress
 import socket
 from collections.abc import Awaitable, Callable
+from typing import Protocol
 from urllib.parse import urljoin, urlsplit
 
 import httpx
@@ -63,6 +64,12 @@ async def validate_host(host: str, resolver: Resolver = system_resolver, allow_p
 class HttpResult:
     def __init__(self, status: int, headers: dict[str, str], body: bytes, url: str):
         self.status, self.headers, self.body, self.url = status, headers, body, url
+
+
+class HttpClient(Protocol):
+    """What an adapter needs from its HTTP client. SafeHttp implements it; the provider dispatcher wraps it without changing the contract."""
+
+    async def get(self, url: str, *, headers: dict[str, str] | None = None) -> HttpResult: ...
 
 
 class SafeHttp:

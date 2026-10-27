@@ -174,7 +174,7 @@ def revoke(db: Session, subject: Subject, consent_id: str, *, reason: str, actor
 def stop_dependents(db: Session, subject: Subject, why: str) -> int:
     """Cancel everything that has not finished, and every hook-registered dependent (scheduled workflows). Idempotent."""
     n = 0
-    for t in db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id, ResearchTask.status.in_(("planned", "approved", "running")))):
+    for t in db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id, ResearchTask.status.in_(("planned", "approved", "running", "waiting_limits")))):
         t.status, t.limitations = "cancelled", why
         n += 1
     for hook in REVOKE_HOOKS:

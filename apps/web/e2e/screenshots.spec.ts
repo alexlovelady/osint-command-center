@@ -56,6 +56,15 @@ test("capture the simple-mode screens", async ({ page }) => {
   await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Settings" }).click();
   await expect(page.getByLabel("Providers and keys")).toBeVisible();
   await shot(page, "08-settings");
+  await page.getByLabel("Provider usage", { exact: true }).scrollIntoViewIfNeeded();
+  await expect(page.getByLabel("Provider VirusTotal")).toBeVisible();
+  await page.getByLabel("SEC EDGAR contact").first().scrollIntoViewIfNeeded();
+  await shot(page, "11-provider-usage");
   await page.getByRole("checkbox", { name: /Advanced mode/ }).check();
   await shot(page, "09-advanced-mode");
+  await page.getByRole("checkbox", { name: /Advanced mode/ }).uncheck();
+  await page.goto("/#/investigations");
+  await page.getByLabel("Investigation Acme Example LLC").getByRole("button").click();
+  await expect(page.getByLabel("Waiting for provider limits")).toBeVisible();
+  await shot(page, "10-waiting-for-limits");
 });

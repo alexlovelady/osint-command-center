@@ -65,6 +65,8 @@ class AppState:
     aiv: Any = None  # AivExecutor (approved verification plans; never resumes an interrupted run)
     update_http: Any = None  # test/dev seam: SafeHttp used by the update check
     update_transport: Any = None  # test/dev seam: httpx transport used by the update download
+    quota: Any = None  # QuotaService: the one place provider budgets are reserved
+    quota_resumer: Any = None  # durable resumer for deferred provider work
 
 
 def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAdapter] | None = None,
@@ -93,7 +95,14 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
         cipher = VaultCipher(master) if master else None
     vault = Vault(settings.vault_dir, cipher, require_encryption=settings.vault_encryption != "off")
     adapters = adapters or default_adapters(settings)
-    http = SafeHttp(allow_private=settings.allow_private_destinations)
+    from .quota import GatedHttp, QuotaService
+    def _contact() -> str | None:
+        with sm() as cdb:
+            row = cdb.get(Setting, "edgar_contact")
+            return row.value_json if row and isinstance(row.value_json, str) else None
+
+    quota = QuotaService(sm, lambda name: state.secrets.get(name) if state.secrets is not None else None, enforce=settings.quota_enforce, contact=_contact)
+    http = GatedHttp(SafeHttp(allow_private=settings.allow_private_destinations), quota)   # every adapter's ctx.http: metered providers are reserved before they are sent
 
     def _default_ctx() -> AdapterContext:
         with sm() as db:
@@ -101,11 +110,21 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
             cfg = {"edgar_user_agent": row.value_json if row else None, "allow_private": settings.allow_private_destinations}
         return AdapterContext(http=http, config=cfg, secret=state.secrets.get)
 
-    ctx_factory = ctx_factory or _default_ctx
+    _inner_ctx = ctx_factory or _default_ctx
+
+    def ctx_factory():  # type: ignore[no-redef]
+        c = _inner_ctx()
+        if not isinstance(c.http, GatedHttp):
+            c.http = GatedHttp(c.http, quota)
+        return c
     runner = JobRunner(sm, settings, vault, adapters, ctx_factory)
+    runner.quota = quota
     state = AppState(settings, sm, vault, adapters, runner, tokens={settings.session_token: LOCAL_USER_ID}, db_key=db_key)
     from .secrets_store import SecretStore
     state.secrets = SecretStore(sm, vault)
+    state.quota = quota
+    from .quota.resume import Resumer
+    state.quota_resumer = Resumer(state)
     from .workflows import Scheduler
     scheduler = Scheduler(state)
     state.scheduler = scheduler
@@ -119,6 +138,7 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         recovered = runner.recover_interrupted()
+        quota.expire_stale()
         app.state.recovered_jobs = recovered
         scheduler.recover()
         app.state.recovered_automation_runs = state.automation.recover()
@@ -133,6 +153,7 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
         if settings.run_scheduler:
             scheduler.start()
             state.automation_scheduler.start()
+            state.quota_resumer.start()
         egress_task = None
         if settings.run_scheduler and os.environ.get("OSINTCC_EGRESS_SELFCHECK", "1") != "0":
             from .selfcheck.egress import EgressMonitor
@@ -150,6 +171,7 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
             egress_task.cancel()
         await scheduler.stop()
         await state.automation_scheduler.stop()
+        await state.quota_resumer.stop()
         for t in list(state.tasks) + list(state.aiv.tasks.values()):
             t.cancel()
         with engine.connect() as c:  # checkpoint WAL on clean shutdown

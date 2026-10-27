@@ -137,7 +137,7 @@ async def test_tp04_modes_require_different_proof_but_share_the_common_protectio
     assert pv["rdap"]["runnable"]
     # common protections: a private/internal target is refused in both modes whatever the consent says
     _, sid_p, _ids_p = await setup_subject(api, mode="self", domain=None)
-    await grant(api, sid_p, classes=("public_passive",))
+    await grant(api, sid_p, classes=("public_passive", "public_site_query"))
     bad = await api.post(f"{B}/subjects/{sid_p}/identifiers", json={"kind": "domain", "value": "printer.local"})
     pv = (await api.post(f"{B}/subjects/{sid_p}/research/preview", json={})).json()
     assert bad.status_code == 201 and all(not e["runnable"] and "local/internal" in e["reason"] for e in pv["entries"])

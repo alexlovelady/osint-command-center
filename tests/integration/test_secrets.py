@@ -50,7 +50,7 @@ async def api(tmp_path, monkeypatch):
 async def test_catalog_set_use_and_remove_without_ever_echoing_the_value(api):
     items = {i["provider"]: i for i in (await api.get("/secrets")).json()["items"]}
     assert {"virustotal", "shodan", "censys", "urlscan", "opencorporates"} <= set(items) and not any(i["set"] for i in items.values())
-    assert items["censys"]["format"].startswith("API_ID:API_SECRET") and "censys" in items["censys"]["used_by"]
+    assert "Personal Access Token" in items["censys"]["label"] and "API_ID:API_SECRET" in items["censys"]["format"] and "censys" in items["censys"]["used_by"]
     r = await api.post("/secrets/shodan", json={"value": "  SUPERSECRET-123  "})
     assert r.status_code == 200 and r.json() == {"provider": "shodan", "stored": True, "store": "os-keyring"} and "SUPERSECRET" not in r.text
     assert api.kr.data[("osintcc", "shodan")] == "SUPERSECRET-123"                      # trimmed, stored in the credential store

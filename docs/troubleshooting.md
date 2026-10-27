@@ -71,3 +71,16 @@ someone who can rewrite the whole database file.
 
 `doctor --json`, the failing request's `request_id` (every error body has one), and the relevant `audit` entries. Do not attach
 evidence, tokens or the data directory; the API token and keys must never be pasted into a report.
+
+## Provider limits and credentials
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| Investigation says *Waiting for provider limits* | A provider's rate limit, daily quota or monthly credits are used up | Nothing: it continues by itself after the reset (time shown, an estimate). Settings → Provider usage shows which provider and when |
+| A key shows *Rejected by the provider* | The provider answered 401 | Replace the key. Fusion will not retry the old one |
+| A key shows *Plan restricted* | The provider answered 403 for that operation | Check the plan on the provider's site; press *Try again* after changing it |
+| *Stored (not yet tested)* | A value is saved but no real call has succeeded yet | Press *Test* (it tells you what it sends and what it costs) or run an investigation |
+| Censys says *Wrong format* | The value is neither a Personal Access Token nor an `API_ID:API_SECRET` pair | Create a Personal Access Token (Censys account, API Access) and paste it |
+| SEC EDGAR is *blocked* | The contact is missing or not a name plus a valid email | Settings → SEC EDGAR contact; the status line says `Saved at …` when it is stored |
+| Work is not moving after an upgrade | *Pause all provider work* is on | Settings → Provider usage → Resume |
+| Shodan shows *Disabled — paid provider* | By design | Nothing; Fusion does not use it |

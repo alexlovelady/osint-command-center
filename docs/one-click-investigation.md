@@ -113,3 +113,10 @@ Defaults (visible and editable when starting; hard limits in `investigate.LIMITS
 2. Verify SHA-256 sums, start `./osintcc-desktop`, open Home, press New investigation.
 3. To resume an interrupted investigation: Home → Continue → *Check for more*. To cancel: *Stop*.
 4. Screenshots of the core screens are in `docs/screenshots/` (synthetic data, produced by `scripts/demo_server.py` and `apps/web/e2e/screenshots.spec.ts`).
+
+
+## Waiting for provider limits (addendum PQ-1.0)
+
+A run whose only remaining work is waiting for a provider's rate limit, daily quota or monthly credits is parked in the status **`waiting_limits`** ("Waiting for provider limits"). It is not complete and not failed. The Overview counts `completed · no match · running · queued · waiting for limits · blocked by key or plan · failed · remaining`,
+names the earliest estimated time, and offers *See provider usage*. The durable resumer continues the run when the reset arrives, re-checking authorization and case state; the 30-minute allowance counts working time, not waiting time.
+A rejected key or a plan restriction ends the check as *blocked* and the run finishes **complete with limits** (never "complete"). See [provider-quotas.md](provider-quotas.md).

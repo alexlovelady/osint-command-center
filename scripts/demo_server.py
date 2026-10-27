@@ -58,10 +58,19 @@ def main() -> None:
             return httpx.Response(200, json=COMMITS)
         if u.startswith(("https://api.gravatar.com/", "https://keys.openpgp.org/")):
             return httpx.Response(404, text="none")
+        if request.url.host == "www.virustotal.com":
+            return httpx.Response(200, json={"data": {"attributes": {"last_analysis_stats": {"malicious": 0, "suspicious": 0, "harmless": 71}, "reputation": 2, "last_analysis_date": 1700000000}}})
+        if request.url.host == "api.gdeltproject.org":
+            return httpx.Response(200, json={"articles": []})
+        if request.url.host == "urlscan.io":
+            return httpx.Response(200, json={"results": [{"page": {"ip": "93.184.216.34", "country": "US"}, "task": {"time": "2026-01-01T00:00:00Z"}}], "total": 1},
+                                  headers={"X-Rate-Limit-Action": "search", "X-Rate-Limit-Window": "minute", "X-Rate-Limit-Limit": "120", "X-Rate-Limit-Remaining": "119", "X-Rate-Limit-Reset-After": "30"})
         return base(request)
 
     http = SafeHttp(resolver=fake_resolver, transport=httpx.MockTransport(handler))
-    app = create_app(s, ctx_factory=lambda: AdapterContext(http=http, dns_query=fake_dns))
+    demo_keys = {"virustotal": "d" * 64, "urlscan": "00000000-0000-4000-8000-000000000000", "censys": "censys_" + "demo" * 8}      # fictional values; the mock transport accepts anything
+    app = create_app(s, ctx_factory=lambda: AdapterContext(http=http, dns_query=fake_dns, secret=demo_keys.get))
+    app.state.core.secrets.get = demo_keys.get
     orig = app.router.lifespan_context
 
     @asynccontextmanager
@@ -82,6 +91,17 @@ def main() -> None:
             from osintcc.profile import investigate
             for _ in range(10):
                 step = investigate.advance(a.state.core, out["run"]["id"])
+                for rid in step["run_ids"]:
+                    await a.state.core.runner.run_until_idle(rid)
+                if step["finished"]:
+                    break
+                await asyncio.sleep(0.05)
+            # A second, fictional business: three owned domains. VirusTotal's public API is paced (4 per minute, 16 s apart), so the later lookups genuinely wait.
+            b = (await c.post("/api/v1/investigations", json={"kind": "business", "display_name": "Acme Example LLC", "purpose": "synthetic demonstration of a business self-audit; fictional company",
+                                                              "inputs": [{"kind": "domain", "value": f"{n}.example.com"} for n in ("acme", "shop", "mail")],
+                                                              "authorization": {"verification_method": "self_attestation", "verifier": "demo operator"}, "start": True, "approved_sources": "listed"})).json()
+            for _ in range(12):
+                step = investigate.advance(a.state.core, b["run"]["id"])
                 for rid in step["run_ids"]:
                     await a.state.core.runner.run_until_idle(rid)
                 if step["finished"]:

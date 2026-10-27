@@ -5,6 +5,7 @@ import json
 
 from ...ingest.fin import edgar_filing_url
 from ...policy.ssrf import DestinationDenied
+from ...quota.credentials import validate_contact
 from ..base import (
     AdapterContext,
     AdapterManifest,
@@ -34,10 +35,9 @@ class EdgarAdapter:
 
     async def run(self, target: Target, ctx: AdapterContext) -> AdapterResult:
         aid = self.manifest.id
-        ua = (ctx.config.get("edgar_user_agent") or "").strip()
-        if "@" not in ua:
-            return skipped(aid, "requires_config", "The SEC requires a contact in the User-Agent. Set 'edgar_contact' in "
-                           "Settings (name and email); no request was made.")
+        err, ua = validate_contact(ctx.config.get("edgar_user_agent"))
+        if err:
+            return skipped(aid, "requires_config", f"The SEC requires a contact (your name and email) in the User-Agent. {err} Set it in Settings; no request was made.")
         cik = target.canonical.split(":", 1)[1]
         url = f"https://data.sec.gov/submissions/CIK{cik}.json"
         try:

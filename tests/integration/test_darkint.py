@@ -282,6 +282,7 @@ async def test_outage_rate_limit_and_offline_are_reported_as_such_with_partial_a
     r = (await api.post(f"{B}/cases/{p['cid']}/darkint/check", json=both)).json()
     got = {(x["provider_id"], x["outcome"]) for x in r["results"]}
     assert ("hibp", "rate_limited") in got and ("ransomware_live", "match") in got and r["partial"] is True and not r["all_failed"]
+    api.app.state.core.quota.clear_restrictions("hibp")                                             # the 429 above made the dispatcher back off; this part of the test is about a later outage
     world["rwl_status"] = 503
     world["hibp_status"] = 503
     seen_before = list(world["seen"])

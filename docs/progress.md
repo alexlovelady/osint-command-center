@@ -193,3 +193,10 @@ Implemented per `docs/master-profile-status.md`: Master Profile Editor (migratio
 ## One-click investigation and simplified experience (2026-10-27)
 
 Implemented per `docs/one-click-investigation.md`: data-semantics fixes (handle vs name, repository vs profile, self-attested vs corroborated, evidence applicability, reclassification, result accounting), the durable orchestrator and API (migration 0017), the simple UI (Home, Investigations, New investigation, Investigation with Overview/Profile/Findings/Activity & Coverage, Review, Settings) and the Advanced-mode switch. Fixture-tested only for the third-party sources; none was exercised live.
+
+## Provider quotas, durable queue and credentials (2026-10-27, addendum PQ-1.0)
+
+Built: a shared dispatcher (`backend/osintcc/quota/`) with persistent budgets, per-provider operation limits, header learning, back-off, a durable resumer and the `waiting_limits` investigation state; migration 0018; Censys Personal Access Token support; the SEC contact save fix with read-back; Provider usage in Settings;
+Advanced queue and ledger; Shodan disabled by default; VirusTotal and urlscan.io added to the one-click planner for owned domains (with named third-party approval). Details, matrix and verification report: [provider-quotas.md](provider-quotas.md), [provider-limit-matrix.md](provider-limit-matrix.md).
+
+Tested with mock transports and a fake clock only. **No provider was contacted live.** Fixture-only items are listed in provider-quotas.md ("What was not verified live").

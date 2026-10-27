@@ -857,9 +857,12 @@ async def get_settings(request: Request):
     st = S(request)
     with st.sm() as db:
         saved = {s.key: s.value_json for s in db.scalars(select(Setting))}
+    with st.sm() as db:
+        erow = db.get(Setting, "edgar_contact")
+        edgar_at = erow.updated_at if erow else None
     return {"offline": st.settings.offline, "max_concurrency": st.settings.max_concurrency,
             "theme": saved.get("theme", "dark"), "data_dir": str(st.settings.data_dir),
-            "ai_enabled": saved.get("ai_enabled", False), "edgar_contact": saved.get("edgar_contact"),
+            "ai_enabled": saved.get("ai_enabled", False), "edgar_contact": saved.get("edgar_contact"), "edgar_contact_saved_at": edgar_at,
             "update_manifest_url": saved.get("update_manifest_url") or st.settings.update_manifest_url or ""}
 
 
@@ -872,14 +875,32 @@ async def put_settings(request: Request, body: SettingsIn):
     um = body.values.get("update_manifest_url")
     if um is not None and um != "" and not re.fullmatch(r"https?://[^\s]{3,500}", um):
         raise ApiError(422, "invalid_setting", "update_manifest_url must be an http(s) URL (or empty to clear it)")
+    values = dict(body.values)
+    if "edgar_contact" in values:
+        if values["edgar_contact"].strip():
+            from ...quota.credentials import validate_contact
+            err, norm = validate_contact(values["edgar_contact"])
+            if err:
+                raise ApiError(422, "invalid_contact", err)
+            values["edgar_contact"] = norm
+        else:
+            values["edgar_contact"] = ""                                   # an empty value clears it; requests are then blocked, visibly
     with st.sm() as db:
-        for k, v in body.values.items():
+        for k, v in values.items():
             db.merge(Setting(key=k, value_json=v))
             if k == "offline":
                 st.settings.offline = v
-        audit.record(db, "settings.update", actor=actor(request), metadata={"keys": list(body.values)})
+        audit.record(db, "settings.update", actor=actor(request), metadata={"keys": list(values)})
         db.commit()
-    return await get_settings(request)
+    with st.sm() as db:                                                    # read back from the database in a fresh session: "saved" means it can be read again
+        for k, v in values.items():
+            row = db.get(Setting, k)
+            if row is None or row.value_json != v:
+                raise ApiError(500, "save_not_verified", f"The setting '{k}' was written but could not be read back, so it is not saved. Try again.", True)
+    out = await get_settings(request)
+    if "edgar_contact" in values:
+        out["edgar_contact_verified_readback"] = True
+    return out
 
 
 class SecretIn(BaseModel):
@@ -891,7 +912,8 @@ SECRET_CATALOG = {
     "virustotal": {"label": "VirusTotal API key", "format": "a 64-character key", "get": "https://www.virustotal.com/gui/my-apikey"},
     "urlscan": {"label": "urlscan.io API key (optional: raises rate limits)", "format": "a UUID", "get": "https://urlscan.io/user/profile/"},
     "shodan": {"label": "Shodan API key", "format": "a 32-character key", "get": "https://account.shodan.io/"},
-    "censys": {"label": "Censys credentials", "format": "API_ID:API_SECRET (joined by a colon)", "get": "https://search.censys.io/account/api"},
+    "censys": {"label": "Censys Personal Access Token", "format": "one long token (preferred), or the legacy API_ID:API_SECRET joined by a colon", "get": "https://platform.censys.io/account/api"},
+    "brave_search": {"label": "Brave Search API key", "format": "a key from the Brave Search API dashboard", "get": "https://api-dashboard.search.brave.com/app/keys"},
     "opencorporates": {"label": "OpenCorporates API token", "format": "a token", "get": "https://opencorporates.com/api_accounts/new"},
 }
 
@@ -904,8 +926,18 @@ async def list_secrets(request: Request):
         if ad.manifest.api_key_name:
             used.setdefault(ad.manifest.api_key_name, []).append(aid)
     names = sorted(set(SECRET_CATALOG) | set(used))
+    from ...quota import PROVIDERS as QP
+    from ...quota.status import credential_state
+    by_cred = {p.credential: p.id for p in QP.values() if p.credential}
+    snap = {e["provider"]: e for e in S(request).quota.snapshot()}
+
+    def state(n: str) -> dict[str, str] | None:
+        pid = by_cred.get(n)
+        if pid is None:
+            return {"code": "stored" if store.exists(n) else "not_configured", "label": "Stored (not yet tested)" if store.exists(n) else "Not configured", "hint": ""}
+        return credential_state(snap[pid], store.get(n))
     return {"items": [{"provider": n, **SECRET_CATALOG.get(n, {"label": f"{n} key", "format": "", "get": ""}), "set": store.exists(n),
-                       "used_by": used.get(n, [])} for n in names],
+                       "used_by": used.get(n, []), "state": state(n)} for n in names],
             "note": "Keys are stored in the OS credential store (or, without one, sealed in the encrypted database). They are never shown again."}
 
 
@@ -914,6 +946,9 @@ async def save_secret(request: Request, provider: str, body: SecretIn):
     from ...secrets_store import NAME, SecretStoreError
     if not NAME.fullmatch(provider):
         raise ApiError(422, "invalid_provider", "invalid provider name")
+    from ...quota.credentials import validate_credential
+    if (why := validate_credential(provider, body.value)) is not None:
+        raise ApiError(422, "wrong_format", why)
     try:
         where = S(request).secrets.set(provider, body.value.strip())
     except SecretStoreError as exc:
@@ -1327,8 +1362,10 @@ from . import profile_master as _profile_master
 
 router.include_router(_profile_master.router)
 from . import investigations as _investigations
+from . import providers as _providers
 
 router.include_router(_investigations.router)
+router.include_router(_providers.router)
 from . import branding as _branding
 
 router.include_router(_branding.router)

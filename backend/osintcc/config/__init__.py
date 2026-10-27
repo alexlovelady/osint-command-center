@@ -45,6 +45,8 @@ class Settings:
     offline: bool = False
     retry_scale: float = field(default_factory=lambda: float(os.environ.get("OSINTCC_RETRY_SCALE", "1.0")))  # multiplies retry delays (tests shrink it)
     run_scheduler: bool = True  # tests drive Scheduler.tick() directly
+    # Provider budgets (addendum PQ-1.0). "off" is for unit tests that exercise adapters with their own fixtures; the packaged app always enforces.
+    quota_enforce: bool = field(default_factory=lambda: os.environ.get("OSINTCC_QUOTA", "on") != "off")
     # Test/dev seam: lets adapters reach loopback fixture servers. Never enabled by default.
     allow_private_destinations: bool = False
     # Active-assessment module: absent from the registry unless the owner turns it on (it still needs a

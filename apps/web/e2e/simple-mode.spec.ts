@@ -114,3 +114,24 @@ test("simple mode screens fit common desktop and narrow widths without sideways 
   await page.keyboard.press("Tab");
   await expect(page.locator(":focus")).toBeVisible();
 });
+
+test("settings: the SEC contact says Saved and survives a reload; Shodan is shown as a disabled paid provider; usage never shows a key", async ({ page }) => {
+  await openApp(page);
+  await page.goto("/#/settings");
+  const field = page.getByLabel("SEC EDGAR contact", { exact: false }).locator("input").first();
+  await expect(field).toBeVisible();
+  await field.fill("Quota Tester quota.tester@example.org");
+  await expect(page.getByRole("status").filter({ hasText: "Unsaved changes" })).toBeVisible();
+  await page.getByRole("button", { name: "Save", exact: true }).first().click();
+  await expect(page.getByRole("status").filter({ hasText: /^Saved at / })).toBeVisible();
+  await expect(field).toHaveValue("Quota Tester quota.tester@example.org");                       // still there, not cleared
+  await page.reload();
+  await expect(page.getByLabel("SEC EDGAR contact", { exact: false }).locator("input").first()).toHaveValue("Quota Tester quota.tester@example.org");
+  const usage = page.getByLabel("Provider usage").first();
+  await expect(usage).toBeVisible();
+  await expect(page.getByLabel("Provider Shodan")).toContainText("Disabled — paid provider");
+  await expect(page.getByLabel("Provider Shodan").getByRole("button", { name: "Turn on" })).toHaveCount(0);
+  await expect(usage).toContainText("Spend guard: $0");
+  const text = await page.getByRole("main").innerText();
+  expect(text).not.toMatch(/Bearer |x-apikey|censys_[a-z0-9]{10}/i);
+});

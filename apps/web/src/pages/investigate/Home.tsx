@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Empty, ErrorBox, Loading, fmt } from "../../components/ui";
 import { api } from "../../lib/api";
-import { ACTIVE_STATUSES, STATUS_BADGE, STATUS_TEXT, type RunRow } from "../../lib/investigationApi";
+import { ACTIVE_STATUSES, WAITING_STATUSES, STATUS_BADGE, STATUS_TEXT, type RunRow } from "../../lib/investigationApi";
 
 export function RunCard({ r, go }: { r: RunRow; go: (to: string) => void }) {
   const active = ACTIVE_STATUSES.includes(r.status);
@@ -11,10 +11,10 @@ export function RunCard({ r, go }: { r: RunRow; go: (to: string) => void }) {
         <b style={{ fontSize: 16 }}>{r.name || "Untitled"}</b>
         <span className={`badge ${STATUS_BADGE[r.status]}`}>{STATUS_TEXT[r.status]}</span>
         <span className="grow" />
-        <button className="primary" onClick={() => go(`investigation/${r.id}`)}>{active ? "Watch" : r.status === "paused" || r.status === "awaiting_review" ? "Continue" : "Open"}</button>
+        <button className="primary" onClick={() => go(`investigation/${r.id}`)}>{active || WAITING_STATUSES.includes(r.status) ? "Watch" : r.status === "paused" || r.status === "awaiting_review" ? "Continue" : "Open"}</button>
       </div>
       <div className="muted">
-        {r.units.done} check(s) done · {r.units.running} running · {r.units.not_run} not run (with reasons)
+        {r.units.done} check(s) done · {r.units.running} running{(r.units.waiting_limits ?? 0) > 0 && <> · <b>{r.units.waiting_limits} waiting for limits</b></>}{(r.units.blocked ?? 0) > 0 && <> · {r.units.blocked} blocked</>} · {r.units.not_run} not run (with reasons)
         {r.pending_decisions > 0 && <> · <b>{r.pending_decisions} decision(s) waiting</b></>} · updated {fmt(r.updated_at)}
       </div>
     </article>
@@ -24,10 +24,10 @@ export function RunCard({ r, go }: { r: RunRow; go: (to: string) => void }) {
 /** Home: start something new, resume what is running, see what needs you. */
 export default function Home({ go }: { go: (to: string) => void }) {
   const q = useQuery({ queryKey: ["investigations"], queryFn: () => api<{ items: RunRow[] }>("/investigations"),
-    refetchInterval: (query) => (query.state.data?.items.some((r) => ACTIVE_STATUSES.includes(r.status)) ? 3000 : false) });
+    refetchInterval: (query) => (query.state.data?.items.some((r) => ACTIVE_STATUSES.includes(r.status)) ? 3000 : query.state.data?.items.some((r) => WAITING_STATUSES.includes(r.status)) ? 15000 : false) });
   const rv = useQuery({ queryKey: ["global-review"], queryFn: () => api<{ total: number }>("/investigations/review") });
   const runs = q.data?.items ?? [];
-  const live = runs.filter((r) => ACTIVE_STATUSES.includes(r.status) || r.status === "paused");
+  const live = runs.filter((r) => ACTIVE_STATUSES.includes(r.status) || WAITING_STATUSES.includes(r.status) || r.status === "paused");
   const warn = runs.filter((r) => r.status === "draft");
   return (
     <section aria-label="Home">

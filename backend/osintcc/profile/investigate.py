@@ -25,6 +25,7 @@ from ..db.models import (
     Case,
     InvestigationEvent,
     InvestigationRun,
+    Job,
     ProfileCandidateLink,
     ProfileItem,
     ResearchTask,
@@ -40,6 +41,7 @@ from .service import ProfileError
 DEFAULT_POLICY = {"max_depth": 2, "max_runs": 100, "per_pass": 10, "per_identifier": 10, "followups_per_pass": 25, "runtime_minutes": 30}
 LIMITS = {"max_depth": (1, 4), "max_runs": (1, 100), "per_pass": (1, 20), "per_identifier": (1, 50), "followups_per_pass": (1, 100), "runtime_minutes": (1, 120)}
 ACTIVE = ("queued", "collecting", "correlating", "expanding")
+WAITING = "waiting_limits"          # parked: every remaining check is waiting for a provider's rate limit or quota to reset; a durable resumer continues it
 FINISHED = ("awaiting_review", "complete_with_limits", "completed", "cancelled", "failed")
 INPUT_KINDS = {"person": ("name", "email", "phone", "username", "alias", "url", "domain", "organization"), "business": ("organization", "domain", "url", "email", "username", "name", "phone")}
 STATUS_LABEL = {"ready": "Ready", "needs_approval": "Sends to a third party (needs your approval)", "needs_key": "Needs an API key", "needs_authorization": "Needs authorization",
@@ -126,6 +128,11 @@ def _classify(step: dict[str, Any], st: Any) -> tuple[str, str]:
     needs = step["needs"]
     if needs == "already_done":
         return "already_done", "This source already ran for this input."
+    notice = st.quota.notice(step["source_id"]) if getattr(st, "quota", None) is not None else None
+    if notice and notice["state"] == "disabled":
+        return "blocked", notice["text"]
+    if notice and notice["state"] in ("rejected", "plan_restricted"):
+        return "needs_key", notice["text"]
     if ad is not None and (k := _key_missing(st, ad)) and needs != "blocked":
         return "needs_key", f"No '{k}' key is stored. Add it in Settings to enable this source; nothing was sent."
     if needs == "blocked":
@@ -212,6 +219,55 @@ def start(db: Session, st: Any, subject: Subject, case: Case, *, actor: str, kin
 
 def _tasks(db: Session, subject: Subject) -> list[ResearchTask]:
     return list(db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id)))
+
+
+def _waiting_jobs(db: Session, tasks: list[ResearchTask]) -> list[Job]:
+    out = []
+    for t in tasks:
+        job = db.scalars(select(Job).where(Job.run_id == t.run_id, Job.adapter_id == t.source_id)).first() if t.run_id else None
+        if job is not None and job.status in ("queued", "deferred", "running"):
+            out.append(job)
+    return out
+
+
+def _park(db: Session, run: InvestigationRun, waiting: list[ResearchTask]) -> None:
+    """Everything that is left is waiting for a provider limit. Say so, remember when it may resume, and stop spending the runtime allowance."""
+    jobs = _waiting_jobs(db, waiting)
+    times = [j.next_retry_at.replace(tzinfo=UTC) if j.next_retry_at.tzinfo is None else j.next_retry_at for j in jobs if j.next_retry_at]
+    nxt = min(times) if times else None
+    first = run.status != WAITING
+    run.status, run.phase, run.stop_reason = WAITING, WAITING, "provider_limits"
+    run.counts_json = {**run.counts_json, "waiting_since": run.counts_json.get("waiting_since") or _now().isoformat() if first else run.counts_json.get("waiting_since"),
+                       "next_eligible_at": nxt.isoformat() if nxt else None, "waiting_checks": len(waiting)}
+    if first:
+        emit(db, run, "waiting", f"{len(waiting)} check(s) are waiting for a provider's limit to reset" + (f"; the next one may run after {nxt.strftime('%H:%M UTC')}." if nxt else "."),
+             {"checks": len(waiting), "next_eligible_at": nxt.isoformat() if nxt else None})
+
+
+def wake(st: Any, run_id: str) -> bool:
+    """Continue a parked investigation once none of its checks is still waiting on a provider. Called by the durable resumer; safe to call repeatedly."""
+    with st.sm() as db:
+        run = db.get(InvestigationRun, run_id)
+        if run is None or run.status != WAITING:
+            return False
+        subject = db.get(Subject, run.subject_id)
+        assert subject is not None
+        research.refresh_tasks(db, subject)
+        if any(t.status in ("waiting_limits", "approved", "running") for t in _tasks(db, subject)):
+            db.commit()
+            return False
+        since = run.counts_json.get("waiting_since")
+        if run.deadline_at and since:
+            try:
+                run.deadline_at = run.deadline_at + (_now() - datetime.fromisoformat(since))     # the runtime allowance counts working time, not time spent waiting for a reset
+            except ValueError:
+                pass
+        run.counts_json = {k: v for k, v in run.counts_json.items() if k not in ("waiting_since", "next_eligible_at", "waiting_checks")}
+        run.status, run.phase, run.stop_reason = "collecting", "collecting", ""
+        emit(db, run, "resumed", "Provider limits reset; continuing")
+        db.commit()
+    launch(st, run_id)
+    return True
 
 
 def _finish(db: Session, run: InvestigationRun, status: str, reason: str, message: str) -> None:
@@ -318,6 +374,11 @@ def advance(st: Any, run_id: str) -> dict[str, Any]:
             db.commit()
             return {"finished": False, "run_ids": out["run_ids"], "wait": False}
         # nothing left that is allowed
+        waiting = [t for t in _tasks(db, subject) if t.status == "waiting_limits"]
+        if waiting:
+            _park(db, run, waiting)
+            db.commit()
+            return {"finished": True, "run_ids": [], "wait": False}
         pending = _pending_decisions(db, subject)
         limits = []
         if waiting_approval:
@@ -326,6 +387,13 @@ def advance(st: Any, run_id: str) -> dict[str, Any]:
             limits.append("needs_key")
         if stop in ("budget_exhausted", "max_depth"):
             limits.append(stop)
+        end_tasks = _tasks(db, subject)
+        if any(t.status == "blocked" for t in end_tasks):
+            limits.append("provider_blocked")            # a credential was rejected, a plan does not include the operation, or the provider is switched off
+        if any(t.status == "failed" for t in end_tasks):
+            limits.append("source_errors")               # a source errored or timed out: that is a gap in coverage, never a clean result
+        if any(t.status == "unavailable" for t in end_tasks):
+            limits.append("coverage_gaps")               # a source could not run here (not installed, unsupported input): also a gap, reported as such
         man = build_manifest(db, st, subject, case)
         if any(r["status"] in ("unsupported_input", "needs_authorization", "separate_approval", "not_installed") for r in man["rows"]):
             limits.append("coverage_gaps")
@@ -391,7 +459,7 @@ def recover(st: Any) -> int:
 
 
 def pause(db: Session, run: InvestigationRun, actor: str) -> None:
-    if run.status not in ACTIVE:
+    if run.status not in ACTIVE and run.status != WAITING:
         raise ProfileError("not_running", "only a running investigation can be paused")
     run.status = "paused"
     emit(db, run, "paused", "Paused. Checks already started will finish; nothing new is started.")
@@ -431,8 +499,10 @@ def cancel(db: Session, run: InvestigationRun, actor: str) -> None:
         raise ProfileError("not_cancellable", "this investigation is already finished")
     run.status, run.finished_at, run.stop_reason = "cancelled", _now(), "cancelled"
     for t in _tasks(db, db.get(Subject, run.subject_id)):  # type: ignore[arg-type]
-        if t.status == "approved" and t.run_id:
+        if t.status in ("approved", "waiting_limits") and t.run_id:
             t.status = "cancelled"
+            for job in db.scalars(select(Job).where(Job.run_id == t.run_id, Job.adapter_id == t.source_id, Job.status.in_(("queued", "deferred")))):
+                job.status, job.quota_status, job.finished_at = "cancelled", "cancelled", _now()      # queued provider work does not outlive the investigation
     emit(db, run, "cancelled", "Cancelled. Results already collected are kept.")
     audit.record(db, "investigation.cancel", actor=actor, case_id=run.case_id, resource_type="investigation", resource_id=run.id)
 
@@ -461,13 +531,35 @@ def progress(db: Session, st: Any, run: InvestigationRun) -> dict[str, Any]:
         by[t.status] = by.get(t.status, 0) + 1
     manifest_rows = run.manifest_json.get("rows", [])
     not_run = [r for r in manifest_rows if r["status"] in ("needs_key", "needs_authorization", "unsupported_input", "not_installed", "separate_approval", "blocked")]
-    done = by.get("completed", 0) + by.get("partial", 0)
-    running = by.get("running", 0) + by.get("approved", 0)
+    states = _job_states(db, tasks)
+    no_match = states.count("no_match")
+    done = by.get("completed", 0) + by.get("partial", 0) - no_match
+    queued = by.get("approved", 0) - sum(1 for s in states if s in ("running",))
+    running = states.count("running")
+    waiting = by.get("waiting_limits", 0)
+    blocked = sum(1 for s in states if s in ("blocked_credentials", "blocked_plan", "disabled_provider", "awaiting_authorization"))
+    unavailable = by.get("unavailable", 0)                              # skipped: a tool is not installed or the source cannot take this input; a coverage gap, not an error
+    failed = by.get("failed", 0) + by.get("blocked", 0) - blocked
+    nxt = run.counts_json.get("next_eligible_at") if run.status == WAITING else None
+    if nxt is None and waiting:
+        times = [j.next_retry_at for j in _waiting_jobs(db, [t for t in tasks if t.status == "waiting_limits"]) if j.next_retry_at]
+        nxt = min(times).isoformat() if times else None
     return {"id": run.id, "status": run.status, "phase": run.phase, "pass": run.pass_no, "stop_reason": run.stop_reason, "updated_at": run.updated_at, "started_at": run.started_at,
-            "finished_at": run.finished_at, "units": {"done": done, "running": running, "failed": by.get("failed", 0) + by.get("blocked", 0) + by.get("unavailable", 0),
-                                                       "waiting_approval": len(run.counts_json.get("waiting_approval", [])), "not_run": len(not_run)},
+            "finished_at": run.finished_at, "units": {"done": done, "no_match": no_match, "running": running, "queued": max(0, queued), "waiting_limits": waiting, "blocked": blocked,
+                                                       "failed": max(0, failed), "unavailable": unavailable, "remaining": max(0, queued) + running + waiting, "waiting_approval": len(run.counts_json.get("waiting_approval", [])),
+                                                       "not_run": len(not_run)},
+            "next_eligible_at": nxt,
             "label": "Counts are checks the investigation knows about. They are not a percentage of everything that exists about the subject.",
             "pending_decisions": _pending_decisions(db, subject), "policy": run.policy_json, "last_error": run.last_error}
+
+
+def _job_states(db: Session, tasks: list[ResearchTask]) -> list[str]:
+    """The honest per-check state: the dispatcher's task status for checks that have a job, otherwise the research task's own status."""
+    out = []
+    for t in tasks:
+        job = db.scalars(select(Job).where(Job.run_id == t.run_id, Job.adapter_id == t.source_id)).first() if t.run_id else None
+        out.append(job.quota_status if job is not None else t.status)
+    return out
 
 
 def summary(db: Session, st: Any, run: InvestigationRun, role: str = "owner") -> dict[str, Any]:
@@ -497,15 +589,35 @@ def summary(db: Session, st: Any, run: InvestigationRun, role: str = "owner") ->
     analysis = gaps.analyze(db, st, subject, case, st.adapters, st.settings, role=role)
     inbox = review_inbox(db, st, subject, role=role)
     man = build_manifest(db, st, subject, case)
-    limits = _limits(run, man)
+    limits = _limits(run, man) + _task_limits(db, subject)
     return {"run": {"id": run.id, "status": run.status, "kind": run.kind, "policy": run.policy_json, "approved_sources": run.approved_sources, "excluded_sources": run.excluded_sources,
                     "stop_reason": run.stop_reason, "created_at": run.created_at, "requested_by": run.requested_by},
             "subject": {"id": subject.id, "case_id": case.id, "display_name": subject.display_name, "type": subject.type, "mode": subject.mode, "purpose": subject.purpose},
             "authorization": consent.current_status(db, subject), "progress": prog, "facts": {k: v[:12] for k, v in facts.items()}, "fact_counts": {k: len(v) for k, v in facts.items()},
             "possible_associations": possible, "coverage": cov["categories"], "accounting": accounting.pipeline(db, subject), "decisions": {"open": len(inbox["items"]), "top": inbox["items"][:3]},
-            "limits": limits, "next_actions": analysis["next_actions"][:5], "email_first": analysis["email_first"],
+            "limits": limits, "next_actions": _waiting_actions(prog) + analysis["next_actions"][:5], "email_first": analysis["email_first"],
             "manifest": {"counts": man["counts"], "rows": man["rows"], "third_parties": man["third_parties"], "approvable": man["approvable"]},
             "invite": "Want better coverage? Add another email, username, business name or owned domain. One is enough to start; each extra input gives the sources more to work with."}
+
+
+def _waiting_actions(prog: dict[str, Any]) -> list[dict[str, str]]:
+    u = prog["units"]
+    if not u.get("waiting_limits"):
+        return []
+    when = prog.get("next_eligible_at")
+    return [{"kind": "info", "text": f"{u['waiting_limits']} check(s) are waiting for a provider's limit to reset. Nothing needs you; they continue by themselves"
+             + (f" (earliest around {str(when)[:16].replace('T', ' ')} UTC, an estimate, not a promise)." if when else "."), "go": "coverage"}]
+
+
+def _task_limits(db: Session, subject: Subject) -> list[dict[str, str]]:
+    """One line per check that did not produce a result, with the provider's reason. Nothing here is a 'no match'."""
+    out = []
+    for t in _tasks(db, subject):
+        if t.status in ("waiting_limits", "blocked", "failed", "unavailable"):
+            label = SOURCES[t.source_id].label if t.source_id in SOURCES else t.source_id
+            code = {"waiting_limits": "waiting_limits", "blocked": "provider_blocked", "unavailable": "not_available"}.get(t.status, "source_error")
+            out.append({"code": code, "source": label, "input": "", "text": (t.limitations or {"waiting_limits": "Waiting for a provider limit to reset.", "blocked": "Blocked."}.get(t.status, "The source did not answer."))[:300]})
+    return out
 
 
 def _limits(run: InvestigationRun, man: dict[str, Any]) -> list[dict[str, str]]:

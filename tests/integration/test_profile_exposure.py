@@ -205,6 +205,7 @@ async def test_account_check_fails_closed_when_the_provider_cannot_answer(api, p
     assert r["status"] == "requires_key" and r["created"] == 0 and not [u for u, _ in provider["seen"] if "haveibeenpwned" in u]
     provider["hibp_key"] = "k"
     for code, expect in ((404, "not_found_in_checked_sources"), (401, "requires_key"), (429, "rate_limited"), (503, "error")):
+        api.app.state.core.quota.clear_restrictions("hibp")                                         # each status is a separate scenario: forget the previous back-off or rejection
         provider["hibp_status"] = code
         out = (await api.post(f"{B}/subjects/{sid}/exposure/approve", json={"identifier_id": iid, "confirm": True})).json()
         assert out["status"] == expect, (code, out)

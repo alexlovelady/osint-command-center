@@ -83,6 +83,9 @@ async def test_opencorporates_needs_key_and_never_stores_it():
     assert any("leads" in w for w in res.warnings)
 
 
+LEGACY = "0b1c2d3e-aaaa-bbbb-cccc-1234567890ab:s3cr3tS3cr3tS3cr3tS3cr3tAA"
+
+
 async def test_censys_basic_auth_header_and_failure_modes():
     body = {"result": {"services": [{"port": 443, "service_name": "HTTPS", "transport_protocol": "TCP"}],
                        "autonomous_system": {"asn": 15133, "name": "EDGECAST"}, "location": {"country_code": "US"}}}
@@ -90,12 +93,12 @@ async def test_censys_basic_auth_header_and_failure_modes():
     assert (await CensysAdapter().run(T("ip", "93.184.216.34"), ctx)).status == "skipped" and calls == []
     ctx, calls = ctx_with(lambda r: httpx.Response(200, json=body), {"censys": "nocolon"})
     assert (await CensysAdapter().run(T("ip", "93.184.216.34"), ctx)).status == "skipped" and calls == []
-    ctx, calls = ctx_with(lambda r: httpx.Response(200, json=body), {"censys": "ID:SECRET"})
+    ctx, calls = ctx_with(lambda r: httpx.Response(200, json=body), {"censys": LEGACY})
     res = await CensysAdapter().run(T("ip", "93.184.216.34"), ctx)
-    assert res.status == "success" and calls[0].headers["authorization"] == "Basic " + base64.b64encode(b"ID:SECRET").decode()
+    assert res.status == "success" and calls[0].headers["authorization"] == "Basic " + base64.b64encode(LEGACY.encode()).decode()
     assert "SECRET" not in json.dumps([f.model_dump(mode="json") for f in res.findings]) and {f.predicate for f in res.findings} >= {"censys.services"}
     for status, expect in ((404, "success"), (403, "skipped"), (500, "error")):
-        ctx, _ = ctx_with(lambda r, s=status: httpx.Response(s), {"censys": "ID:SECRET"})
+        ctx, _ = ctx_with(lambda r, s=status: httpx.Response(s), {"censys": LEGACY})
         assert (await CensysAdapter().run(T("ip", "93.184.216.34"), ctx)).status == expect
 
 

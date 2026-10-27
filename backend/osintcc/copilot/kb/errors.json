@@ -1,837 +1,857 @@
 [
- {
-  "code": "APPROVAL_REQUIRED",
-  "meaning": "An approval, confirmation or published version is missing or expired for this exact version.",
-  "fix": "Publish, press Request approval, decide it (with an expiry), then activate or run again."
- },
- {
-  "code": "CREDENTIAL_MISSING",
-  "meaning": "A source needs an API key or an approved destination that is not configured.",
-  "fix": "Add the key in Setup -> API keys, or approve the webhook name in Automations -> Settings."
- },
- {
-  "code": "INVALID_GRAPH",
-  "meaning": "The workflow definition is not valid (bad reference, cycle, missing scope check, unknown setting, over a limit).",
-  "fix": "Open the Checks panel: each problem names the step and the rule. Fix them, then publish."
- },
- {
-  "code": "OFFLINE",
-  "meaning": "Offline mode is on, so network steps pause.",
-  "fix": "Turn offline mode off, then retry the paused run."
- },
- {
-  "code": "PARTIAL_RESULT",
-  "meaning": "The run finished but some sources failed or were optional and unavailable.",
-  "fix": "Open the run's warnings; results are marked partial and are not used as a baseline."
- },
- {
-  "code": "PRECONDITION_FAILED",
-  "meaning": "The draft changed since you loaded it (someone or something saved a newer revision).",
-  "fix": "Reload the workflow and re-apply your edit."
- },
- {
-  "code": "RUN_CANCELLED",
-  "meaning": "The run was stopped.",
-  "fix": "Start it again if you still want the result."
- },
- {
-  "code": "SCOPE_DENIED",
-  "meaning": "The target was refused by scope policy (private, local, unauthorised or malformed). It is never retried.",
-  "fix": "Use a public target you are allowed to examine, or add a scope authorization for active collection; widening scope is your decision."
- },
- {
-  "code": "SCOPE_EXPIRED",
-  "meaning": "The scope authorization behind this run expired or was revoked.",
-  "fix": "Renew the authorization, then request and grant the approval again."
- },
- {
-  "code": "SOURCE_UNAVAILABLE",
-  "meaning": "A source is not installed, is offline, or failed.",
-  "fix": "Install or repair it in Setup, retry later, or use the diagnosis's suggested alternative."
- },
- {
-  "code": "UNSUPPORTED_ADAPTER",
-  "meaning": "A step names a source that is not registered in this installation.",
-  "fix": "Pick a registered source (the editor lists them) or install the tool in Setup."
- },
- {
-  "code": "admin_required",
-  "meaning": "The action needs the admin role.",
-  "fix": "Sign in as the admin user (the local desktop session is the admin). Settings pages that change configuration are admin-only."
- },
- {
-  "code": "ai_disabled",
-  "meaning": "AI features are switched off.",
-  "fix": "Settings -> AI: turn AI on and pick a profile. Every other feature works without AI; the Copilot still answers from built-in documentation."
- },
- {
-  "code": "ai_unavailable",
-  "meaning": "The configured model could not be reached.",
-  "fix": "For a local model check that Ollama (or your llama.cpp server) is running and the model name exists (Tool Manager / Setup show it). For a cloud profile check the key and the network. The Copilot falls back to documentation-only answers meanwhile."
- },
- {
-  "code": "already_linked",
-  "meaning": "These entities are already merged.",
-  "fix": "Split the existing merge first if you want to change it."
- },
- {
-  "code": "archived",
-  "meaning": "Archived cases are read-only.",
-  "fix": "Unarchive the case first if you need to add to it."
- },
- {
-  "code": "assessment_required",
-  "meaning": "A real hardware receiver needs an ownership/authorisation assessment and your region.",
-  "fix": "Complete the assessment on the Hardware tab, or use the simulated/replay device."
- },
- {
-  "code": "attestation_required",
-  "meaning": "Subject-confirmed needs a recorded subject attestation.",
-  "fix": "Tick 'subject attests' and say who attested and how in the basis."
- },
- {
-  "code": "backup_refused",
-  "meaning": "A backup could not be created; the message gives the reason (for example a passphrase shorter than 8 characters).",
-  "fix": "Use a passphrase of 8 or more characters and try again from Settings -> Encryption & backup."
- },
- {
-  "code": "bad_signature",
-  "meaning": "The update manifest is malformed or its signature does not match the key built into the app.",
-  "fix": "Re-publish the manifest with the right key (scripts/update_tool.py publish). The key cannot be changed from the UI."
- },
- {
-  "code": "basis_required",
-  "meaning": "Every decision needs a reason or method.",
-  "fix": "Write why you made this decision; it is stored with your name and the time."
- },
- {
-  "code": "budget_exceeded",
-  "meaning": "More sources were selected than one approval allows.",
-  "fix": "Approve fewer sources at a time; each approval is capped to keep research bounded."
- },
- {
-  "code": "cannot_apply",
-  "meaning": "This kind of correction cannot be applied automatically.",
-  "fix": "Choose 'accepted', then make the change yourself."
- },
- {
-  "code": "case_not_open",
-  "meaning": "Searches can only be run on an open case.",
-  "fix": "Reopen the case, or create a new one."
- },
- {
-  "code": "changed_since",
-  "meaning": "That candidate was reviewed again after the decision you tried to undo.",
-  "fix": "Undo the later decision first, then the earlier one."
- },
- {
-  "code": "citation_check_failed",
-  "meaning": "The report was not created because a verified statement does not resolve to intact case evidence.",
-  "fix": "Open the preview, read the listed problems (missing, redacted or altered evidence) and fix or remove those statements."
- },
- {
-  "code": "claim_empty",
-  "meaning": "A claim needs an object entity or a value.",
-  "fix": "Fill in the value or choose an entity."
- },
- {
-  "code": "cloud_not_allowed",
-  "meaning": "This case does not allow sending content to a cloud model.",
-  "fix": "Use a local model, or change the case's AI policy on the AI tab (your decision, per case)."
- },
- {
-  "code": "confirm_required",
-  "meaning": "A confirmation is needed.",
-  "fix": "Review the preview and confirm."
- },
- {
-  "code": "confirmation_required",
-  "meaning": "This is an explicit action and needs confirm=true (the UI sends it when you press the confirm button).",
-  "fix": "Press the confirm button in the UI; nothing happens until you do."
- },
- {
-  "code": "consent_expired",
-  "meaning": "Consent recorded for a human source has expired.",
-  "fix": "Renew consent on the Humint tab before adding more material."
- },
- {
-  "code": "consent_required",
-  "meaning": "You must tick that you own or are authorised to import the material.",
-  "fix": "Tick the ownership/authorisation box on the Imports or Evidence tab before choosing a file."
- },
- {
-  "code": "consent_revoked",
-  "meaning": "Consent for this source was withdrawn.",
-  "fix": "No further material may be added or used for this source."
- },
- {
-  "code": "corroboration_required",
-  "meaning": "Confirming an account needs the subject's attestation or independent evidence; a matching handle is not enough.",
-  "fix": "Tick 'the subject attests' (self-audit) or attach evidence that does not come from the handle check itself."
- },
- {
-  "code": "descriptor_too_long",
-  "meaning": "The descriptor is longer than 200 characters.",
-  "fix": "Shorten it to a category, provider and date."
- },
- {
-  "code": "device_busy",
-  "meaning": "That hardware device is already recording.",
-  "fix": "Stop the running capture on the Hardware tab first."
- },
- {
-  "code": "dns_failed",
-  "meaning": "The update server name could not be resolved.",
-  "fix": "Check the address and your network."
- },
- {
-  "code": "duplicate",
-  "meaning": "An item with that name already exists.",
-  "fix": "Choose another name."
- },
- {
-  "code": "duplicate_alias",
-  "meaning": "That alias already exists in this case.",
-  "fix": "Use a different alias."
- },
- {
-  "code": "duration_too_long",
-  "meaning": "The authorization is longer than allowed for this mode.",
-  "fix": "Use a shorter period and renew when it ends."
- },
- {
-  "code": "empty",
-  "meaning": "The upload was empty.",
-  "fix": "Choose a file with content."
- },
- {
-  "code": "evidence_required",
-  "meaning": "Accepting needs an evidence item from this case.",
-  "fix": "Pick an evidence item first."
- },
- {
-  "code": "expiry_in_past",
-  "meaning": "The authorization end date has already passed.",
-  "fix": "Choose a date in the future."
- },
- {
-  "code": "hash_mismatch",
-  "meaning": "The downloaded update does not match the signed SHA-256 and was deleted.",
-  "fix": "Re-publish the file and manifest together; never run a file that failed verification."
- },
- {
-  "code": "individual_monitoring_blocked",
-  "meaning": "Recurring monitoring of an individual needs a documented case purpose and an acknowledgement.",
-  "fix": "Write the case purpose and tick the acknowledgement when creating the schedule."
- },
- {
-  "code": "invalid_audience",
-  "meaning": "The report audience must be 'subject' or 'analyst'.",
-  "fix": "Pick one of the two."
- },
- {
-  "code": "invalid_citation",
-  "meaning": "A cited evidence item does not belong to this case.",
-  "fix": "Cite evidence from the same case."
- },
- {
-  "code": "invalid_identifier",
-  "meaning": "The input is not an allowed identifier kind or value.",
-  "fix": "Use a name, alias, username, email, domain, URL or organization. Government or financial identifiers and secrets are never accepted."
- },
- {
-  "code": "invalid_image",
-  "meaning": "The file could not be decoded as an image, or it is truncated or too large when decoded.",
-  "fix": "Re-save the image from an image editor; very large dimensions are refused."
- },
- {
-  "code": "invalid_plugin",
-  "meaning": "The plugin package or its manifest is not valid.",
-  "fix": "Check the manifest against the plugin SDK documentation and re-import."
- },
- {
-  "code": "invalid_prefix",
-  "meaning": "The password check accepts exactly five hexadecimal characters.",
-  "fix": "Use the in-app password check; it hashes in your browser and sends only the first five characters."
- },
- {
-  "code": "invalid_profile",
-  "meaning": "That AI profile type is not valid.",
-  "fix": "Ollama and llama.cpp profiles are always local (loopback addresses); cloud profiles need an https URL."
- },
- {
-  "code": "invalid_schedule",
-  "meaning": "The schedule definition is not valid.",
-  "fix": "Choose a supported interval and a valid workflow."
- },
- {
-  "code": "invalid_setting",
-  "meaning": "A setting name or value is not allowed.",
-  "fix": "Use a value the Settings page offers."
- },
- {
-  "code": "license_blocked",
-  "meaning": "The licence basis for this dataset does not permit importing it.",
-  "fix": "Provide the licence basis and licensor the dataset allows, or do not import it."
- },
- {
-  "code": "malformed_input",
-  "meaning": "The imported file could not be parsed.",
-  "fix": "Check the file type and that the file is not damaged; the Imports tab lists supported kinds."
- },
- {
-  "code": "merge_cycle",
-  "meaning": "That merge would be circular or self-referential.",
-  "fix": "Pick two different entities that are not already merged into each other."
- },
- {
-  "code": "network_error",
-  "meaning": "A network request failed (no route, refused, timed out).",
-  "fix": "Check the network or the server address; the message names the exception type."
- },
- {
-  "code": "no_evidence",
-  "meaning": "A claim with no evidence cannot be verified.",
-  "fix": "Attach an evidence item to the claim first."
- },
- {
-  "code": "no_rdap_server",
-  "meaning": "No RDAP server is known for that TLD.",
-  "fix": "Try a different registry source (crt.sh or DNS) for that domain."
- },
- {
-  "code": "not_configured",
-  "meaning": "No update server address is set.",
-  "fix": "Settings -> Updates: enter the manifest address."
- },
- {
-  "code": "not_found",
-  "meaning": "The item does not exist (or you cannot access it).",
-  "fix": "Reload the page; the item may have been deleted."
- },
- {
-  "code": "not_installable",
-  "meaning": "That tool is not on the installable list for this operating system.",
-  "fix": "Open Setup to see what can be installed here, or install the tool yourself and re-check in Tool Manager."
- },
- {
-  "code": "not_installed",
-  "meaning": "The tool is not installed.",
-  "fix": "Setup: tick the tool and press Install selected, or install it yourself; then re-check in Tool Manager."
- },
- {
-  "code": "not_yet_valid",
-  "meaning": "The authorization is not valid yet.",
-  "fix": "Wait until its start time or record a new one."
- },
- {
-  "code": "nothing_selected",
-  "meaning": "Nothing was selected.",
-  "fix": "Select at least one item and try again."
- },
- {
-  "code": "offline",
-  "meaning": "Offline mode is on, so network sources and downloads are denied.",
-  "fix": "Settings -> turn Offline mode off. Local AI and stored cases keep working in offline mode."
- },
- {
-  "code": "out_of_scope",
-  "meaning": "No live authorization covers this source class or identifier.",
-  "fix": "Add the class or identifier to a new authorization, or choose a source that is covered."
- },
- {
-  "code": "parse_error",
-  "meaning": "A tool's output could not be parsed.",
-  "fix": "The raw output was kept as evidence; check the tool version in Tool Manager."
- },
- {
-  "code": "plugin_refused",
-  "meaning": "The plugin action was refused (not reviewed, hash changed, or it asked for something not allowed).",
-  "fix": "Review the manifest in Settings -> Plugins; a changed file disables the plugin until you accept the new hash."
- },
- {
-  "code": "plugin_tampered",
-  "meaning": "A plugin file changed after it was approved.",
-  "fix": "It is disabled again; review the manifest and accept the new hash if you trust it."
- },
- {
-  "code": "policy_blocked",
-  "meaning": "Policy would currently block part of this workflow.",
-  "fix": "Preview the workflow, read which step is blocked and why, then change the target or settings."
- },
- {
-  "code": "policy_denied",
-  "meaning": "Policy refused the plan or request (for example offline mode, a closed case, a private/forbidden destination, or an unconfirmed active source). Nothing was started.",
-  "fix": "Read the denial reason shown with it; it names the rule. Fix the cause (turn offline mode off, confirm the sources that need confirmation) and preview again."
- },
- {
-  "code": "proof_required",
-  "meaning": "This mode needs verifiable proof of consent.",
-  "fix": "Attach the signed document or confirmation as case evidence and choose a verifiable method."
- },
- {
-  "code": "purpose_required",
-  "meaning": "People/public-identity cases need a documented purpose.",
-  "fix": "Write the purpose of the investigation when creating the case."
- },
- {
-  "code": "purposes_required",
-  "meaning": "Client authorizations must list the permitted purposes.",
-  "fix": "Add at least one purpose."
- },
- {
-  "code": "rate_limited",
-  "meaning": "The source asked the app to slow down.",
-  "fix": "Wait the stated time; the app never tries to evade rate limits. Try another source meanwhile."
- },
- {
-  "code": "report_failed",
-  "meaning": "Report generation raised an error.",
-  "fix": "Check the troubleshooting log for the exception, try another format (HTML/Markdown) and report the exception name."
- },
- {
-  "code": "requires_config",
-  "meaning": "The source needs configuration before it can run.",
-  "fix": "Read the warning on the run; for Amass this is data sources in its config file."
- },
- {
-  "code": "requires_key",
-  "meaning": "The source needs an API key that is not stored.",
-  "fix": "Setup -> API keys: paste the key and Save. Without one the source makes no request."
- },
- {
-  "code": "resolution_evidence_required",
-  "meaning": "A remediation task can only be resolved with evidence of the fix or retest.",
-  "fix": "Attach case evidence (for example a screenshot or note) and resolve again."
- },
- {
-  "code": "resolver_error",
-  "meaning": "DNS lookup failed.",
-  "fix": "Check connectivity; the name may not exist."
- },
- {
-  "code": "restore_refused",
-  "meaning": "A backup could not be restored (wrong passphrase, damaged file, or the target folder is not empty).",
-  "fix": "Restore always writes into a new empty folder; check the passphrase and the file. The existing data folder is never modified."
- },
- {
-  "code": "rights_required",
-  "meaning": "You must confirm you own the image, it is public, or you have documented authorization to analyse it.",
-  "fix": "Tick the confirmation on the import form."
- },
- {
-  "code": "role_required",
-  "meaning": "That report or view needs the editor or owner role.",
-  "fix": "Ask a case owner to raise your role on this case."
- },
- {
-  "code": "scope_required",
-  "meaning": "Client authorizations must name the identities they cover.",
-  "fix": "Tick the identities this consent applies to."
- },
- {
-  "code": "secret_rejected",
-  "meaning": "The text looks like it contains a secret, a credential or a government/financial identifier.",
-  "fix": "Describe the category instead (for example 'breach 2023, passwords exposed'). Exposure records never hold secrets."
- },
- {
-  "code": "secret_store_unavailable",
-  "meaning": "The operating system credential store could not be used for a key.",
-  "fix": "Unlock or install a credential store (on Linux a Secret Service such as gnome-keyring); without one the app seals keys in its encrypted database."
- },
- {
-  "code": "sensitive_blocked",
-  "meaning": "This case forbids sending RESTRICTED material to a cloud model.",
-  "fix": "Use a local model or change the case policy."
- },
- {
-  "code": "subject_inactive",
-  "meaning": "The subject is paused, closed or purged.",
-  "fix": "Set the subject back to active before collecting."
- },
- {
-  "code": "timeout",
-  "meaning": "The source did not answer in time.",
-  "fix": "Retry later or use an alternative source for the same question."
- },
- {
-  "code": "too_large",
-  "meaning": "The upload exceeds the size limit.",
-  "fix": "Use a smaller file, or trim the capture."
- },
- {
-  "code": "type_mismatch",
-  "meaning": "Entities of different types cannot be merged.",
-  "fix": "Merge only entities of the same type."
- },
- {
-  "code": "undeclared_network_destination",
-  "meaning": "A plugin tried to reach a network address it did not declare.",
-  "fix": "The plugin is blocked by design; review its manifest."
- },
- {
-  "code": "unknown_model",
-  "meaning": "The model is not in the setup catalog.",
-  "fix": "Pick a model listed in Setup, or add your own profile in Settings -> AI."
- },
- {
-  "code": "unknown_selection",
-  "meaning": "A selected source or input is not part of this target's plan.",
-  "fix": "Preview the plan again and select from the list shown."
- },
- {
-  "code": "unmasked_identifier",
-  "meaning": "An email address in the text is not masked.",
-  "fix": "Mask it, for example j***@example.com."
- },
- {
-  "code": "unsafe_file",
-  "meaning": "The file is not a plain raster image (SVG, HTML, PDF, archives and executables are refused).",
-  "fix": "Export the picture as JPEG, PNG, GIF, WebP, BMP or TIFF and import that."
- },
- {
-  "code": "unsupported_format",
-  "meaning": "That image format is not accepted.",
-  "fix": "Convert it to JPEG, PNG, GIF, WebP, BMP or TIFF."
- },
- {
-  "code": "unsupported_kind",
-  "meaning": "The file type could not be detected.",
-  "fix": "Choose the type explicitly on the Imports tab; the message lists supported kinds."
- },
- {
-  "code": "unsupported_platform",
-  "meaning": "This tool does not run on this operating system.",
-  "fix": "Use an alternative (Tool Manager lists them) or run on a supported OS."
- },
- {
-  "code": "validation_error",
-  "meaning": "The request did not match the expected shape (a missing field, wrong type or value out of range).",
-  "fix": "Check the highlighted field in the form; the details list which field failed."
- },
- {
-  "code": "verification_too_weak",
-  "meaning": "Sensitive checks need more than a self-attestation.",
-  "fix": "Use email confirmation, provider verification, a signed document or in-person verification."
- },
- {
-  "code": "aiv_disabled",
-  "meaning": "Active verification is switched off in this installation, so nothing active can run.",
-  "fix": "An administrator turns it on in the case's Verification tab > Status. It is off by default."
- },
- {
-  "code": "auth_missing",
-  "meaning": "No asset authorization covers this action.",
-  "fix": "Record an asset authorization (case owner) that names the exact hosts, ports and checks, then build the plan again."
- },
- {
-  "code": "auth_expired",
-  "meaning": "The asset authorization has passed its end date.",
-  "fix": "Record a new authorization. Old ones are never extended silently."
- },
- {
-  "code": "auth_revoked",
-  "meaning": "The asset authorization was revoked; approvals and running checks stopped at once.",
-  "fix": "Record a new authorization if the work should continue."
- },
- {
-  "code": "auth_not_started",
-  "meaning": "The authorization's start time has not arrived yet.",
-  "fix": "Wait until it starts or record one with the right start."
- },
- {
-  "code": "host_out_of_scope",
-  "meaning": "The host is not named in the authorization (or its address is not allowed).",
-  "fix": "Check the host spelling and the authorization's scope. A different host needs its own authorization."
- },
- {
-  "code": "port_out_of_scope",
-  "meaning": "The port is not one the authorization permits.",
-  "fix": "Use a listed port or record an authorization that lists it."
- },
- {
-  "code": "class_not_allowed",
-  "meaning": "The authorization does not permit this kind of check.",
-  "fix": "Record an authorization that includes the check class, or choose a permitted check."
- },
- {
-  "code": "resolved_ip_forbidden",
-  "meaning": "The name resolved to an address that is never allowed (private, loopback, link-local or cloud-metadata space).",
-  "fix": "Use a public host you are authorized to test. Private lab hosts need an explicit lab-network statement."
- },
- {
-  "code": "scope_changed",
-  "meaning": "The authorization changed after the plan was approved, so the approval no longer applies.",
-  "fix": "Create a new plan from the current authorization and approve it again."
- },
- {
-  "code": "approval_used",
-  "meaning": "A plan approval is single use and has been used.",
-  "fix": "Review the plan and approve it again to run it once more."
- },
- {
-  "code": "approval_expired",
-  "meaning": "The approval ran out of time before the run started.",
-  "fix": "Approve the plan again (approvals last at most four hours)."
- },
- {
-  "code": "approval_mismatch",
-  "meaning": "The approval was given for a different plan or version.",
-  "fix": "Approve the plan you want to run; editing a plan creates a new version that needs its own approval."
- },
- {
-  "code": "template_not_approved",
-  "meaning": "A signature template is not approved by id and content hash.",
-  "fix": "Review it under Verification > Templates and approve that exact text, or remove it from the plan."
- },
- {
-  "code": "template_rejected",
-  "meaning": "The template makes requests the review does not allow (not read-only GET/HEAD, has payloads, bodies, headers, flows or other protocols).",
-  "fix": "Use a plain fingerprint template, or do not use that template."
- },
- {
-  "code": "approval_required",
-  "meaning": "An explicit approval is needed for this change.",
-  "fix": "Preview it, then tick the approval box and apply."
- },
- {
-  "code": "invalid_branding",
-  "meaning": "The product name is not acceptable (for example it uses 'Intel' as a brand or contains markup).",
-  "fix": "Use a name of 3 to 60 characters without markup; 'Intelligence' is fine, 'Intel' alone is not."
- },
- {
-  "code": "nothing_to_hand_off",
-  "meaning": "There are no confirmed observations at that severity to export.",
-  "fix": "Review the observations and confirm the ones that are real, then export again."
- },
- {
-  "code": "terms_required",
-  "meaning": "A DARKINT provider's terms have not been accepted.",
-  "fix": "An administrator reads the provider's terms and enables it with the confirmation."
- },
- {
-  "code": "provider_not_permitted",
-  "meaning": "The authorization does not permit this exposure provider.",
-  "fix": "Record an authorization that lists the provider, or leave the list empty to allow any enabled provider."
- },
- {
-  "code": "not_monitorable",
-  "meaning": "This provider cannot be scheduled (password checks and manual sources are owner-initiated only).",
-  "fix": "Run it by hand from the Exposure tab."
- },
- {
-  "code": "domain_monitor_unsupported",
-  "meaning": "Domain-wide breach lookups are run by hand after domain verification, not scheduled.",
-  "fix": "Run the lookup from the DARKINT tab after verifying the domain with the provider."
- },
- {
-  "code": "RATE_LIMITED",
-  "meaning": "The provider (or its documented rate limit) said to slow down.",
-  "fix": "Wait and try again; the free Ransomware.live interface allows about one request per minute."
- },
- {
-  "code": "nothing_to_report",
-  "meaning": "There are no verification runs to put in a report yet.",
-  "fix": "Approve and run a plan first, then create the report."
- },
- {
-  "code": "invalid_address",
-  "meaning": "That is not a valid email address.",
-  "fix": "Check the spelling; use the form name@domain."
- },
- {
-  "code": "not_confirmed",
-  "meaning": "Only a confirmed address can be added as an input.",
-  "fix": "Confirm it first with the owner's attestation or independent corroboration."
- },
- {
-  "code": "merge_conflict",
-  "meaning": "Addresses with different decisions cannot be merged.",
-  "fix": "Resolve the decisions first (reopen the rejected one, or confirm both)."
- },
- {
-  "code": "not_expandable",
-  "meaning": "A selected research step is not available in the plan (blocked, already done, beyond the depth limit, or it needs its own approval).",
-  "fix": "Open the plan, read each step's status, and tick only ready steps."
- },
- {
-  "code": "out_of_range",
-  "meaning": "An expansion limit is outside what is allowed.",
-  "fix": "Use whole numbers: depth 1 to 4, total runs 1 to 100, runs per pass 1 to 20."
- },
- {
-  "code": "unknown_setting",
-  "meaning": "That expansion setting does not exist.",
-  "fix": "Use max_depth, max_runs, max_per_pass or auto_passive."
- },
- {
-  "code": "already_an_input",
-  "meaning": "That address is already one of the subject's own inputs.",
-  "fix": "Nothing to do: it is researched as an input."
- },
- {
-  "code": "invalid_domain",
-  "meaning": "The shared-provider list entry is not a plain domain name.",
-  "fix": "Enter a domain such as mail.example.net, without a path or an @."
- },
- {
-  "code": "invalid_state",
-  "meaning": "The state filter or requested state is not one of Unassessed, Candidate, Corroborated, Conflicting, Rejected or Not available.",
-  "fix": "Pick one of the listed states."
- },
- {
-  "code": "self_attestation_only",
-  "meaning": "The only support is the subject's own statement, which is recorded as self-attestation and is never independent corroboration.",
-  "fix": "Add evidence from an independent source and tick 'independent of the subject', or leave the item as a candidate."
- },
- {
-  "code": "owner_required",
-  "meaning": "Revealing or recording a restricted value is limited to the case owner.",
-  "fix": "Ask the case owner, or work with the masked value."
- },
- {
-  "code": "need_to_know_required",
-  "meaning": "A restricted field (date of birth, phone, address, identity reference) needs a stated reason it is required.",
-  "fix": "Type why the value is needed; the reason is recorded."
- },
- {
-  "code": "authorization_required",
-  "meaning": "There is no current authorization for this subject, so restricted values cannot be recorded or revealed.",
-  "fix": "Record or renew the authorization in the Authorization tab."
- },
- {
-  "code": "reference_only",
-  "meaning": "This value is stored only as a masked form and a keyed token, so it cannot be revealed.",
-  "fix": "Use Compare to check a number against the stored token."
- },
- {
-  "code": "not_reference",
-  "meaning": "Compare works only on identity-document or SSN reference items.",
-  "fix": "Choose a reference item."
- },
- {
-  "code": "not_restricted",
-  "meaning": "Reveal applies only to restricted items.",
-  "fix": "This value is not masked; read it directly."
- },
- {
-  "code": "reason_required",
-  "meaning": "A reveal needs a reason of at least ten characters, which is audited.",
-  "fix": "Describe why you need to see the value."
- },
- {
-  "code": "input_value_fixed",
-  "meaning": "An input's value cannot be edited in place because research is tied to it.",
-  "fix": "Retire it and add the corrected value."
- },
- {
-  "code": "not_an_input_type",
-  "meaning": "This type of item cannot be used as a research input.",
-  "fix": "Only emails, usernames, domains, URLs, names, aliases and organizations can be inputs."
- },
- {
-  "code": "invalid_origin",
-  "meaning": "The origin is not one of the supported ones.",
-  "fix": "Choose subject provided, analyst supplied, published source or verified provider."
- },
- {
-  "code": "invalid_type",
-  "meaning": "The item type is not in the Master Profile catalog.",
-  "fix": "Pick a listed type, or use a custom attribute."
- },
- {
-  "code": "invalid_confidence",
-  "meaning": "Confidence must be unknown, low, medium or high.",
-  "fix": "Pick one of the four."
- },
- {
-  "code": "invalid_value",
-  "meaning": "The value is not valid for this type of item.",
-  "fix": "Check the format, for example a date as YYYY-MM-DD or a phone number with digits."
- },
- {
-  "code": "evidence_not_in_case",
-  "meaning": "That evidence belongs to a different case.",
-  "fix": "Use evidence stored in this case."
- },
- {
-  "code": "custom_type_required",
-  "meaning": "A custom attribute needs a name.",
-  "fix": "Type the attribute name."
- },
- {
-  "code": "too_many_rows",
-  "meaning": "The import has more rows than one batch allows.",
-  "fix": "Split the file into smaller parts."
- },
- {
-  "code": "unreadable_import",
-  "meaning": "The file could not be read as CSV or JSON, or is not a list of objects with type and value.",
-  "fix": "Check the format and the header row."
- },
- {
-  "code": "evidence_not_applicable",
-  "meaning": "The selected evidence is not about that site, so it cannot support that account.",
-  "fix": "Choose evidence from the same site, or leave Independent evidence on None and record a self-attestation."
- },
- {
-  "code": "rejected_item",
-  "meaning": "This was rejected. A rejected value never drives research.",
-  "fix": "Reopen it (Needs review) first if you changed your mind."
- },
- {
-  "code": "backed_item_fixed",
-  "meaning": "An input or a reviewed claim keeps its type, because its research history is attached to it.",
-  "fix": "Add it again with the right type and retire the old one."
- },
- {
-  "code": "restricted_type",
-  "meaning": "Restricted types cannot be created by changing the type of another item.",
-  "fix": "Add a restricted value directly, as the case owner, with a stated need."
- },
- {
-  "code": "same_type",
-  "meaning": "The item already has that type.",
-  "fix": "Pick a different type."
- },
- {
-  "code": "nothing_to_undo",
-  "meaning": "This item was never reclassified.",
-  "fix": "Nothing to undo."
- },
- {
-  "code": "no_valid_inputs",
-  "meaning": "None of the values could be used as inputs.",
-  "fix": "Check each value's type, for example an email must contain an @."
- },
- {
-  "code": "not_running",
-  "meaning": "Only a running investigation can be paused.",
-  "fix": "Use Resume or Stop instead."
- },
- {
-  "code": "not_resumable",
-  "meaning": "This investigation is running or already finished.",
-  "fix": "Wait for it to finish, or start a new one."
- },
- {
-  "code": "not_cancellable",
-  "meaning": "This investigation is already finished.",
-  "fix": "Nothing to stop."
- },
- {
-  "code": "invalid_action",
-  "meaning": "The decision is not one of Mine, Not mine, Unsure or Need evidence.",
-  "fix": "Pick one of the four."
- },
- {
-  "code": "invalid_selection",
-  "meaning": "An item in the selection is not recognised.",
-  "fix": "Refresh the page and select again."
- },
- {
-  "code": "too_many",
-  "meaning": "Too many items in one batch.",
-  "fix": "Review at most 200 at a time."
- }
+  {
+    "code": "APPROVAL_REQUIRED",
+    "meaning": "An approval, confirmation or published version is missing or expired for this exact version.",
+    "fix": "Publish, press Request approval, decide it (with an expiry), then activate or run again."
+  },
+  {
+    "code": "CREDENTIAL_MISSING",
+    "meaning": "A source needs an API key or an approved destination that is not configured.",
+    "fix": "Add the key in Setup -> API keys, or approve the webhook name in Automations -> Settings."
+  },
+  {
+    "code": "INVALID_GRAPH",
+    "meaning": "The workflow definition is not valid (bad reference, cycle, missing scope check, unknown setting, over a limit).",
+    "fix": "Open the Checks panel: each problem names the step and the rule. Fix them, then publish."
+  },
+  {
+    "code": "OFFLINE",
+    "meaning": "Offline mode is on, so network steps pause.",
+    "fix": "Turn offline mode off, then retry the paused run."
+  },
+  {
+    "code": "PARTIAL_RESULT",
+    "meaning": "The run finished but some sources failed or were optional and unavailable.",
+    "fix": "Open the run's warnings; results are marked partial and are not used as a baseline."
+  },
+  {
+    "code": "PRECONDITION_FAILED",
+    "meaning": "The draft changed since you loaded it (someone or something saved a newer revision).",
+    "fix": "Reload the workflow and re-apply your edit."
+  },
+  {
+    "code": "RUN_CANCELLED",
+    "meaning": "The run was stopped.",
+    "fix": "Start it again if you still want the result."
+  },
+  {
+    "code": "SCOPE_DENIED",
+    "meaning": "The target was refused by scope policy (private, local, unauthorised or malformed). It is never retried.",
+    "fix": "Use a public target you are allowed to examine, or add a scope authorization for active collection; widening scope is your decision."
+  },
+  {
+    "code": "SCOPE_EXPIRED",
+    "meaning": "The scope authorization behind this run expired or was revoked.",
+    "fix": "Renew the authorization, then request and grant the approval again."
+  },
+  {
+    "code": "SOURCE_UNAVAILABLE",
+    "meaning": "A source is not installed, is offline, or failed.",
+    "fix": "Install or repair it in Setup, retry later, or use the diagnosis's suggested alternative."
+  },
+  {
+    "code": "UNSUPPORTED_ADAPTER",
+    "meaning": "A step names a source that is not registered in this installation.",
+    "fix": "Pick a registered source (the editor lists them) or install the tool in Setup."
+  },
+  {
+    "code": "admin_required",
+    "meaning": "The action needs the admin role.",
+    "fix": "Sign in as the admin user (the local desktop session is the admin). Settings pages that change configuration are admin-only."
+  },
+  {
+    "code": "ai_disabled",
+    "meaning": "AI features are switched off.",
+    "fix": "Settings -> AI: turn AI on and pick a profile. Every other feature works without AI; the Copilot still answers from built-in documentation."
+  },
+  {
+    "code": "ai_unavailable",
+    "meaning": "The configured model could not be reached.",
+    "fix": "For a local model check that Ollama (or your llama.cpp server) is running and the model name exists (Tool Manager / Setup show it). For a cloud profile check the key and the network. The Copilot falls back to documentation-only answers meanwhile."
+  },
+  {
+    "code": "already_linked",
+    "meaning": "These entities are already merged.",
+    "fix": "Split the existing merge first if you want to change it."
+  },
+  {
+    "code": "archived",
+    "meaning": "Archived cases are read-only.",
+    "fix": "Unarchive the case first if you need to add to it."
+  },
+  {
+    "code": "assessment_required",
+    "meaning": "A real hardware receiver needs an ownership/authorisation assessment and your region.",
+    "fix": "Complete the assessment on the Hardware tab, or use the simulated/replay device."
+  },
+  {
+    "code": "attestation_required",
+    "meaning": "Subject-confirmed needs a recorded subject attestation.",
+    "fix": "Tick 'subject attests' and say who attested and how in the basis."
+  },
+  {
+    "code": "backup_refused",
+    "meaning": "A backup could not be created; the message gives the reason (for example a passphrase shorter than 8 characters).",
+    "fix": "Use a passphrase of 8 or more characters and try again from Settings -> Encryption & backup."
+  },
+  {
+    "code": "bad_signature",
+    "meaning": "The update manifest is malformed or its signature does not match the key built into the app.",
+    "fix": "Re-publish the manifest with the right key (scripts/update_tool.py publish). The key cannot be changed from the UI."
+  },
+  {
+    "code": "basis_required",
+    "meaning": "Every decision needs a reason or method.",
+    "fix": "Write why you made this decision; it is stored with your name and the time."
+  },
+  {
+    "code": "budget_exceeded",
+    "meaning": "More sources were selected than one approval allows.",
+    "fix": "Approve fewer sources at a time; each approval is capped to keep research bounded."
+  },
+  {
+    "code": "cannot_apply",
+    "meaning": "This kind of correction cannot be applied automatically.",
+    "fix": "Choose 'accepted', then make the change yourself."
+  },
+  {
+    "code": "case_not_open",
+    "meaning": "Searches can only be run on an open case.",
+    "fix": "Reopen the case, or create a new one."
+  },
+  {
+    "code": "changed_since",
+    "meaning": "That candidate was reviewed again after the decision you tried to undo.",
+    "fix": "Undo the later decision first, then the earlier one."
+  },
+  {
+    "code": "citation_check_failed",
+    "meaning": "The report was not created because a verified statement does not resolve to intact case evidence.",
+    "fix": "Open the preview, read the listed problems (missing, redacted or altered evidence) and fix or remove those statements."
+  },
+  {
+    "code": "claim_empty",
+    "meaning": "A claim needs an object entity or a value.",
+    "fix": "Fill in the value or choose an entity."
+  },
+  {
+    "code": "cloud_not_allowed",
+    "meaning": "This case does not allow sending content to a cloud model.",
+    "fix": "Use a local model, or change the case's AI policy on the AI tab (your decision, per case)."
+  },
+  {
+    "code": "confirm_required",
+    "meaning": "A confirmation is needed.",
+    "fix": "Review the preview and confirm."
+  },
+  {
+    "code": "confirmation_required",
+    "meaning": "This is an explicit action and needs confirm=true (the UI sends it when you press the confirm button).",
+    "fix": "Press the confirm button in the UI; nothing happens until you do."
+  },
+  {
+    "code": "consent_expired",
+    "meaning": "Consent recorded for a human source has expired.",
+    "fix": "Renew consent on the Humint tab before adding more material."
+  },
+  {
+    "code": "consent_required",
+    "meaning": "You must tick that you own or are authorised to import the material.",
+    "fix": "Tick the ownership/authorisation box on the Imports or Evidence tab before choosing a file."
+  },
+  {
+    "code": "consent_revoked",
+    "meaning": "Consent for this source was withdrawn.",
+    "fix": "No further material may be added or used for this source."
+  },
+  {
+    "code": "corroboration_required",
+    "meaning": "Confirming an account needs the subject's attestation or independent evidence; a matching handle is not enough.",
+    "fix": "Tick 'the subject attests' (self-audit) or attach evidence that does not come from the handle check itself."
+  },
+  {
+    "code": "descriptor_too_long",
+    "meaning": "The descriptor is longer than 200 characters.",
+    "fix": "Shorten it to a category, provider and date."
+  },
+  {
+    "code": "device_busy",
+    "meaning": "That hardware device is already recording.",
+    "fix": "Stop the running capture on the Hardware tab first."
+  },
+  {
+    "code": "dns_failed",
+    "meaning": "The update server name could not be resolved.",
+    "fix": "Check the address and your network."
+  },
+  {
+    "code": "duplicate",
+    "meaning": "An item with that name already exists.",
+    "fix": "Choose another name."
+  },
+  {
+    "code": "duplicate_alias",
+    "meaning": "That alias already exists in this case.",
+    "fix": "Use a different alias."
+  },
+  {
+    "code": "duration_too_long",
+    "meaning": "The authorization is longer than allowed for this mode.",
+    "fix": "Use a shorter period and renew when it ends."
+  },
+  {
+    "code": "empty",
+    "meaning": "The upload was empty.",
+    "fix": "Choose a file with content."
+  },
+  {
+    "code": "evidence_required",
+    "meaning": "Accepting needs an evidence item from this case.",
+    "fix": "Pick an evidence item first."
+  },
+  {
+    "code": "expiry_in_past",
+    "meaning": "The authorization end date has already passed.",
+    "fix": "Choose a date in the future."
+  },
+  {
+    "code": "hash_mismatch",
+    "meaning": "The downloaded update does not match the signed SHA-256 and was deleted.",
+    "fix": "Re-publish the file and manifest together; never run a file that failed verification."
+  },
+  {
+    "code": "individual_monitoring_blocked",
+    "meaning": "Recurring monitoring of an individual needs a documented case purpose and an acknowledgement.",
+    "fix": "Write the case purpose and tick the acknowledgement when creating the schedule."
+  },
+  {
+    "code": "invalid_audience",
+    "meaning": "The report audience must be 'subject' or 'analyst'.",
+    "fix": "Pick one of the two."
+  },
+  {
+    "code": "invalid_citation",
+    "meaning": "A cited evidence item does not belong to this case.",
+    "fix": "Cite evidence from the same case."
+  },
+  {
+    "code": "invalid_identifier",
+    "meaning": "The input is not an allowed identifier kind or value.",
+    "fix": "Use a name, alias, username, email, domain, URL or organization. Government or financial identifiers and secrets are never accepted."
+  },
+  {
+    "code": "invalid_image",
+    "meaning": "The file could not be decoded as an image, or it is truncated or too large when decoded.",
+    "fix": "Re-save the image from an image editor; very large dimensions are refused."
+  },
+  {
+    "code": "invalid_plugin",
+    "meaning": "The plugin package or its manifest is not valid.",
+    "fix": "Check the manifest against the plugin SDK documentation and re-import."
+  },
+  {
+    "code": "invalid_prefix",
+    "meaning": "The password check accepts exactly five hexadecimal characters.",
+    "fix": "Use the in-app password check; it hashes in your browser and sends only the first five characters."
+  },
+  {
+    "code": "invalid_profile",
+    "meaning": "That AI profile type is not valid.",
+    "fix": "Ollama and llama.cpp profiles are always local (loopback addresses); cloud profiles need an https URL."
+  },
+  {
+    "code": "invalid_schedule",
+    "meaning": "The schedule definition is not valid.",
+    "fix": "Choose a supported interval and a valid workflow."
+  },
+  {
+    "code": "invalid_setting",
+    "meaning": "A setting name or value is not allowed.",
+    "fix": "Use a value the Settings page offers."
+  },
+  {
+    "code": "license_blocked",
+    "meaning": "The licence basis for this dataset does not permit importing it.",
+    "fix": "Provide the licence basis and licensor the dataset allows, or do not import it."
+  },
+  {
+    "code": "malformed_input",
+    "meaning": "The imported file could not be parsed.",
+    "fix": "Check the file type and that the file is not damaged; the Imports tab lists supported kinds."
+  },
+  {
+    "code": "merge_cycle",
+    "meaning": "That merge would be circular or self-referential.",
+    "fix": "Pick two different entities that are not already merged into each other."
+  },
+  {
+    "code": "network_error",
+    "meaning": "A network request failed (no route, refused, timed out).",
+    "fix": "Check the network or the server address; the message names the exception type."
+  },
+  {
+    "code": "no_evidence",
+    "meaning": "A claim with no evidence cannot be verified.",
+    "fix": "Attach an evidence item to the claim first."
+  },
+  {
+    "code": "no_rdap_server",
+    "meaning": "No RDAP server is known for that TLD.",
+    "fix": "Try a different registry source (crt.sh or DNS) for that domain."
+  },
+  {
+    "code": "not_configured",
+    "meaning": "No update server address is set.",
+    "fix": "Settings -> Updates: enter the manifest address."
+  },
+  {
+    "code": "not_found",
+    "meaning": "The item does not exist (or you cannot access it).",
+    "fix": "Reload the page; the item may have been deleted."
+  },
+  {
+    "code": "not_installable",
+    "meaning": "That tool is not on the installable list for this operating system.",
+    "fix": "Open Setup to see what can be installed here, or install the tool yourself and re-check in Tool Manager."
+  },
+  {
+    "code": "not_installed",
+    "meaning": "The tool is not installed.",
+    "fix": "Setup: tick the tool and press Install selected, or install it yourself; then re-check in Tool Manager."
+  },
+  {
+    "code": "not_yet_valid",
+    "meaning": "The authorization is not valid yet.",
+    "fix": "Wait until its start time or record a new one."
+  },
+  {
+    "code": "nothing_selected",
+    "meaning": "Nothing was selected.",
+    "fix": "Select at least one item and try again."
+  },
+  {
+    "code": "offline",
+    "meaning": "Offline mode is on, so network sources and downloads are denied.",
+    "fix": "Settings -> turn Offline mode off. Local AI and stored cases keep working in offline mode."
+  },
+  {
+    "code": "out_of_scope",
+    "meaning": "No live authorization covers this source class or identifier.",
+    "fix": "Add the class or identifier to a new authorization, or choose a source that is covered."
+  },
+  {
+    "code": "parse_error",
+    "meaning": "A tool's output could not be parsed.",
+    "fix": "The raw output was kept as evidence; check the tool version in Tool Manager."
+  },
+  {
+    "code": "plugin_refused",
+    "meaning": "The plugin action was refused (not reviewed, hash changed, or it asked for something not allowed).",
+    "fix": "Review the manifest in Settings -> Plugins; a changed file disables the plugin until you accept the new hash."
+  },
+  {
+    "code": "plugin_tampered",
+    "meaning": "A plugin file changed after it was approved.",
+    "fix": "It is disabled again; review the manifest and accept the new hash if you trust it."
+  },
+  {
+    "code": "policy_blocked",
+    "meaning": "Policy would currently block part of this workflow.",
+    "fix": "Preview the workflow, read which step is blocked and why, then change the target or settings."
+  },
+  {
+    "code": "policy_denied",
+    "meaning": "Policy refused the plan or request (for example offline mode, a closed case, a private/forbidden destination, or an unconfirmed active source). Nothing was started.",
+    "fix": "Read the denial reason shown with it; it names the rule. Fix the cause (turn offline mode off, confirm the sources that need confirmation) and preview again."
+  },
+  {
+    "code": "proof_required",
+    "meaning": "This mode needs verifiable proof of consent.",
+    "fix": "Attach the signed document or confirmation as case evidence and choose a verifiable method."
+  },
+  {
+    "code": "purpose_required",
+    "meaning": "People/public-identity cases need a documented purpose.",
+    "fix": "Write the purpose of the investigation when creating the case."
+  },
+  {
+    "code": "purposes_required",
+    "meaning": "Client authorizations must list the permitted purposes.",
+    "fix": "Add at least one purpose."
+  },
+  {
+    "code": "rate_limited",
+    "meaning": "The source asked the app to slow down.",
+    "fix": "Wait the stated time; the app never tries to evade rate limits. Try another source meanwhile."
+  },
+  {
+    "code": "report_failed",
+    "meaning": "Report generation raised an error.",
+    "fix": "Check the troubleshooting log for the exception, try another format (HTML/Markdown) and report the exception name."
+  },
+  {
+    "code": "requires_config",
+    "meaning": "The source needs configuration before it can run.",
+    "fix": "Read the warning on the run; for Amass this is data sources in its config file."
+  },
+  {
+    "code": "requires_key",
+    "meaning": "The source needs an API key that is not stored.",
+    "fix": "Setup -> API keys: paste the key and Save. Without one the source makes no request."
+  },
+  {
+    "code": "resolution_evidence_required",
+    "meaning": "A remediation task can only be resolved with evidence of the fix or retest.",
+    "fix": "Attach case evidence (for example a screenshot or note) and resolve again."
+  },
+  {
+    "code": "resolver_error",
+    "meaning": "DNS lookup failed.",
+    "fix": "Check connectivity; the name may not exist."
+  },
+  {
+    "code": "restore_refused",
+    "meaning": "A backup could not be restored (wrong passphrase, damaged file, or the target folder is not empty).",
+    "fix": "Restore always writes into a new empty folder; check the passphrase and the file. The existing data folder is never modified."
+  },
+  {
+    "code": "rights_required",
+    "meaning": "You must confirm you own the image, it is public, or you have documented authorization to analyse it.",
+    "fix": "Tick the confirmation on the import form."
+  },
+  {
+    "code": "role_required",
+    "meaning": "That report or view needs the editor or owner role.",
+    "fix": "Ask a case owner to raise your role on this case."
+  },
+  {
+    "code": "scope_required",
+    "meaning": "Client authorizations must name the identities they cover.",
+    "fix": "Tick the identities this consent applies to."
+  },
+  {
+    "code": "secret_rejected",
+    "meaning": "The text looks like it contains a secret, a credential or a government/financial identifier.",
+    "fix": "Describe the category instead (for example 'breach 2023, passwords exposed'). Exposure records never hold secrets."
+  },
+  {
+    "code": "secret_store_unavailable",
+    "meaning": "The operating system credential store could not be used for a key.",
+    "fix": "Unlock or install a credential store (on Linux a Secret Service such as gnome-keyring); without one the app seals keys in its encrypted database."
+  },
+  {
+    "code": "sensitive_blocked",
+    "meaning": "This case forbids sending RESTRICTED material to a cloud model.",
+    "fix": "Use a local model or change the case policy."
+  },
+  {
+    "code": "subject_inactive",
+    "meaning": "The subject is paused, closed or purged.",
+    "fix": "Set the subject back to active before collecting."
+  },
+  {
+    "code": "timeout",
+    "meaning": "The source did not answer in time.",
+    "fix": "Retry later or use an alternative source for the same question."
+  },
+  {
+    "code": "too_large",
+    "meaning": "The upload exceeds the size limit.",
+    "fix": "Use a smaller file, or trim the capture."
+  },
+  {
+    "code": "type_mismatch",
+    "meaning": "Entities of different types cannot be merged.",
+    "fix": "Merge only entities of the same type."
+  },
+  {
+    "code": "undeclared_network_destination",
+    "meaning": "A plugin tried to reach a network address it did not declare.",
+    "fix": "The plugin is blocked by design; review its manifest."
+  },
+  {
+    "code": "unknown_model",
+    "meaning": "The model is not in the setup catalog.",
+    "fix": "Pick a model listed in Setup, or add your own profile in Settings -> AI."
+  },
+  {
+    "code": "unknown_selection",
+    "meaning": "A selected source or input is not part of this target's plan.",
+    "fix": "Preview the plan again and select from the list shown."
+  },
+  {
+    "code": "unmasked_identifier",
+    "meaning": "An email address in the text is not masked.",
+    "fix": "Mask it, for example j***@example.com."
+  },
+  {
+    "code": "unsafe_file",
+    "meaning": "The file is not a plain raster image (SVG, HTML, PDF, archives and executables are refused).",
+    "fix": "Export the picture as JPEG, PNG, GIF, WebP, BMP or TIFF and import that."
+  },
+  {
+    "code": "unsupported_format",
+    "meaning": "That image format is not accepted.",
+    "fix": "Convert it to JPEG, PNG, GIF, WebP, BMP or TIFF."
+  },
+  {
+    "code": "unsupported_kind",
+    "meaning": "The file type could not be detected.",
+    "fix": "Choose the type explicitly on the Imports tab; the message lists supported kinds."
+  },
+  {
+    "code": "unsupported_platform",
+    "meaning": "This tool does not run on this operating system.",
+    "fix": "Use an alternative (Tool Manager lists them) or run on a supported OS."
+  },
+  {
+    "code": "validation_error",
+    "meaning": "The request did not match the expected shape (a missing field, wrong type or value out of range).",
+    "fix": "Check the highlighted field in the form; the details list which field failed."
+  },
+  {
+    "code": "verification_too_weak",
+    "meaning": "Sensitive checks need more than a self-attestation.",
+    "fix": "Use email confirmation, provider verification, a signed document or in-person verification."
+  },
+  {
+    "code": "aiv_disabled",
+    "meaning": "Active verification is switched off in this installation, so nothing active can run.",
+    "fix": "An administrator turns it on in the case's Verification tab > Status. It is off by default."
+  },
+  {
+    "code": "auth_missing",
+    "meaning": "No asset authorization covers this action.",
+    "fix": "Record an asset authorization (case owner) that names the exact hosts, ports and checks, then build the plan again."
+  },
+  {
+    "code": "auth_expired",
+    "meaning": "The asset authorization has passed its end date.",
+    "fix": "Record a new authorization. Old ones are never extended silently."
+  },
+  {
+    "code": "auth_revoked",
+    "meaning": "The asset authorization was revoked; approvals and running checks stopped at once.",
+    "fix": "Record a new authorization if the work should continue."
+  },
+  {
+    "code": "auth_not_started",
+    "meaning": "The authorization's start time has not arrived yet.",
+    "fix": "Wait until it starts or record one with the right start."
+  },
+  {
+    "code": "host_out_of_scope",
+    "meaning": "The host is not named in the authorization (or its address is not allowed).",
+    "fix": "Check the host spelling and the authorization's scope. A different host needs its own authorization."
+  },
+  {
+    "code": "port_out_of_scope",
+    "meaning": "The port is not one the authorization permits.",
+    "fix": "Use a listed port or record an authorization that lists it."
+  },
+  {
+    "code": "class_not_allowed",
+    "meaning": "The authorization does not permit this kind of check.",
+    "fix": "Record an authorization that includes the check class, or choose a permitted check."
+  },
+  {
+    "code": "resolved_ip_forbidden",
+    "meaning": "The name resolved to an address that is never allowed (private, loopback, link-local or cloud-metadata space).",
+    "fix": "Use a public host you are authorized to test. Private lab hosts need an explicit lab-network statement."
+  },
+  {
+    "code": "scope_changed",
+    "meaning": "The authorization changed after the plan was approved, so the approval no longer applies.",
+    "fix": "Create a new plan from the current authorization and approve it again."
+  },
+  {
+    "code": "approval_used",
+    "meaning": "A plan approval is single use and has been used.",
+    "fix": "Review the plan and approve it again to run it once more."
+  },
+  {
+    "code": "approval_expired",
+    "meaning": "The approval ran out of time before the run started.",
+    "fix": "Approve the plan again (approvals last at most four hours)."
+  },
+  {
+    "code": "approval_mismatch",
+    "meaning": "The approval was given for a different plan or version.",
+    "fix": "Approve the plan you want to run; editing a plan creates a new version that needs its own approval."
+  },
+  {
+    "code": "template_not_approved",
+    "meaning": "A signature template is not approved by id and content hash.",
+    "fix": "Review it under Verification > Templates and approve that exact text, or remove it from the plan."
+  },
+  {
+    "code": "template_rejected",
+    "meaning": "The template makes requests the review does not allow (not read-only GET/HEAD, has payloads, bodies, headers, flows or other protocols).",
+    "fix": "Use a plain fingerprint template, or do not use that template."
+  },
+  {
+    "code": "approval_required",
+    "meaning": "An explicit approval is needed for this change.",
+    "fix": "Preview it, then tick the approval box and apply."
+  },
+  {
+    "code": "invalid_branding",
+    "meaning": "The product name is not acceptable (for example it uses 'Intel' as a brand or contains markup).",
+    "fix": "Use a name of 3 to 60 characters without markup; 'Intelligence' is fine, 'Intel' alone is not."
+  },
+  {
+    "code": "nothing_to_hand_off",
+    "meaning": "There are no confirmed observations at that severity to export.",
+    "fix": "Review the observations and confirm the ones that are real, then export again."
+  },
+  {
+    "code": "terms_required",
+    "meaning": "A DARKINT provider's terms have not been accepted.",
+    "fix": "An administrator reads the provider's terms and enables it with the confirmation."
+  },
+  {
+    "code": "provider_not_permitted",
+    "meaning": "The authorization does not permit this exposure provider.",
+    "fix": "Record an authorization that lists the provider, or leave the list empty to allow any enabled provider."
+  },
+  {
+    "code": "not_monitorable",
+    "meaning": "This provider cannot be scheduled (password checks and manual sources are owner-initiated only).",
+    "fix": "Run it by hand from the Exposure tab."
+  },
+  {
+    "code": "domain_monitor_unsupported",
+    "meaning": "Domain-wide breach lookups are run by hand after domain verification, not scheduled.",
+    "fix": "Run the lookup from the DARKINT tab after verifying the domain with the provider."
+  },
+  {
+    "code": "RATE_LIMITED",
+    "meaning": "The provider (or its documented rate limit) said to slow down.",
+    "fix": "Wait and try again; the free Ransomware.live interface allows about one request per minute."
+  },
+  {
+    "code": "nothing_to_report",
+    "meaning": "There are no verification runs to put in a report yet.",
+    "fix": "Approve and run a plan first, then create the report."
+  },
+  {
+    "code": "invalid_address",
+    "meaning": "That is not a valid email address.",
+    "fix": "Check the spelling; use the form name@domain."
+  },
+  {
+    "code": "not_confirmed",
+    "meaning": "Only a confirmed address can be added as an input.",
+    "fix": "Confirm it first with the owner's attestation or independent corroboration."
+  },
+  {
+    "code": "merge_conflict",
+    "meaning": "Addresses with different decisions cannot be merged.",
+    "fix": "Resolve the decisions first (reopen the rejected one, or confirm both)."
+  },
+  {
+    "code": "not_expandable",
+    "meaning": "A selected research step is not available in the plan (blocked, already done, beyond the depth limit, or it needs its own approval).",
+    "fix": "Open the plan, read each step's status, and tick only ready steps."
+  },
+  {
+    "code": "out_of_range",
+    "meaning": "An expansion limit is outside what is allowed.",
+    "fix": "Use whole numbers: depth 1 to 4, total runs 1 to 100, runs per pass 1 to 20."
+  },
+  {
+    "code": "unknown_setting",
+    "meaning": "That expansion setting does not exist.",
+    "fix": "Use max_depth, max_runs, max_per_pass or auto_passive."
+  },
+  {
+    "code": "already_an_input",
+    "meaning": "That address is already one of the subject's own inputs.",
+    "fix": "Nothing to do: it is researched as an input."
+  },
+  {
+    "code": "invalid_domain",
+    "meaning": "The shared-provider list entry is not a plain domain name.",
+    "fix": "Enter a domain such as mail.example.net, without a path or an @."
+  },
+  {
+    "code": "invalid_state",
+    "meaning": "The state filter or requested state is not one of Unassessed, Candidate, Corroborated, Conflicting, Rejected or Not available.",
+    "fix": "Pick one of the listed states."
+  },
+  {
+    "code": "self_attestation_only",
+    "meaning": "The only support is the subject's own statement, which is recorded as self-attestation and is never independent corroboration.",
+    "fix": "Add evidence from an independent source and tick 'independent of the subject', or leave the item as a candidate."
+  },
+  {
+    "code": "owner_required",
+    "meaning": "Revealing or recording a restricted value is limited to the case owner.",
+    "fix": "Ask the case owner, or work with the masked value."
+  },
+  {
+    "code": "need_to_know_required",
+    "meaning": "A restricted field (date of birth, phone, address, identity reference) needs a stated reason it is required.",
+    "fix": "Type why the value is needed; the reason is recorded."
+  },
+  {
+    "code": "authorization_required",
+    "meaning": "There is no current authorization for this subject, so restricted values cannot be recorded or revealed.",
+    "fix": "Record or renew the authorization in the Authorization tab."
+  },
+  {
+    "code": "reference_only",
+    "meaning": "This value is stored only as a masked form and a keyed token, so it cannot be revealed.",
+    "fix": "Use Compare to check a number against the stored token."
+  },
+  {
+    "code": "not_reference",
+    "meaning": "Compare works only on identity-document or SSN reference items.",
+    "fix": "Choose a reference item."
+  },
+  {
+    "code": "not_restricted",
+    "meaning": "Reveal applies only to restricted items.",
+    "fix": "This value is not masked; read it directly."
+  },
+  {
+    "code": "reason_required",
+    "meaning": "A reveal needs a reason of at least ten characters, which is audited.",
+    "fix": "Describe why you need to see the value."
+  },
+  {
+    "code": "input_value_fixed",
+    "meaning": "An input's value cannot be edited in place because research is tied to it.",
+    "fix": "Retire it and add the corrected value."
+  },
+  {
+    "code": "not_an_input_type",
+    "meaning": "This type of item cannot be used as a research input.",
+    "fix": "Only emails, usernames, domains, URLs, names, aliases and organizations can be inputs."
+  },
+  {
+    "code": "invalid_origin",
+    "meaning": "The origin is not one of the supported ones.",
+    "fix": "Choose subject provided, analyst supplied, published source or verified provider."
+  },
+  {
+    "code": "invalid_type",
+    "meaning": "The item type is not in the Master Profile catalog.",
+    "fix": "Pick a listed type, or use a custom attribute."
+  },
+  {
+    "code": "invalid_confidence",
+    "meaning": "Confidence must be unknown, low, medium or high.",
+    "fix": "Pick one of the four."
+  },
+  {
+    "code": "invalid_value",
+    "meaning": "The value is not valid for this type of item.",
+    "fix": "Check the format, for example a date as YYYY-MM-DD or a phone number with digits."
+  },
+  {
+    "code": "evidence_not_in_case",
+    "meaning": "That evidence belongs to a different case.",
+    "fix": "Use evidence stored in this case."
+  },
+  {
+    "code": "custom_type_required",
+    "meaning": "A custom attribute needs a name.",
+    "fix": "Type the attribute name."
+  },
+  {
+    "code": "too_many_rows",
+    "meaning": "The import has more rows than one batch allows.",
+    "fix": "Split the file into smaller parts."
+  },
+  {
+    "code": "unreadable_import",
+    "meaning": "The file could not be read as CSV or JSON, or is not a list of objects with type and value.",
+    "fix": "Check the format and the header row."
+  },
+  {
+    "code": "evidence_not_applicable",
+    "meaning": "The selected evidence is not about that site, so it cannot support that account.",
+    "fix": "Choose evidence from the same site, or leave Independent evidence on None and record a self-attestation."
+  },
+  {
+    "code": "rejected_item",
+    "meaning": "This was rejected. A rejected value never drives research.",
+    "fix": "Reopen it (Needs review) first if you changed your mind."
+  },
+  {
+    "code": "backed_item_fixed",
+    "meaning": "An input or a reviewed claim keeps its type, because its research history is attached to it.",
+    "fix": "Add it again with the right type and retire the old one."
+  },
+  {
+    "code": "restricted_type",
+    "meaning": "Restricted types cannot be created by changing the type of another item.",
+    "fix": "Add a restricted value directly, as the case owner, with a stated need."
+  },
+  {
+    "code": "same_type",
+    "meaning": "The item already has that type.",
+    "fix": "Pick a different type."
+  },
+  {
+    "code": "nothing_to_undo",
+    "meaning": "This item was never reclassified.",
+    "fix": "Nothing to undo."
+  },
+  {
+    "code": "no_valid_inputs",
+    "meaning": "None of the values could be used as inputs.",
+    "fix": "Check each value's type, for example an email must contain an @."
+  },
+  {
+    "code": "not_running",
+    "meaning": "Only a running investigation can be paused.",
+    "fix": "Use Resume or Stop instead."
+  },
+  {
+    "code": "not_resumable",
+    "meaning": "This investigation is running or already finished.",
+    "fix": "Wait for it to finish, or start a new one."
+  },
+  {
+    "code": "not_cancellable",
+    "meaning": "This investigation is already finished.",
+    "fix": "Nothing to stop."
+  },
+  {
+    "code": "invalid_action",
+    "meaning": "The decision is not one of Mine, Not mine, Unsure or Need evidence.",
+    "fix": "Pick one of the four."
+  },
+  {
+    "code": "invalid_selection",
+    "meaning": "An item in the selection is not recognised.",
+    "fix": "Refresh the page and select again."
+  },
+  {
+    "code": "too_many",
+    "meaning": "Too many items in one batch.",
+    "fix": "Review at most 200 at a time."
+  },
+  {
+    "code": "invalid_contact",
+    "meaning": "The SEC EDGAR contact is not a name followed by a valid email address, so it was not saved.",
+    "fix": "Enter your name and email in Settings, for example: Jane Analyst jane@example.org. The SEC requires a contact it can reach."
+  },
+  {
+    "code": "paid_provider",
+    "meaning": "A provider that needs a paid plan (Shodan) was switched on without confirming your account includes the capability. Fusion never buys anything.",
+    "fix": "Leave it off, or confirm on the provider's own site that your plan includes the needed lookups, then tick both confirmations."
+  },
+  {
+    "code": "save_not_verified",
+    "meaning": "A setting was written but could not be read back, so it is not treated as saved.",
+    "fix": "Try again. If it repeats, check disk space and permissions on the data folder, then see the troubleshooting page."
+  },
+  {
+    "code": "wrong_format",
+    "meaning": "The credential is not in a shape the provider's adapter can send (for example a Censys value that is neither a Personal Access Token nor an API ID and key pair).",
+    "fix": "Paste the credential exactly as the provider shows it. For Censys use a Personal Access Token from the API Access page."
+  }
 ]

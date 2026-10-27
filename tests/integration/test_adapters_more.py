@@ -129,6 +129,7 @@ async def test_shodan_key_never_reaches_stored_urls_or_evidence(tmp_path):
     http = SafeHttp(resolver=fake_resolver, transport=httpx.MockTransport(handler))
     app = create_app(s, ctx_factory=lambda: AdapterContext(http=http, secret={"shodan": "SECRETKEY99"}.get))
     async with app.router.lifespan_context(app):
+        app.state.core.quota.set_disabled("shodan", False)            # Shodan is off by default (paid); this test is about key handling once the operator opted in
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1",
                                      headers={"Authorization": f"Bearer {s.session_token}"}) as c:
             cid = (await c.post("/api/v1/cases", json={"title": "S", "purpose": "x"})).json()["id"]

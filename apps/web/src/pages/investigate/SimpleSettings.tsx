@@ -2,9 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ErrorBox, Loading } from "../../components/ui";
 import { api } from "../../lib/api";
+import EdgarContact from "../../components/EdgarContact";
 import { useAdvanced } from "../../lib/mode";
+import ProviderUsage from "./ProviderUsage";
 
-interface SecretRow { provider: string; label: string; set: boolean; used_by: string[]; get: string }
+interface SecretRow { provider: string; label: string; set: boolean; used_by: string[]; get: string; format?: string; state?: { code: string; label: string; hint: string } }
+const STATE_BADGE: Record<string, string> = { verified: "st-ok", stored: "st-warn", rejected: "st-bad", wrong_format: "st-bad", plan_restricted: "st-bad", quota_exhausted: "st-warn", not_configured: "st-mute", disabled: "st-mute", disabled_paid: "st-mute" };
 interface SourceRow { id: string; label: string; maturity: string; health?: string | null; needs_key: string | null; registered: boolean; operation_class: string }
 
 const MATURITY: Record<string, string> = { live_tested: "Live-tested", mocked_only: "Fixture-tested only", partially_verified: "Partly verified", manual: "Manual" };
@@ -15,8 +18,8 @@ function KeyRow({ s }: { s: SecretRow }) {
   const save = useMutation({ mutationFn: () => api(`/secrets/${s.provider}`, { method: "POST", json: { value: v } }), onSuccess: () => { setV(""); qc.invalidateQueries({ queryKey: ["secrets"] }); qc.invalidateQueries({ queryKey: ["summary"] }); } });
   return (
     <li className="row" style={{ padding: "3px 0" }}>
-      <b>{s.label}</b><span className={`badge ${s.set ? "st-ok" : "st-mute"}`}>{s.set ? "key stored" : "no key"}</span>
-      <span className="muted">used by {s.used_by.join(", ") || "optional sources"}</span>
+      <b>{s.label}</b><span className={`badge ${STATE_BADGE[s.state?.code ?? ""] ?? (s.set ? "st-warn" : "st-mute")}`} title={s.state?.hint}>{s.state?.label ?? (s.set ? "Stored (not yet tested)" : "Not configured")}</span>
+      <span className="muted">used by {s.used_by.join(", ") || "optional sources"}{s.format ? ` · ${s.format}` : ""}</span>
       <input type="password" aria-label={`${s.label}`} placeholder={s.set ? "replace key" : "paste key"} value={v} onChange={(e) => setV(e.target.value)} style={{ width: 220 }} autoComplete="off" />
       <button disabled={!v.trim() || save.isPending} onClick={() => save.mutate()}>Save</button>
       {s.get && <a href={s.get} target="_blank" rel="noreferrer noopener">Get a key</a>}
@@ -50,6 +53,8 @@ export default function SimpleSettings() {
               <tbody>{live.map((s) => <tr key={s.id}><td>{s.label}</td><td>{MATURITY[s.maturity] ?? s.maturity}</td><td>{(s.health ?? "unknown").replace(/_/g, " ")}</td><td>{s.needs_key ? `key: ${s.needs_key}` : "nothing"}</td></tr>)}</tbody></table>
             <div className="muted">“Fixture-tested” means checked against recorded responses. It has not been proven against the live service.</div></details>)}
       </div>
+      <EdgarContact />
+      <ProviderUsage />
       <div className="card" aria-label="Limits and privacy">
         <h3 style={{ marginTop: 0 }}>Limits and privacy</h3>
         <ul>

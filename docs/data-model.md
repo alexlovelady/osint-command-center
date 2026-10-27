@@ -2,7 +2,7 @@
 
 Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mode with foreign keys on; schema changes only through Alembic migrations (`backend/osintcc/db/migrations`). FTS5 `search_index` is maintained by triggers and is not an ORM table.
 
-90 tables.
+92 tables.
 
 ## ai_calls
 
@@ -1003,6 +1003,13 @@ One-click investigation: a durable, bounded orchestration over the existing rese
 | created_at | DATETIME | no |  |
 | started_at | DATETIME | yes |  |
 | finished_at | DATETIME | yes |  |
+| quota_status | VARCHAR(28) | no |  |
+| provider | VARCHAR(40) | no |  |
+| operation | VARCHAR(40) | no |  |
+| priority | INTEGER | no |  |
+| consumption_known | BOOLEAN | yes |  |
+| scope_ref | VARCHAR(80) | no |  |
+| deferrals | INTEGER | no |  |
 
 ## mcp_approvals
 
@@ -1180,6 +1187,49 @@ Append-only history of ownership/validation decisions; reversal writes a new eve
 | bulk_id | VARCHAR(36) | yes |  |
 | reverts_event_id | VARCHAR(36) | yes |  |
 | created_at | DATETIME | no |  |
+
+## provider_ledger
+
+One row per outbound provider request that was reserved. Rolling and calendar windows are computed from these rows, so counters survive a restart.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| provider | VARCHAR(40) | no |  |
+| operation | VARCHAR(40) | no |  |
+| account_key | VARCHAR(24) | no |  |
+| case_id | VARCHAR(36) | yes |  |
+| job_id | VARCHAR(36) | yes |  |
+| url_host | VARCHAR(120) | no |  |
+| state | VARCHAR(12) | no |  |
+| cost | FLOAT | no |  |
+| reserved_at | DATETIME | no |  |
+| finished_at | DATETIME | yes |  |
+| lease_until | DATETIME | yes |  |
+| http_status | INTEGER | yes |  |
+| classification | VARCHAR(32) | no |  |
+| consumption_known | BOOLEAN | yes |  |
+| error_code | VARCHAR(40) | no |  |
+
+## provider_state
+
+Per provider and credential identity: what the account is entitled to (learned from the provider), what the operator turned off, and the last thing the provider said.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| provider | VARCHAR(40) | no | PK |
+| account_key | VARCHAR(24) | no | PK |
+| learned_json | JSON | no |  |
+| blocked_until | DATETIME | yes |  |
+| blocked_status | VARCHAR(24) | no |  |
+| disabled | BOOLEAN | no |  |
+| disabled_reason | VARCHAR(120) | no |  |
+| verified_state | VARCHAR(20) | no |  |
+| verified_at | DATETIME | yes |  |
+| last_status | INTEGER | yes |  |
+| last_error | VARCHAR(200) | no |  |
+| last_response_at | DATETIME | yes |  |
+| updated_at | DATETIME | no |  |
 
 ## relationship_evidence
 

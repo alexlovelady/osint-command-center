@@ -101,3 +101,8 @@ An address is stored as a **candidate** only when a stored source shows it; the 
 - The investigation never researches from a found handle, address or link until a person confirms it and chooses Use as input. A mailbox provider's domain, or a domain implied by an email address, is never researched.
 - Phone numbers, dates of birth, addresses and identity references stay masked in every API response, event, report and model prompt; phone numbers are not searched at all.
 - Nothing is sent to a cloud model. Local AI is optional and does not receive restricted values.
+
+## Provider usage ledger
+
+Fusion keeps a local ledger of the requests it sends to metered providers (provider, action, host name, time, HTTP status, whether the provider counted it) in the encrypted database, so limits survive a restart. It contains no credentials and no searched identifiers.
+A credential is represented only by a truncated one-way fingerprint. The SEC EDGAR contact is configuration (the name and email you typed for the SEC's User-Agent), not a secret, and is stored unmasked in settings. Nothing in the ledger leaves the machine.

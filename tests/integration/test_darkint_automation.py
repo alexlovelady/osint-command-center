@@ -112,9 +112,11 @@ async def test_provider_problems_surface_as_the_specified_error_codes_not_as_emp
     world["hibp_status"] = 429
     _, nodes = await run_wf(api, p["cid"], CHECK[:1], m["id"])
     assert nodes["check"]["state"] == "failed" and nodes["check"]["error_code"] == "RATE_LIMITED"
+    api.app.state.core.quota.clear_restrictions("hibp")                                             # the 429 above made the dispatcher back off
     world["hibp_status"] = 503
     _, nodes = await run_wf(api, p["cid"], CHECK[:1], m["id"])
     assert nodes["check"]["error_code"] == "SOURCE_UNAVAILABLE"
+    api.app.state.core.quota.clear_restrictions("hibp")
     world["hibp_key"] = None
     _, nodes = await run_wf(api, p["cid"], CHECK[:1], m["id"])
     assert nodes["check"]["error_code"] == "CREDENTIAL_MISSING"

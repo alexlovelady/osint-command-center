@@ -100,3 +100,16 @@ attacker on the same machine, hardware attacks, a compromised OS credential stor
 | Cross-case access to runs, results or decisions | Every route re-checks case membership and role; outsiders get 404 |
 | Restricted data in progress views or logs | Masked everywhere; phone numbers are masked in manifests and summaries; events carry source names and counts, not values |
 | A model decides or starts research | The Copilot, automation and MCP packages do not import the orchestrator or the review functions (asserted by a test) |
+
+## Provider quotas and the durable queue
+
+| Threat | Control | Test |
+|---|---|---|
+| Work bypasses the quota through another code path | Every context handed to an adapter is wrapped in the dispatcher's HTTP gate; the set of modules that build HTTP clients is fixed by a test | `test_no_code_path…`, `test_the_only_modules…`, `test_every_context…` |
+| Two workers spend the last request | Reservation under one lock, committed before sending; a busy ledger answers "not now" | `test_two_investigations_sharing…`, `test_a_busy_ledger…` |
+| A rejected key is hammered | 401 is remembered per credential fingerprint and not retried until the key changes | `test_a_rejected_key…` |
+| A rate limit becomes an empty result | Refusals are task statuses of their own; only a source that answered can be a no match | `test_each_virustotal_answer…` |
+| Queued work runs after authorization is withdrawn | The consent gate and policy are re-checked as each job starts, including resumed ones | `test_authorization_is_checked_again…` |
+| Secrets leak through status, ledger or logs | Ledger and state hold fingerprints only; usage, queue and ledger views are tested for the absence of keys and targets | `test_usage_view…`, `test_queue_and_ledger…` |
+| Surprise spend | No purchase, upgrade or overflow code exists; exhausted credits defer to the reset; the paid provider (Shodan) is off by default | `test_shodan_is_disabled…` |
+| An unlicensed use of a free API | VirusTotal is labelled personal and non-commercial in the plan and in Provider usage; Fusion cannot verify the licence tier and says so | docs |

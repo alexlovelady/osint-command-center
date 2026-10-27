@@ -200,7 +200,9 @@ async def test_rate_limited_provider_does_not_loop_and_is_reported(api, world):
     assert sum("api.gravatar.com" in u for u in world["seen"]) <= 3                                    # bounded retries, no runaway loop
     summ = (await api.get(f"{B}/investigations/{p['run']['id']}/summary")).json()
     grav = [s for s in summ["accounting"]["sources"] if s["source_id"] == "gravatar_email"]
-    assert grav and grav[0]["status"] in ("failed", "partial", "unavailable", "blocked", "completed")
+    assert grav and grav[0]["status"] in ("failed", "partial", "unavailable", "blocked", "completed", "waiting_limits")
+    prog = (await api.get(f"{B}/investigations/{p['run']['id']}")).json()
+    assert prog["status"] == "waiting_limits" and prog["units"]["waiting_limits"] >= 1                 # a 429 waits for the provider; it is never complete and never an empty result
 
 
 async def test_pause_cancel_resume_and_authorization_loss(api, world):

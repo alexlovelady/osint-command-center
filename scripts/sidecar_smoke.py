@@ -145,6 +145,15 @@ def run_checks(encrypted: bool) -> None:
         check("One-click investigation: plan names the providers, a phone is unsupported and masked, and nothing is sent until you press Investigate",
               iv.status_code == 201 and {"needs_approval", "unsupported_input"} <= stat and "7777" not in iv.text and det.status_code == 200 and [x["kind"] for x in det.json()["inputs"]] == ["email", "username"],
               f"{iv.status_code} {sorted(stat)}")
+        pu = c.get("/providers/usage")
+        pj = pu.json() if pu.status_code == 200 else {}
+        pv = {p["provider"]: p for p in pj.get("providers", [])}
+        se = c.put("/settings", json={"values": {"edgar_contact": "Smoke Tester smoke@example.org"}})
+        bad = c.put("/settings", json={"values": {"edgar_contact": "no-name@example.org"}})
+        check("Provider quotas: usage view lists the providers, Shodan is disabled as a paid provider, the $0 guard is stated, and the SEC contact is validated and read back",
+              pu.status_code == 200 and {"virustotal", "urlscan", "censys", "brave", "sec_edgar", "shodan"} <= set(pv) and pv["shodan"]["state"]["label"] == "Disabled — paid provider"
+              and pj["spend_guard"]["paid_spend_usd"] == 0 and se.status_code == 200 and se.json().get("edgar_contact_verified_readback") is True and bad.status_code == 422,
+              f"{pu.status_code} {se.status_code} {bad.status_code}")
         rp = c.post(f"/subjects/{ps}/report/preview", json={"audience": "subject"})
         check("Target profile: report preview with citation check", rp.status_code == 200 and rp.json()["citation_check"]["ok"] is True, rp.text[:80])
         check("keyring backend importable in the bundle", k.returncode == 0 and k.stdout.strip() != "", k.stdout.strip() or k.stderr[-200:])

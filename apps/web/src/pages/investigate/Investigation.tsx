@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Empty, ErrorBox, Loading, fmt } from "../../components/ui";
 import { api } from "../../lib/api";
-import { ACTIVE_STATUSES, INPUT_KINDS, STATUS_BADGE, STATUS_TEXT, STOP_TEXT, kindLabel, type Candidate, type Inbox, type RunEvent, type Summary } from "../../lib/investigationApi";
+import { ACTIVE_STATUSES, WAITING_STATUSES, INPUT_KINDS, STATUS_BADGE, STATUS_TEXT, STOP_TEXT, kindLabel, type Candidate, type Inbox, type RunEvent, type Summary } from "../../lib/investigationApi";
 import type { MasterDoc, MasterItem } from "../../lib/masterApi";
 import { DecisionBar, InboxList } from "./Review";
 
@@ -76,6 +76,7 @@ function Overview({ s, refresh, setView, go }: { s: Summary; refresh: () => void
   const pending = s.manifest.rows.filter((r) => r.status === "needs_approval" && !run.approved_sources.includes(r.source_id));
   const approve = useMutation({ mutationFn: () => api(`/investigations/${run.id}/approve`, { method: "POST", json: { sources: [...new Set(pending.map((r) => r.source_id))] } }), onSuccess: refresh });
   const active = ACTIVE_STATUSES.includes(run.status);
+  const parked = WAITING_STATUSES.includes(run.status);
   const u = s.progress.units;
   return (
     <>
@@ -84,15 +85,22 @@ function Overview({ s, refresh, setView, go }: { s: Summary; refresh: () => void
           <span className={`badge ${STATUS_BADGE[run.status]}`}>{STATUS_TEXT[run.status]}</span>
           <span>{STOP_TEXT[run.stop_reason] ?? (active ? "Working. This page updates by itself." : "")}</span>
           <span className="grow" />
-          {active && <button onClick={() => act.mutate("pause")}>Pause</button>}
+          {(active || parked) && <button onClick={() => act.mutate("pause")}>Pause</button>}
           {["paused", "awaiting_review", "complete_with_limits", "failed"].includes(run.status) && <button className="primary" onClick={() => act.mutate("resume")} title="Looks for new work only: nothing already checked is repeated.">{run.status === "paused" ? "Resume" : "Check for more"}</button>}
           {["awaiting_review", "complete_with_limits", "completed", "failed"].includes(run.status) && <button onClick={() => act.mutate("refresh")} title="Runs the permitted checks again, inside the same limits and approvals. Earlier results are kept.">Refresh results</button>}
           {run.status !== "cancelled" && run.status !== "completed" && <button onClick={() => act.mutate("cancel")}>Stop</button>}
         </div>
         <div className="row" style={{ marginTop: 6 }}>
-          <span><b>{u.done}</b> checks done</span><span><b>{u.running}</b> running</span><span><b>{u.failed}</b> failed or blocked</span>
+          <span><b>{u.done}</b> completed</span><span><b>{u.no_match ?? 0}</b> no match</span><span><b>{u.running}</b> running</span><span><b>{u.queued ?? 0}</b> queued</span>
+          <span><b>{u.waiting_limits ?? 0}</b> waiting for limits</span><span><b>{u.blocked ?? 0}</b> blocked by key or plan</span><span><b>{u.failed}</b> failed</span><span><b>{u.unavailable ?? 0}</b> not available here</span><span><b>{u.remaining ?? 0}</b> remaining</span>
           <span><b>{u.waiting_approval}</b> waiting for approval</span><span><b>{u.not_run}</b> not run, with reasons</span>
         </div>
+        {(u.waiting_limits ?? 0) > 0 && (
+          <div className="banner" role="status" aria-label="Waiting for provider limits">
+            <b>{u.waiting_limits} check(s) are waiting for a provider’s limit to reset.</b> Nothing needs you; they continue by themselves
+            {s.progress.next_eligible_at ? <> (earliest around {s.progress.next_eligible_at.slice(0, 16).replace("T", " ")} UTC; an estimate, not a promise)</> : null}.
+            <div className="row"><button onClick={() => go("settings")}>See provider usage</button></div>
+          </div>)}
         <div className="muted">{s.progress.label}</div>
         {s.progress.last_error && <div className="banner err">{s.progress.last_error}</div>}
         {act.isError && <ErrorBox error={act.error} />}
@@ -260,7 +268,7 @@ function Findings({ s }: { s: Summary }) {
 
 function Activity({ s }: { s: Summary }) {
   const rid = s.run.id;
-  const ev = useQuery({ queryKey: ["events", rid], queryFn: () => api<{ events: RunEvent[] }>(`/investigations/${rid}/events`), refetchInterval: ACTIVE_STATUSES.includes(s.run.status) ? 2500 : false });
+  const ev = useQuery({ queryKey: ["events", rid], queryFn: () => api<{ events: RunEvent[] }>(`/investigations/${rid}/events`), refetchInterval: ACTIVE_STATUSES.includes(s.run.status) ? 2500 : WAITING_STATUSES.includes(s.run.status) ? 15000 : false });
   const groups: [string[], string][] = [[["ready", "already_done"], "Ran or ready"], [["needs_approval"], "Needs approval"], [["needs_key", "needs_authorization", "not_installed", "blocked"], "Configured but unavailable"],
     [["unsupported_input"], "No supported source"], [["separate_approval"], "Needs its own approval"]];
   const rows = s.manifest.rows;
@@ -292,7 +300,7 @@ export default function Investigation({ id, go }: { id: string; go: (to: string)
   const [view, setView] = useState<View>("Overview");
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["summary", id], queryFn: () => api<Summary>(`/investigations/${id}/summary`),
-    refetchInterval: (query) => (query.state.data && ACTIVE_STATUSES.includes(query.state.data.run.status) ? 3000 : false) });
+    refetchInterval: (query) => (query.state.data && ACTIVE_STATUSES.includes(query.state.data.run.status) ? 3000 : query.state.data && WAITING_STATUSES.includes(query.state.data.run.status) ? 15000 : false) });
   if (q.isLoading) return <Loading what="the investigation" />;
   if (q.isError || !q.data) return <ErrorBox error={q.error} />;
   const s = q.data;
