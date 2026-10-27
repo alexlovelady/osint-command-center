@@ -9,7 +9,7 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 - Case-scoped routes check case membership; global routes (settings, plugins, AI profiles, vault, updates, backup) need the admin role.
 - Time values are ISO-8601 UTC. Nothing returned is a conclusion: findings, claims and suggestions carry confidence labels and evidence ids.
 
-337 operations in 41 groups.
+358 operations in 42 groups.
 
 ## ai
 
@@ -335,6 +335,24 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | PATCH | `/api/v1/hypotheses/{hid}` | Set Hypothesis Status |
 | POST | `/api/v1/hypotheses/{hid}/claims` | Link Hypothesis Claim |
 
+## investigations
+
+| Method | Path | Summary |
+|---|---|---|
+| GET | `/api/v1/investigations` | List Runs |
+| POST | `/api/v1/investigations` | Create (or reuse) the case and subject, record the inputs and the authorization, and return the manifest: what will run, what cannot and why |
+| POST | `/api/v1/investigations/detect` | Smart paste: split on commas, semicolons and new lines and guess each value's type. The person can correct every guess; nothing is stored he |
+| GET | `/api/v1/investigations/review` | Everything waiting for a person's decision across the investigations they can see. |
+| GET | `/api/v1/investigations/{run_id}` | Get Run |
+| POST | `/api/v1/investigations/{run_id}/advance` | Run the next step now and wait for what it starts. Normally the background driver does this; it is here for tests and for a stalled driver. |
+| POST | `/api/v1/investigations/{run_id}/approve` | One bounded approval naming providers. The investigation continues on its own afterwards. |
+| POST | `/api/v1/investigations/{run_id}/cancel` | Cancel |
+| GET | `/api/v1/investigations/{run_id}/events` | Durable replay: ask for events after the last sequence number you saw. A dropped connection loses nothing. |
+| POST | `/api/v1/investigations/{run_id}/pause` | Pause |
+| POST | `/api/v1/investigations/{run_id}/refresh` | Re-run the permitted checks now (same limits, same approvals). 'Resume' only looks for NEW work. |
+| POST | `/api/v1/investigations/{run_id}/resume` | Resume |
+| GET | `/api/v1/investigations/{run_id}/summary` | Get Summary |
+
 ## mcp
 
 | Method | Path | Summary |
@@ -479,7 +497,9 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/subjects/{subject_id}/images/{image_id}/reverse-search` | Reverse Search |
 | POST | `/api/v1/subjects/{subject_id}/images/{image_id}/review` | Review |
 | GET | `/api/v1/subjects/{subject_id}/images/{image_id}/thumbnail` | A pixel-only re-encoded PNG. The original bytes are never served to the browser. |
+| POST | `/api/v1/subjects/{subject_id}/investigations` | Start Run |
 | GET | `/api/v1/subjects/{subject_id}/master` | Sections, the research gaps panel and the next actions in one document. |
+| GET | `/api/v1/subjects/{subject_id}/master/accounting` | Per source: returned -> findings -> unique candidate accounts -> profile entries, counted from the stored records. |
 | GET | `/api/v1/subjects/{subject_id}/master/export` | Redacted export: restricted values are omitted, evidence is referenced by id and hash. |
 | GET | `/api/v1/subjects/{subject_id}/master/gaps` | Get Gaps |
 | POST | `/api/v1/subjects/{subject_id}/master/items` | Add Item |
@@ -487,6 +507,8 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | DELETE | `/api/v1/subjects/{subject_id}/master/items/{item_id}` | Retire Item |
 | PATCH | `/api/v1/subjects/{subject_id}/master/items/{item_id}` | Edit Item |
 | POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/compare` | Compare |
+| POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/reclassify` | Change an item's type (and with it its category). With preview=true nothing changes and the effects are listed. The value, evidence and veri |
+| POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/reclassify/undo` | Undo Reclassify |
 | POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/reveal` | Reveal |
 | POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/state` | Set State |
 | POST | `/api/v1/subjects/{subject_id}/master/items/{item_id}/unmerge` | Unmerge |
@@ -506,6 +528,10 @@ Generated from the application's OpenAPI document by `scripts/gen_docs.py` (the 
 | GET | `/api/v1/subjects/{subject_id}/retention/preview` | Retention Preview |
 | POST | `/api/v1/subjects/{subject_id}/retention/purge` | Retention Purge |
 | GET | `/api/v1/subjects/{subject_id}/review-history` | Review History |
+| GET | `/api/v1/subjects/{subject_id}/review-inbox` | Inbox |
+| POST | `/api/v1/subjects/{subject_id}/review-inbox/decide` | Bulk decisions with an impact preview. 'Mine' records the owner's own attestation; it is never independent corroboration. |
+| POST | `/api/v1/subjects/{subject_id}/review-inbox/undo` | Undo |
+| POST | `/api/v1/subjects/{subject_id}/review-inbox/use-as-input` | Use As Input |
 | GET | `/api/v1/subjects/{subject_id}/templates` | Subject Templates |
 | GET | `/api/v1/subjects/{subject_id}/timeline` | Get Timeline |
 | GET | `/api/v1/subjects/{subject_id}/verification` | What verification exists for this target profile. Assets belong to a profile only through an explicit link made by a person (owner_subject_i |

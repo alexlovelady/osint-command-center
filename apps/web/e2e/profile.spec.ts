@@ -6,6 +6,7 @@ const AUTH = { Authorization: `Bearer ${TOKEN}` };
 const PNG_1X1 = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
 
 async function openApp(page: Page) {
+  await page.addInitScript(() => localStorage.setItem("osintcc.advanced", "1"));
   await page.goto(`/#token=${TOKEN}`);
   await expect(page.getByRole("heading", { name: "OSINT Command Center" })).toBeVisible();
   await page.evaluate(() => localStorage.setItem("osintcc.copilot.open", "0"));

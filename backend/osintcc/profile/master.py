@@ -45,6 +45,7 @@ from ..db.models import (
 from ..telemetry import audit
 from . import candidates, consent, emails
 from .normalize import IdentifierError, canonical_url, normalize_identifier
+from .registry import SOURCES
 from .service import ProfileError, add_claim, add_identifier, evidence_refs, remove_identifier, review_claim
 
 CATEGORIES = [("identity", "Identity"), ("contact", "Contact"), ("locations", "Locations"), ("education", "Education"), ("employment", "Employment"), ("online_footprint", "Online footprint"),
@@ -92,6 +93,13 @@ _DATE = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")
 
 def _now() -> datetime:
     return datetime.now(UTC)
+
+
+def _source_label(method: str) -> str:
+    """The name a person recognises for `adapter:github_email_search`; the technical id stays in collection_method."""
+    sid = method.partition(":")[2]
+    src = SOURCES.get(sid) if sid else None
+    return src.label if src else ""
 
 
 def _cat(it: ProfileItem) -> str:
@@ -262,6 +270,22 @@ def repair_lead_types(db: Session, subject: Subject) -> int:
         if want and want != it.type and why:
             _retype(db, it, want, actor="system", reason="automatic correction: " + why, automatic=True)
             n += 1
+    db.flush()
+    return n + merge_duplicate_leads(db, subject)
+
+
+def merge_duplicate_leads(db: Session, subject: Subject) -> int:
+    """An untouched discovered candidate that repeats an entry the subject (or an analyst) already has is folded into it: the evidence moves, the candidate is marked merged."""
+    rows = list(db.scalars(select(ProfileItem).where(ProfileItem.subject_id == subject.id, ProfileItem.status == "active", ProfileItem.merged_into.is_(None))))
+    base = {(r.type, r.normalized_value): r for r in rows if r.origin != "discovered" and r.normalized_value}
+    n = 0
+    for r in rows:
+        keep = base.get((r.type, r.normalized_value)) if r.origin == "discovered" and r.verification_state == "candidate" else None
+        if keep is not None and keep.id != r.id:
+            keep.evidence_ids = list(dict.fromkeys([*keep.evidence_ids, *r.evidence_ids]))
+            r.merged_into, r.status = keep.id, "merged"
+            audit.record(db, "profile.lead_merge", actor="system", case_id=subject.case_id, resource_type="profile_item", resource_id=r.id, metadata={"into": keep.id})
+            n += 1
     return n
 
 
@@ -337,6 +361,7 @@ def undo_reclassify(db: Session, subject: Subject, item_id: str, *, role: str, a
 
 def sweep_leads(db: Session, subject: Subject, actor: str = "system") -> int:
     """Turn cited exact-email references into candidate items. A lead is a CANDIDATE: never an input, never a fact."""
+    sync_existing(db, subject, actor)                  # the subject's own inputs exist as entries first, so a lead that repeats one is attached to it, never added beside it
     runs = {t.run_id: t for t in db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id)) if t.run_id}
     scope = _live_scope(db, subject)
     n = 0
@@ -355,8 +380,13 @@ def sweep_leads(db: Session, subject: Subject, actor: str = "system") -> int:
                     disp, norm = _normalize(t, raw)
                 except ProfileError:
                     continue
-                if not norm or db.scalars(select(ProfileItem).where(ProfileItem.subject_id == subject.id, ProfileItem.type == t, ProfileItem.normalized_value == norm,
-                                                                    ProfileItem.status == "active")).first():
+                if not norm:
+                    continue
+                dup = db.scalars(select(ProfileItem).where(ProfileItem.subject_id == subject.id, ProfileItem.type == t, ProfileItem.normalized_value == norm,
+                                                           ProfileItem.status == "active")).first()
+                if dup is not None:                      # the same value again (or the subject's own input): one entry, with one more place it was seen
+                    if f.evidence_id not in dup.evidence_ids:
+                        dup.evidence_ids = [*dup.evidence_ids, f.evidence_id]
                     continue
                 db.add(ProfileItem(subject_id=subject.id, case_id=subject.case_id, category=TYPES[t]["category"], type=t, value=disp, normalized_value=norm, source_id=str(v.get("source") or f.adapter_id),
                                    evidence_ids=[f.evidence_id], collection_method=f"adapter:{f.adapter_id}", origin="discovered", recorded_by=actor, observed_at=f.observed_at, confidence=f.confidence,
@@ -404,7 +434,7 @@ def item_dict(db: Session, it: ProfileItem, *, role: str, conflicting: bool = Fa
             ev.append({"id": e.id, "title": e.title, "kind": e.kind, "sha256": e.sha256, "url": e.original_url})
     return {"id": f"item:{it.id}", "category": _cat(it), "type": it.type, "type_label": spec["label"], "custom_type": it.custom_type, "value": shown, "masked": restricted and not revealed,
             "restricted": restricted, "normalized_value": "" if restricted else it.normalized_value, "attributes": {} if restricted else it.attributes, "source_id": it.source_id, "evidence": ev,
-            "collection_method": it.collection_method, "origin": it.origin, "recorded_by": it.recorded_by, "observed_at": it.observed_at, "last_verified_at": it.last_verified_at,
+            "collection_method": it.collection_method, "source_label": _source_label(it.collection_method), "origin": it.origin, "recorded_by": it.recorded_by, "observed_at": it.observed_at, "last_verified_at": it.last_verified_at,
             "confidence": it.confidence, "verification_state": state, "state_label": STATE_LABEL[state], "self_attested": it.self_attested, "sensitivity": it.sensitivity, "scope_id": it.scope_id,
             "retention_policy": it.retention_policy, "is_input": it.is_input, "feeds_research": bool(spec["identifier"]) and it.is_input and it.status == "active", "backed_by": it.backing_kind or "item",
             "merged_into": it.merged_into, "version": it.version, "note": it.note, "discovered": it.origin == "discovered", "reference_only": spec["reference"], "created_at": it.created_at,

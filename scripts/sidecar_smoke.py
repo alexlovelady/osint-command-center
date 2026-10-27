@@ -137,6 +137,14 @@ def run_checks(encrypted: bool) -> None:
         srcs = {e["source_id"] for e in (mrd.json().get("entries", []) if mrd.status_code == 200 else []) if e.get("identifier_kind") == "email"}
         check("Master profile: an email entered once feeds research, and a mailbox provider's domain is never researched", mi.status_code == 201 and md.status_code == 200 and "gravatar_email" in srcs
               and not {"rdap", "dns", "crtsh"} & srcs, f"{mi.status_code} {md.status_code} {sorted(srcs)}")
+        iv = c.post("/investigations", json={"kind": "person", "inputs": [{"kind": "email", "value": "smoke2@gmail.com"}, {"kind": "phone", "value": "+1 555 010 7777"}],
+                                              "purpose": "frozen build smoke test", "authorization": {"verification_method": "self_attestation", "verifier": "smoke"}})
+        im = iv.json().get("manifest", {}) if iv.status_code == 201 else {}
+        stat = {r["status"] for r in im.get("rows", [])}
+        det = c.post("/investigations/detect", json={"text": "a@b.example, @handle"})
+        check("One-click investigation: plan names the providers, a phone is unsupported and masked, and nothing is sent until you press Investigate",
+              iv.status_code == 201 and {"needs_approval", "unsupported_input"} <= stat and "7777" not in iv.text and det.status_code == 200 and [x["kind"] for x in det.json()["inputs"]] == ["email", "username"],
+              f"{iv.status_code} {sorted(stat)}")
         rp = c.post(f"/subjects/{ps}/report/preview", json={"audience": "subject"})
         check("Target profile: report preview with citation check", rp.status_code == 200 and rp.json()["citation_check"]["ok"] is True, rp.text[:80])
         check("keyring backend importable in the bundle", k.returncode == 0 and k.stdout.strip() != "", k.stdout.strip() or k.stderr[-200:])

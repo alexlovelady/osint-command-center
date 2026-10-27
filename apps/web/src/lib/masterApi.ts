@@ -1,8 +1,8 @@
 // Types for the Master Profile API (Master Target Profile addendum). The server is the source of truth; these only describe its JSON.
-export type MasterState = "unassessed" | "candidate" | "corroborated" | "conflicting" | "rejected" | "not_available";
+export type MasterState = "unassessed" | "candidate" | "corroborated" | "conflicting" | "rejected" | "not_available" | "self_attested";
 export interface MasterEvidence { id: string; title?: string; kind?: string; sha256?: string; url?: string | null }
 export interface MasterItem { id: string; category: string; type: string; type_label: string; custom_type?: string; value: string; masked: boolean; restricted: boolean;
-  normalized_value?: string; attributes?: Record<string, unknown>; source_id?: string; evidence: MasterEvidence[]; collection_method?: string; origin: string; recorded_by?: string;
+  normalized_value?: string; attributes?: Record<string, unknown>; source_id?: string; evidence: MasterEvidence[]; collection_method?: string; source_label?: string; origin: string; recorded_by?: string;
   observed_at?: string | null; last_verified_at?: string | null; confidence: string; verification_state: MasterState; state_label: string; self_attested?: boolean; sensitivity?: string;
   is_input: boolean; feeds_research: boolean; backed_by?: string; note?: string; discovered?: boolean; reference_only?: boolean; readonly?: boolean; open?: string; caveat: string;
   created_at?: string; asset_authorization?: { covered: boolean; reason: string } }

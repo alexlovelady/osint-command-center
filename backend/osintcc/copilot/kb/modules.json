@@ -1162,5 +1162,146 @@
    "shared provider",
    "gmail"
   ]
+ },
+ {
+  "id": "home",
+  "title": "Home (simple mode)",
+  "kind": "page",
+  "where": {
+   "route": "home"
+  },
+  "summary": "The starting page in simple mode: a New investigation button, what is running or paused, investigations waiting for a decision, authorization warnings and recent investigations. With none yet it shows an example and one button to start.",
+  "how_to": [
+   "Press New investigation to start from an email, username, website, phone, name or business.",
+   "Open a running investigation with Watch, or Continue one that is paused or waiting for you.",
+   "Open Review when the banner says decisions are waiting."
+  ],
+  "keywords": [
+   "home",
+   "start",
+   "new investigation",
+   "simple mode",
+   "resume"
+  ]
+ },
+ {
+  "id": "investigations",
+  "title": "Investigations list",
+  "kind": "page",
+  "where": {
+   "route": "investigations"
+  },
+  "summary": "Every investigation, newest first, with its status, the number of checks done, running and not run, and how many decisions wait.",
+  "how_to": [
+   "Open one with its button.",
+   "Press New investigation to start another."
+  ],
+  "keywords": [
+   "investigations",
+   "history",
+   "list"
+  ]
+ },
+ {
+  "id": "new-investigation",
+  "title": "New investigation",
+  "kind": "page",
+  "where": {
+   "route": "new"
+  },
+  "summary": "Choose a person or a business, add one or more identifiers (paste several at once; each is typed automatically and can be corrected), say whose information it is and why, confirm the authorization, then review the plan. The plan lists what will run now, what needs your approval because it sends an input to a third party, what needs an API key, what is unavailable, and which inputs have no supported source (a phone number or a name alone cannot be searched). Pressing Investigate approves exactly the providers still ticked.",
+  "how_to": [
+   "Add at least one identifier. One is enough; more improve precision and coverage.",
+   "Tick the authorization statement; your name is recorded.",
+   "Press Review plan, untick any provider you do not want, then press Investigate.",
+   "Researching someone else on a client's behalf needs written consent: use the Advanced workbench's Authorization tab."
+  ],
+  "keywords": [
+   "new investigation",
+   "investigate",
+   "one click",
+   "identifiers",
+   "plan",
+   "approve providers",
+   "authorization",
+   "phone",
+   "name only"
+  ]
+ },
+ {
+  "id": "investigation",
+  "title": "Investigation (Overview, Profile, Findings, Activity and Coverage)",
+  "kind": "page",
+  "where": {
+   "route": "investigation"
+  },
+  "summary": "One investigation in one place. Overview shows status, honest progress counts (not a percentage of everything), what is independently corroborated versus only self-attested versus merely possible, what could not be done and why, the next decisions, and how to improve coverage by adding another input. Profile is the readable dossier grouped by Identity and contact, Accounts, Organizations and work, Locations, Media, Relationships, Security and Timeline, with a Why we think this drawer and a Change type control that never alters evidence. Findings groups accounts by site, merges URL variants and shows signals. Activity and Coverage shows the pipeline from returned results to unique accounts, what ran, what is unavailable and the activity log.",
+  "how_to": [
+   "Use Pause, Resume (Check for more) or Stop at any time; results already collected are kept.",
+   "If it says Needs your approval, approve the named providers once and it continues.",
+   "Add another email, username, website, business or owned domain under Improve coverage.",
+   "Save a simple brief or an expert export under Report."
+  ],
+  "keywords": [
+   "investigation",
+   "overview",
+   "dossier",
+   "findings",
+   "activity",
+   "coverage",
+   "self-attested",
+   "corroborated",
+   "limits",
+   "report",
+   "resume",
+   "stop",
+   "pause"
+  ]
+ },
+ {
+  "id": "review",
+  "title": "Review",
+  "kind": "page",
+  "where": {
+   "route": "review"
+  },
+  "summary": "Everything waiting for a human decision across investigations: accounts, addresses and facts a source suggested. Each card shows the question, how many independent signals support it (two tools agreeing on a handle is one signal) and how many evidence items. Mine records your own attestation (it is never independent corroboration), Not mine rejects, Unsure and Need evidence keep it a candidate. A preview shows the impact before anything changes, evidence is attached only if you choose it and only where it is about that site, and account decisions can be undone. Use as input makes a lead a research starting point, with a reason.",
+  "how_to": [
+   "Tick the items, type a reason, choose an action, check the preview, then Apply.",
+   "Leave Independent evidence on None unless you have evidence that is about that same site.",
+   "Use Undo this batch if you made a mistake."
+  ],
+  "keywords": [
+   "review",
+   "decisions",
+   "mine",
+   "not mine",
+   "unsure",
+   "attestation",
+   "bulk",
+   "undo",
+   "use as input",
+   "lead"
+  ]
+ },
+ {
+  "id": "advanced-mode",
+  "title": "Advanced mode",
+  "kind": "page",
+  "where": {
+   "route": "settings"
+  },
+  "summary": "A switch in the top bar and in Settings. Off (the default) shows Home, Investigations, Review and Settings. On shows the whole workbench as well: Cases, every case tab, Automations, DARKINT, Tool Manager and Setup. It changes only what is visible and is remembered on this device; it never changes stored records, and links to a case still work in either mode.",
+  "how_to": [
+   "Turn it on from the top bar or Settings.",
+   "Open an investigation in the Advanced workbench from its page."
+  ],
+  "keywords": [
+   "advanced mode",
+   "workbench",
+   "expert",
+   "simple mode",
+   "toggle"
+  ]
  }
 ]

@@ -1,0 +1,115 @@
+# One-click investigation and the simplified experience: design, status, traceability
+
+Spec: `Fusion_One_Click_Investigation_Simplification_Claude_Code_Master_Spec.md` (v1.0, 2026-10-27). Labels used here: **fixture-tested** (proven against recorded or synthetic responses through a mock transport), **live-tested** (the project's own earlier live runs), **not implemented**. Nothing in this change was exercised against a live third-party service.
+
+## What was built
+
+| Layer | Where |
+|---|---|
+| Durable orchestrator: manifest, bounded expansion, checkpoints, pause/resume/cancel, restart recovery | `backend/osintcc/profile/investigate.py`, tables `investigation_runs` and `investigation_events` (migration 0017) |
+| API | `backend/osintcc/api/v1/investigations.py` (`POST /investigations`, `POST /subjects/{id}/investigations`, `GET /investigations[/{id}[/summary\|/events\|/review]]`, pause, resume, refresh, cancel, approve, review inbox, decide, undo, use-as-input, smart-paste detect) |
+| Data semantics fixes | `profile/master.py` (`classify_lead`, `repair_lead_types`, `merge_duplicate_leads`, `reclassify`, `self_attest`), `profile/candidates.py` (`ownership`, `evidence_applies`), `profile/accounting.py`, `profile/normalize.py` (`profile_root`) |
+| Simple UI | `apps/web/src/pages/investigate/` (Home, Investigations, NewInvestigation, Investigation, Review, SimpleSettings), `lib/mode.ts`, `lib/investigationApi.ts`, `App.tsx` |
+| Workbench readability | `apps/web/src/components/FindingValue.tsx` used by the case Findings tab |
+
+No second research engine and no shadow candidate store: the orchestrator calls the existing consent gate, research approval, expansion planner, candidate and email review, and master profile.
+
+## How an investigation runs
+
+1. **Prepare** (`POST /investigations`): creates or reuses the case and subject, records the authorization the person confirmed, stores the inputs (a phone becomes a masked restricted entry, never a research input) and returns the **manifest**: every source for every input with a status (`ready`, `needs_approval`, `needs_key`, `needs_authorization`, `unsupported_input`, `not_installed`, `separate_approval`, `blocked`, `already_done`), the reason, who would receive the input, and how well the source was tested. Nothing is sent.
+2. **Start** (`POST /subjects/{id}/investigations`): the providers named in `approved_sources` are the single bounded approval for sources that send an input to a third party. Anything not named stays “needs approval”; other work continues.
+3. **Step** (`advance`, driven in the background): refresh finished tasks, fold results back (associated emails, leads, candidate accounts), ask the expansion planner what is allowed, run the allowed and approved steps through `research.approve`, checkpoint, repeat. Only the subject's inputs and CONFIRMED associations are seeds; a found handle is a lead.
+4. **Rest**: `awaiting_review` (a decision or an approval is needed), `complete_with_limits` (every permitted check ran; some methods were unavailable, listed), or `completed` (no limits at all, which is rare). Never “complete” when a method did not run.
+5. **Stops** are recorded with a reason: depth, source-run budget, per-input cap, runtime, authorization ended or revoked, offline, case closed, a step refused by the safety checks, an internal error, cancel. The orchestrator never retries a failed source (each source runs once per input; only the adapter's own bounded retries apply), so errors cannot loop.
+
+Defaults (visible and editable when starting; hard limits in `investigate.LIMITS`): depth 2, 100 source runs, 10 per pass, 10 per input, 25 follow-ups per pass, 30 minutes. They sit inside the provider quotas the adapters already enforce.
+
+## Operator guide
+
+- **Resume or cancel an interrupted investigation:** open it (Home → Continue) and press *Check for more* to resume or *Stop* to cancel. After an app restart, runs that were mid-flight resume by themselves (`investigate.recover`); jobs that were running were already marked failed, so no finished or interrupted check is repeated. A run waiting for an authorization resumes only after it is renewed.
+- **Approvals:** *Needs your approval* on the Overview names the providers and their hosts. Approving adds them to this run only.
+- **Keys:** Settings → Providers and keys. A missing key is a visible limit, never a silent skip.
+- **Pause** stops new work; checks already started finish. **Check for more** (resume) looks only for new work and repeats nothing. **Refresh results** runs the permitted checks again inside the same limits and approvals; earlier results and task history are kept and only the latest run of each source counts as “returned”.
+- **Advanced mode** (header or Settings) is a per-device display switch. It does not touch data or any investigation. Deep links such as `#/case/<id>` work in both modes.
+- **Source status:** `docs/source-capability-matrix.md` (generated by `scripts/gen_source_matrix.py`) and Settings → Sources.
+
+## Data protection and threat-model notes
+
+- Authorization is the gate for everything: no authorization means the run is `draft` and nothing is contacted. A revoked or expired authorization stops queued work promptly at the next step.
+- Third-party disclosure is explicit: the plan lists recipients and the approval names providers. An email address's domain is never researched (a mailbox provider's or a custom domain's records say nothing about the person); a domain is researched only if listed as the subject's own with an ownership statement.
+- Restricted values (phone, date of birth, addresses, identity references) are masked in every response, never in logs, events, reports, search or model prompts; owner-only audited reveal remains in the master profile. Phone numbers appear only masked in manifests and summaries.
+- A candidate never drives research: found handles, addresses and URLs are leads. A rejected lead cannot be used as an input until reopened. Two tools agreeing on a handle is one signal.
+- Cross-case isolation and roles are checked server-side on every route (non-members get 404; editors needed to start, approve, decide).
+- No model or automation can decide or start: the Copilot, automation and MCP packages do not import the orchestrator (asserted in `tests/integration/test_profile.py`).
+- Raw provider JSON is not rendered by default; the stored value stays one click away under *Raw evidence*.
+
+## Migration and recovery
+
+`0017_investigation_runs` is additive (two new tables; nothing existing is altered). The existing upgrade path copies the database to `<db>.pre-<revision>.bak` before a non-empty database is upgraded, and upgrades inside a transaction. Rollback: `alembic downgrade 0016` drops only the two new tables (tested). Tests: `tests/integration/test_investigation_data.py`.
+
+**Rehearsal gate (do this before the real data is touched):**
+
+1. Stop Fusion. Make a verified backup of the encrypted data folder (`cp -a` to a dated folder and compare `find … -type f | wc -l` and the database file's SHA-256, or use the in-app backup).
+2. Copy that backup to a scratch folder and start the new binary against the copy: `OSINTCC_DATA_DIR=<scratch> ./osintcc-desktop`. It must open, show your existing cases, profile entries and evidence, and report migration 0017.
+3. Only if that works, start it against the live folder. If the copy does not open (for example the OS credential store entry for the database key is missing), stop: do not touch the live data.
+
+## Known limits
+
+- The exact-email sources (GitHub search, Gravatar, OpenPGP keyserver, Brave) and several others are fixture-tested only. Brave needs the user's own key. GitHub search is capped at 5 results per query; a run that hits the cap says it is a partial look.
+- No phone-discovery source, no name search, no reverse lookups exist, by design; the product says so instead of pretending.
+- There is no way to “find all of someone's other emails”: only addresses a source explicitly shows next to an input become candidates, and none is guessed.
+- Findings in the case workbench are raw stored observations and are not retyped; the linked profile entry carries the correction (FUX-009).
+- Per-site endpoint validation (generated URL vs observed profile) is not available from the Sherlock and Maigret outputs the adapters store (FUX-012).
+
+## Traceability (FUX tickets)
+
+| Ticket | Status | Where | Tests |
+|---|---|---|---|
+| FUX-001 readable GitHub findings | implemented | `components/FindingValue.tsx`, `pages/CaseView.tsx` Findings; simple views never render raw JSON | `FindingValue` used in existing tab tests; `masterProfile.test.tsx` |
+| FUX-002 results vs findings vs candidates | implemented (counts); navigation partly | `profile/accounting.py`, `GET /subjects/{id}/master/accounting`, Activity & Coverage table | `test_fux_semantics.py::test_url_variants…`, `investigate.test.tsx` |
+| FUX-003 handle shown as a full name | implemented | `profile/master.py` `classify_lead`, `repair_lead_types` (corrects existing data once, keeps the original) | `test_a_git_author_handle…`, `test_legacy_mistyped_items…` |
+| FUX-004 confidence/verification clarity | implemented | `self_attested` display state, button tooltips in `MasterProfile.tsx`, dossier badges | `test_owner_attestation_is_never_counted…`, `test_self_attestation_is_not_corroboration` |
+| FUX-005 dense master layout | implemented for simple mode; advanced editor unchanged | `pages/investigate/Investigation.tsx` Dossier | `simple-mode.spec.ts` |
+| FUX-006 friendly source names | implemented | `source_label` in `profile/master.py`, manifest and accounting labels | `test_investigation.py` |
+| FUX-007 trace candidate to evidence | implemented | “Why we think this” drawer, evidence list with URL | `investigate.test.tsx` |
+| FUX-008 empty and unavailable states | implemented | manifest statuses, limits list, accounting statuses | `test_investigation.py::test_name_and_phone_only…`, `…rate_limited…` |
+| FUX-009 edit type | implemented for profile entries (preview, reason, undo, audit); **deferred** for raw findings (immutable provenance; the linked entry carries the type) | `master.reclassify`, `POST …/reclassify`, Dossier “Change type” | `test_an_analyst_can_reclassify…`, `test_legacy_mistyped…` |
+| FUX-010 reviewable queue | implemented | Findings by site with filters, Review inbox, show-more paging | `simple-mode.spec.ts`, `investigate.test.tsx`, `test_hundreds_of_candidates…` |
+| FUX-011 reconcile counts | implemented | `accounting.pipeline`, `profile_root` URL canonicalisation | `test_url_variants_of_one_profile…`, `test_hundreds_of_candidates…` |
+| FUX-012 match vs ownership axes | **partial**: ownership vs handle existence are separate; endpoint-validation axis blocked by adapter output | `candidates.ownership`, Findings badges | `test_owner_attestation…` |
+| FUX-013 scannable rows | implemented | Findings grouped rows; generic caveats once | `simple-mode.spec.ts` |
+| FUX-014 actionable coverage | implemented | Activity & Coverage groups, Settings → Providers and keys | `simple-mode.spec.ts` |
+| FUX-015 add input and continuity | implemented | “Improve coverage” form on Overview, Review inbox, Use as input | `test_use_as_input…`, `investigate.test.tsx` |
+| FUX-016 bulk ownership safeguards | implemented | `investigate.apply_reviews`, `DecisionBar` (preview, exceptions, evidence default None, clear selection, undo) | `test_bulk_review_is_self_attestation…`, `test_owner_attestation…`, `investigate.test.tsx` |
+| FUX-017 related-email guidance | implemented | cap notes (`accounting.CAPS`), email-first message, “Your inputs” in Associated Emails | `test_associated_emails.py`, `test_master_profile.py` |
+| FUX-018 phone vs research | implemented | `unsupported_input` manifest row, masked storage | `test_name_and_phone_only…`, `test_smart_paste…` |
+| FUX-019 business inputs | implemented | organization + relationship, owned-domain ownership statement, separate approvals | `test_a_business_uses_its_organization…`, `test_an_organization_records…` |
+| FUX-020 summary counts | implemented | `self_attested` vs `corroborated` display states across candidates, emails and items | `test_owner_attestation…` |
+
+## Spec test matrix (section 10)
+
+| # | Where |
+|---|---|
+| 1 name / email / phone only, no false success | `test_name_and_phone_only_never_pretend_to_research`, `test_one_free_mail_address…` |
+| 2 business, domain not derived from free email | `test_a_business_uses_its_organization_and_owned_domain_only`, `test_free_mail_inputs_never_research…` |
+| 3 one click runs eligible providers with reasons | `test_one_free_mail_address_starts_a_run…`, `test_providers_that_send…` |
+| 4 second pass only from confirmed seed; approvals do not block other work | `test_a_found_handle_is_a_lead…`, `test_providers_that_send…` |
+| 5 quotas, 429, offline, cancel, expiry, restart; bounded | `test_budgets_stop…`, `test_rate_limited…`, `test_pause_cancel_resume_and_authorization_loss`, `test_restart_resumes…` |
+| 6 GitHub + Sherlock/Maigret overlap reconciliation | `test_url_variants…`, `test_hundreds_of_candidates…` |
+| 7 handle never a full name; repository never a profile; editable | `test_a_git_author_handle…`, `test_an_analyst_can_reclassify…` |
+| 8 bulk “mine” is self-attested, incompatible evidence blocked, undo | `test_owner_attestation…`, `test_bulk_review…` |
+| 9 candidate → input without re-entry; rejected never expands | `test_use_as_input…`, `test_a_rejected_candidate_never_expands` |
+| 10 associated emails need observed evidence | `test_associated_emails.py` (unchanged, passing) |
+| 11 distinct statuses (no key, 0 results, partial, fixture-only, offline) | manifest and accounting statuses; `test_one_free_mail_address…`, `test_rate_limited…` |
+| 12 no sensitive leaks | `test_restricted_values_do_not_leak…`, `test_smart_paste_guesses_types_and_phone_is_masked_everywhere` |
+| 13 migration preserves everything; advanced workbench works | `test_investigation_data.py`, `test_master_profile_data.py`, Playwright suite with Advanced mode |
+| 14 usability from the simple UI, keyboard, widths | `simple-mode.spec.ts` (with axe), `docs/screenshots/` |
+| 15 load: 500+ candidates | `test_hundreds_of_candidates_stay_fast_and_reconcile` |
+| 16 isolation, roles, replay protection | `test_idempotent_start_isolation_and_roles` |
+
+## Handoff checklist
+
+1. `git pull`, back up, rehearse the upgrade on a copy (above), then rebuild with the Docker commands in the release message.
+2. Verify SHA-256 sums, start `./osintcc-desktop`, open Home, press New investigation.
+3. To resume an interrupted investigation: Home → Continue → *Check for more*. To cancel: *Stop*.
+4. Screenshots of the core screens are in `docs/screenshots/` (synthetic data, produced by `scripts/demo_server.py` and `apps/web/e2e/screenshots.spec.ts`).

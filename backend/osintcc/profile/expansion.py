@@ -111,10 +111,12 @@ def _priority(source_id: str, depth: int) -> int:
     return SCORE.get(source_id, 10) - depth * 5
 
 
-def plan(db: Session, subject: Subject, case: Case, adapters: dict[str, IntelAdapter], settings: Settings, st: Any = None) -> dict[str, Any]:
+def plan(db: Session, subject: Subject, case: Case, adapters: dict[str, IntelAdapter], settings: Settings, st: Any = None, fresh_since: datetime | None = None) -> dict[str, Any]:
     pol = get_policy(db, subject)
     sd = seeds(db, subject)
-    done = {(t.identifier_id, t.source_id) for t in db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id, ResearchTask.status != "cancelled"))}
+    # `fresh_since` is set only by an explicit refresh: checks older than that moment no longer count as done, so a person can re-run them. Their history stays.
+    done = {(t.identifier_id, t.source_id) for t in db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id, ResearchTask.status != "cancelled"))
+            if fresh_since is None or (t.created_at.replace(tzinfo=UTC) if t.created_at.tzinfo is None else t.created_at) >= fresh_since}
     used = len(done)
     depth_of = {s["identifier_id"]: s for s in sd["inputs"]}
     steps: list[dict[str, Any]] = []
@@ -186,13 +188,13 @@ def promote_confirmed(db: Session, subject: Subject, actor: str) -> int:
 
 
 def run(db: Session, subject: Subject, case: Case, adapters: dict[str, IntelAdapter], settings: Settings, *, actor: str, keys: list[str] | None = None,
-        confirmed_sources: list[str] | None = None, promote: bool = False) -> dict[str, Any]:
+        confirmed_sources: list[str] | None = None, promote: bool = False, fresh_since: datetime | None = None) -> dict[str, Any]:
     """One bounded pass. Either the keys a person ticked, or - only when the subject's policy allows it - the passive, authorized, confirmation-free steps."""
     research.refresh_tasks(db, subject)
     emails.sweep(db, subject, actor)
     pol = get_policy(db, subject)
     promoted = promote_confirmed(db, subject, actor) if (promote or pol["auto_passive"]) else 0
-    p = plan(db, subject, case, adapters, settings)
+    p = plan(db, subject, case, adapters, settings, fresh_since=fresh_since)
     reason = p["stop_reason"]
     rec = ExpansionRun(subject_id=subject.id, case_id=subject.case_id, depth=max([s["depth"] for s in p["steps"]] or [0]), policy_json=pol, plan_json=p["steps"][:200], created_by=actor)
     db.add(rec)

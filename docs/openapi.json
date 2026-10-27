@@ -797,6 +797,30 @@
     "title": "DecideIn",
     "type": "object"
    },
+   "DetectIn": {
+    "additionalProperties": false,
+    "properties": {
+     "investigation": {
+      "default": "person",
+      "enum": [
+       "person",
+       "business"
+      ],
+      "title": "Investigation",
+      "type": "string"
+     },
+     "text": {
+      "maxLength": 2000,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "title": "DetectIn",
+    "type": "object"
+   },
    "DiagIn": {
     "properties": {
      "run_id": {
@@ -1307,6 +1331,67 @@
     "title": "IdentifierIn",
     "type": "object"
    },
+   "InputIn": {
+    "additionalProperties": false,
+    "properties": {
+     "kind": {
+      "enum": [
+       "name",
+       "email",
+       "phone",
+       "username",
+       "alias",
+       "url",
+       "domain",
+       "organization"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "relationship": {
+      "anyOf": [
+       {
+        "enum": [
+         "founder",
+         "owner",
+         "employee",
+         "contractor",
+         "other"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relationship"
+     },
+     "since": {
+      "default": "",
+      "maxLength": 20,
+      "title": "Since",
+      "type": "string"
+     },
+     "source": {
+      "default": "",
+      "maxLength": 80,
+      "title": "Source",
+      "type": "string"
+     },
+     "value": {
+      "maxLength": 600,
+      "minLength": 1,
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kind",
+     "value"
+    ],
+    "title": "InputIn",
+    "type": "object"
+   },
    "ItemIn": {
     "additionalProperties": false,
     "properties": {
@@ -1695,6 +1780,139 @@
     "title": "PreflightIn",
     "type": "object"
    },
+   "PrepareIn": {
+    "additionalProperties": false,
+    "properties": {
+     "approved_sources": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "const": "listed",
+        "type": "string"
+       }
+      ],
+      "title": "Approved Sources"
+     },
+     "authorization": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/osintcc__api__v1__investigations__AuthIn"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "case_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Case Id"
+     },
+     "display_name": {
+      "default": "",
+      "maxLength": 300,
+      "title": "Display Name",
+      "type": "string"
+     },
+     "excluded_sources": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Excluded Sources",
+      "type": "array"
+     },
+     "idempotency_key": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Idempotency Key"
+     },
+     "inputs": {
+      "items": {
+       "$ref": "#/components/schemas/InputIn"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Inputs",
+      "type": "array"
+     },
+     "kind": {
+      "default": "person",
+      "enum": [
+       "person",
+       "business"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "mode": {
+      "default": "self",
+      "enum": [
+       "self",
+       "client",
+       "organization"
+      ],
+      "title": "Mode",
+      "type": "string"
+     },
+     "policy": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Policy"
+     },
+     "purpose": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Purpose",
+      "type": "string"
+     },
+     "start": {
+      "default": false,
+      "title": "Start",
+      "type": "boolean"
+     },
+     "subject_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Subject Id"
+     }
+    },
+    "required": [
+     "inputs"
+    ],
+    "title": "PrepareIn",
+    "type": "object"
+   },
    "PreviewIn": {
     "properties": {
      "include_sensitive": {
@@ -1894,6 +2112,33 @@
      "matched_url"
     ],
     "title": "ProviderResultIn",
+    "type": "object"
+   },
+   "ReclassifyIn": {
+    "additionalProperties": false,
+    "properties": {
+     "preview": {
+      "default": false,
+      "title": "Preview",
+      "type": "boolean"
+     },
+     "reason": {
+      "default": "",
+      "maxLength": 300,
+      "title": "Reason",
+      "type": "string"
+     },
+     "to_type": {
+      "maxLength": 32,
+      "minLength": 1,
+      "title": "To Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "to_type"
+    ],
+    "title": "ReclassifyIn",
     "type": "object"
    },
    "RematchIn": {
@@ -2551,6 +2796,68 @@
     "title": "SpeculativeIn",
     "type": "object"
    },
+   "StartIn": {
+    "additionalProperties": false,
+    "properties": {
+     "approved_sources": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "const": "listed",
+        "type": "string"
+       }
+      ],
+      "title": "Approved Sources"
+     },
+     "excluded_sources": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Excluded Sources",
+      "type": "array"
+     },
+     "idempotency_key": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Idempotency Key"
+     },
+     "kind": {
+      "default": "person",
+      "enum": [
+       "person",
+       "business"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "policy": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Policy"
+     }
+    },
+    "title": "StartIn",
+    "type": "object"
+   },
    "StateIn": {
     "additionalProperties": false,
     "properties": {
@@ -2776,6 +3083,20 @@
     "title": "TemplateIn",
     "type": "object"
    },
+   "UndoIn": {
+    "additionalProperties": false,
+    "properties": {
+     "bulk_id": {
+      "title": "Bulk Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "bulk_id"
+    ],
+    "title": "UndoIn",
+    "type": "object"
+   },
    "UninstallIn": {
     "properties": {
      "confirm": {
@@ -2785,6 +3106,26 @@
      }
     },
     "title": "UninstallIn",
+    "type": "object"
+   },
+   "UseIn": {
+    "additionalProperties": false,
+    "properties": {
+     "basis": {
+      "default": "",
+      "maxLength": 900,
+      "title": "Basis",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id"
+    ],
+    "title": "UseIn",
     "type": "object"
    },
    "ValidationError": {
@@ -4086,6 +4427,138 @@
      "consent"
     ],
     "title": "SourceIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__investigations__ApproveIn": {
+    "additionalProperties": false,
+    "properties": {
+     "sources": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 40,
+      "minItems": 1,
+      "title": "Sources",
+      "type": "array"
+     }
+    },
+    "required": [
+     "sources"
+    ],
+    "title": "ApproveIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__investigations__AuthIn": {
+    "additionalProperties": false,
+    "properties": {
+     "expires_days": {
+      "default": 30,
+      "maximum": 365.0,
+      "minimum": 1.0,
+      "title": "Expires Days",
+      "type": "integer"
+     },
+     "permitted_purposes": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Permitted Purposes"
+     },
+     "proof_evidence_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proof Evidence Id"
+     },
+     "source_classes": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Classes"
+     },
+     "verification_method": {
+      "default": "self_attestation",
+      "title": "Verification Method",
+      "type": "string"
+     },
+     "verifier": {
+      "default": "",
+      "maxLength": 200,
+      "title": "Verifier",
+      "type": "string"
+     }
+    },
+    "title": "AuthIn",
+    "type": "object"
+   },
+   "osintcc__api__v1__investigations__ReviewIn": {
+    "additionalProperties": false,
+    "properties": {
+     "action": {
+      "enum": [
+       "mine",
+       "not_mine",
+       "unsure",
+       "need_evidence"
+      ],
+      "title": "Action",
+      "type": "string"
+     },
+     "basis": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Basis",
+      "type": "string"
+     },
+     "evidence_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Evidence Ids",
+      "type": "array"
+     },
+     "ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "title": "Ids",
+      "type": "array"
+     },
+     "preview": {
+      "default": false,
+      "title": "Preview",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "ids",
+     "action"
+    ],
+    "title": "ReviewIn",
     "type": "object"
    },
    "osintcc__api__v1__plugins__EnableIn": {
@@ -14121,6 +14594,506 @@
     "summary": "Link Hypothesis Claim"
    }
   },
+  "/api/v1/investigations": {
+   "get": {
+    "operationId": "list_runs_api_v1_investigations_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "case_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Case Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 30,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "List Runs"
+   },
+   "post": {
+    "description": "Create (or reuse) the case and subject, record the inputs and the authorization, and return the manifest: what will run, what cannot and why, and who would receive what.\nWith start=true the investigation begins at once; the named providers in approved_sources are the single approval for sources that send an input to a third party.",
+    "operationId": "prepare_api_v1_investigations_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PrepareIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Prepare"
+   }
+  },
+  "/api/v1/investigations/detect": {
+   "post": {
+    "description": "Smart paste: split on commas, semicolons and new lines and guess each value's type. The person can correct every guess; nothing is stored here.",
+    "operationId": "detect_api_v1_investigations_detect_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DetectIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Detect"
+   }
+  },
+  "/api/v1/investigations/review": {
+   "get": {
+    "description": "Everything waiting for a person's decision across the investigations they can see.",
+    "operationId": "global_review_api_v1_investigations_review_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Global Review"
+   }
+  },
+  "/api/v1/investigations/{run_id}": {
+   "get": {
+    "operationId": "get_run_api_v1_investigations__run_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Run"
+   }
+  },
+  "/api/v1/investigations/{run_id}/advance": {
+   "post": {
+    "description": "Run the next step now and wait for what it starts. Normally the background driver does this; it is here for tests and for a stalled driver.",
+    "operationId": "advance_api_v1_investigations__run_id__advance_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Advance"
+   }
+  },
+  "/api/v1/investigations/{run_id}/approve": {
+   "post": {
+    "description": "One bounded approval naming providers. The investigation continues on its own afterwards.",
+    "operationId": "approve_api_v1_investigations__run_id__approve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__investigations__ApproveIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Approve"
+   }
+  },
+  "/api/v1/investigations/{run_id}/cancel": {
+   "post": {
+    "operationId": "cancel_api_v1_investigations__run_id__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Cancel"
+   }
+  },
+  "/api/v1/investigations/{run_id}/events": {
+   "get": {
+    "description": "Durable replay: ask for events after the last sequence number you saw. A dropped connection loses nothing.",
+    "operationId": "get_events_api_v1_investigations__run_id__events_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "After",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Events"
+   }
+  },
+  "/api/v1/investigations/{run_id}/pause": {
+   "post": {
+    "operationId": "pause_api_v1_investigations__run_id__pause_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Pause"
+   }
+  },
+  "/api/v1/investigations/{run_id}/refresh": {
+   "post": {
+    "description": "Re-run the permitted checks now (same limits, same approvals). 'Resume' only looks for NEW work.",
+    "operationId": "refresh_api_v1_investigations__run_id__refresh_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Refresh"
+   }
+  },
+  "/api/v1/investigations/{run_id}/resume": {
+   "post": {
+    "operationId": "resume_api_v1_investigations__run_id__resume_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Resume"
+   }
+  },
+  "/api/v1/investigations/{run_id}/summary": {
+   "get": {
+    "operationId": "get_summary_api_v1_investigations__run_id__summary_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Summary"
+   }
+  },
   "/api/v1/mcp/approvals": {
    "get": {
     "operationId": "list_approvals_api_v1_mcp_approvals_get",
@@ -17552,6 +18525,53 @@
     "summary": "Thumbnail"
    }
   },
+  "/api/v1/subjects/{subject_id}/investigations": {
+   "post": {
+    "operationId": "start_run_api_v1_subjects__subject_id__investigations_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StartIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Start Run"
+   }
+  },
   "/api/v1/subjects/{subject_id}/master": {
    "get": {
     "description": "Sections, the research gaps panel and the next actions in one document.",
@@ -17620,6 +18640,44 @@
      }
     },
     "summary": "Get Master"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/accounting": {
+   "get": {
+    "description": "Per source: returned -> findings -> unique candidate accounts -> profile entries, counted from the stored records.",
+    "operationId": "get_accounting_api_v1_subjects__subject_id__master_accounting_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Accounting"
    }
   },
   "/api/v1/subjects/{subject_id}/master/export": {
@@ -17946,6 +19004,109 @@
      }
     },
     "summary": "Compare"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/{item_id}/reclassify": {
+   "post": {
+    "description": "Change an item's type (and with it its category). With preview=true nothing changes and the effects are listed. The value, evidence and verification state are untouched.",
+    "operationId": "reclassify_api_v1_subjects__subject_id__master_items__item_id__reclassify_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReclassifyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reclassify"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/master/items/{item_id}/reclassify/undo": {
+   "post": {
+    "operationId": "undo_reclassify_api_v1_subjects__subject_id__master_items__item_id__reclassify_undo_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "item_id",
+      "required": true,
+      "schema": {
+       "title": "Item Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Undo Reclassify"
    }
   },
   "/api/v1/subjects/{subject_id}/master/items/{item_id}/reveal": {
@@ -18818,6 +19979,185 @@
      }
     },
     "summary": "Review History"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/review-inbox": {
+   "get": {
+    "operationId": "inbox_api_v1_subjects__subject_id__review_inbox_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Inbox"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/review-inbox/decide": {
+   "post": {
+    "description": "Bulk decisions with an impact preview. 'Mine' records the owner's own attestation; it is never independent corroboration.",
+    "operationId": "decide_api_v1_subjects__subject_id__review_inbox_decide_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/osintcc__api__v1__investigations__ReviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Decide"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/review-inbox/undo": {
+   "post": {
+    "operationId": "undo_api_v1_subjects__subject_id__review_inbox_undo_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UndoIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Undo"
+   }
+  },
+  "/api/v1/subjects/{subject_id}/review-inbox/use-as-input": {
+   "post": {
+    "operationId": "use_as_input_api_v1_subjects__subject_id__review_inbox_use_as_input_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "subject_id",
+      "required": true,
+      "schema": {
+       "title": "Subject Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UseIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Use As Input"
    }
   },
   "/api/v1/subjects/{subject_id}/templates": {

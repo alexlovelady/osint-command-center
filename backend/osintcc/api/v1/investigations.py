@@ -51,6 +51,9 @@ async def detect(request: Request, body: DetectIn):
 class InputIn(Strict):
     kind: Literal["name", "email", "phone", "username", "alias", "url", "domain", "organization"]
     value: str = Field(min_length=1, max_length=600)
+    relationship: Literal["founder", "owner", "employee", "contractor", "other"] | None = None     # for an organization: how the person is connected to it
+    since: str = Field(default="", max_length=20)
+    source: str = Field(default="", max_length=80)
 
 
 class AuthIn(Strict):
@@ -130,6 +133,10 @@ async def prepare(request: Request, body: PrepareIn):
                 try:
                     ident = service.add_identifier(db, subject, inp.kind, inp.value, actor=me)
                     added.append({"kind": inp.kind, "id": ident.id})
+                    if inp.kind == "organization" and inp.relationship:
+                        master.add_item(db, subject, type="association", value=f"{inp.relationship.capitalize()} of {inp.value.strip()}", role=role, actor=me,
+                                        origin="subject_provided" if body.mode == "self" else "analyst_supplied", source_id=inp.source or "investigation input",
+                                        attributes={"relationship": inp.relationship, "since": inp.since, "organization": inp.value.strip()})
                 except ProfileError as exc:
                     skipped.append({"kind": inp.kind, "code": exc.code, "message": exc.message})
             if not added:
@@ -281,6 +288,22 @@ async def resume(request: Request, run_id: str):
     return out
 
 
+@router.post("/investigations/{run_id}/refresh")
+async def refresh(request: Request, run_id: str):
+    """Re-run the permitted checks now (same limits, same approvals). 'Resume' only looks for NEW work."""
+    st = S(request)
+    with st.sm() as db:
+        run, _s, _c, _ = run_for(db, request, run_id, "editor")
+        try:
+            investigate.refresh(db, run, actor(request))
+        except ProfileError as exc:
+            raise perr(exc) from exc
+        db.commit()
+        out = {"id": run.id, "status": run.status}
+    investigate.launch(st, run_id)
+    return out
+
+
 @router.post("/investigations/{run_id}/cancel")
 async def cancel(request: Request, run_id: str):
     with S(request).sm() as db:
@@ -375,3 +398,21 @@ async def undo(request: Request, subject_id: str, body: UndoIn):
             raise perr(exc) from exc
         db.commit()
         return out
+
+
+class UseIn(Strict):
+    id: str
+    basis: str = Field(default="", max_length=900)
+
+
+@router.post("/subjects/{subject_id}/review-inbox/use-as-input")
+async def use_as_input(request: Request, subject_id: str, body: UseIn):
+    with S(request).sm() as db:
+        s, _c, role = subject_for(db, request, subject_id, "editor")
+        try:
+            out = investigate.use_as_input(db, s, body.id, role=role, actor=actor(request), basis=body.basis)
+        except ProfileError as exc:
+            db.commit()
+            raise perr(exc) from exc
+        db.commit()
+        return {**out, "note": "Now an input. Use 'Check for more' on the investigation to research from it, inside the authorization."}

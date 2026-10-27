@@ -768,5 +768,70 @@
   "code": "unreadable_import",
   "meaning": "The file could not be read as CSV or JSON, or is not a list of objects with type and value.",
   "fix": "Check the format and the header row."
+ },
+ {
+  "code": "evidence_not_applicable",
+  "meaning": "The selected evidence is not about that site, so it cannot support that account.",
+  "fix": "Choose evidence from the same site, or leave Independent evidence on None and record a self-attestation."
+ },
+ {
+  "code": "rejected_item",
+  "meaning": "This was rejected. A rejected value never drives research.",
+  "fix": "Reopen it (Needs review) first if you changed your mind."
+ },
+ {
+  "code": "backed_item_fixed",
+  "meaning": "An input or a reviewed claim keeps its type, because its research history is attached to it.",
+  "fix": "Add it again with the right type and retire the old one."
+ },
+ {
+  "code": "restricted_type",
+  "meaning": "Restricted types cannot be created by changing the type of another item.",
+  "fix": "Add a restricted value directly, as the case owner, with a stated need."
+ },
+ {
+  "code": "same_type",
+  "meaning": "The item already has that type.",
+  "fix": "Pick a different type."
+ },
+ {
+  "code": "nothing_to_undo",
+  "meaning": "This item was never reclassified.",
+  "fix": "Nothing to undo."
+ },
+ {
+  "code": "no_valid_inputs",
+  "meaning": "None of the values could be used as inputs.",
+  "fix": "Check each value's type, for example an email must contain an @."
+ },
+ {
+  "code": "not_running",
+  "meaning": "Only a running investigation can be paused.",
+  "fix": "Use Resume or Stop instead."
+ },
+ {
+  "code": "not_resumable",
+  "meaning": "This investigation is running or already finished.",
+  "fix": "Wait for it to finish, or start a new one."
+ },
+ {
+  "code": "not_cancellable",
+  "meaning": "This investigation is already finished.",
+  "fix": "Nothing to stop."
+ },
+ {
+  "code": "invalid_action",
+  "meaning": "The decision is not one of Mine, Not mine, Unsure or Need evidence.",
+  "fix": "Pick one of the four."
+ },
+ {
+  "code": "invalid_selection",
+  "meaning": "An item in the selection is not recognised.",
+  "fix": "Refresh the page and select again."
+ },
+ {
+  "code": "too_many",
+  "meaning": "Too many items in one batch.",
+  "fix": "Review at most 200 at a time."
  }
 ]

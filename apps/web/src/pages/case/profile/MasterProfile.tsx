@@ -5,7 +5,7 @@ import { api } from "../../../lib/api";
 import type { BatchResult, GapCategory, MasterDoc, MasterItem, MasterSection, MasterState } from "../../../lib/masterApi";
 import type { ProfileT } from "../../../lib/profileApi";
 
-const STATE_CLASS: Record<MasterState, string> = { unassessed: "st-mute", candidate: "st-warn", corroborated: "st-ok", conflicting: "st-bad", rejected: "st-bad", not_available: "st-mute" };
+const STATE_CLASS: Record<MasterState, string> = { unassessed: "st-mute", candidate: "st-warn", corroborated: "st-ok", conflicting: "st-bad", rejected: "st-bad", not_available: "st-mute", self_attested: "st-warn" };
 const ORIGINS: [string, string][] = [["analyst_supplied", "Analyst supplied"], ["subject_provided", "Subject provided (self-attested)"], ["published_source", "Published source"], ["verified_provider", "Verified provider"]];
 
 type Pending = { id: string; kind: "corroborated" | "rejected" | "candidate" | "reveal" | "promote" } | null;
@@ -50,7 +50,7 @@ function ItemRow({ it, sid, editor, owner, onChanged, onGo }: { it: MasterItem; 
           {it.note && <div className="muted">{it.note}</div>}
         </td>
         <td><span className={`badge ${STATE_CLASS[it.verification_state] ?? "st-mute"}`}>{it.state_label}</span>{it.self_attested && <div className="muted">self-attested</div>}</td>
-        <td className="muted">{it.origin.replace(/_/g, " ")}{it.source_id ? ` · ${it.source_id}` : ""}{it.collection_method ? ` · ${it.collection_method}` : ""}
+        <td className="muted">{it.origin.replace(/_/g, " ")}{it.source_id ? ` · ${it.source_id}` : ""}{it.source_label || it.collection_method ? ` · ${it.source_label || it.collection_method}` : ""}
           <div>{it.evidence.length} evidence item(s){it.recorded_by ? ` · by ${it.recorded_by}` : ""}</div></td>
         <td className="muted">{it.confidence}{it.observed_at ? <div>observed {fmt(it.observed_at)}</div> : null}{it.last_verified_at ? <div>verified {fmt(it.last_verified_at)}</div> : null}
           {it.asset_authorization && <div>{it.asset_authorization.covered ? "authorized asset" : "no asset authorization"}: {it.asset_authorization.reason}</div>}</td>
@@ -59,13 +59,13 @@ function ItemRow({ it, sid, editor, owner, onChanged, onGo }: { it: MasterItem; 
           {canAct && (
             <span className="row">
               <button onClick={() => setEditing(true)} disabled={it.masked && !owner}>Edit</button>
-              <button onClick={() => setPending({ id: it.id, kind: "corroborated" })}>Corroborate</button>
-              <button onClick={() => setPending({ id: it.id, kind: "rejected" })}>Reject</button>
-              <button onClick={() => setPending({ id: it.id, kind: "candidate" })}>Needs review</button>
+              <button title="Needs evidence from a source independent of the subject. The subject’s own statement is recorded as self-attested, not corroborated." onClick={() => setPending({ id: it.id, kind: "corroborated" })}>Corroborate</button>
+              <button title="Not this subject, or wrong. Kept on record; never used for research." onClick={() => setPending({ id: it.id, kind: "rejected" })}>Reject</button>
+              <button title="Keep it as an unverified candidate and flag it for a decision." onClick={() => setPending({ id: it.id, kind: "candidate" })}>Needs review</button>
               {!it.is_input && ["email", "username", "profile_url", "website", "owned_domain", "full_name", "alias", "organization"].includes(it.type) && <button onClick={() => setPending({ id: it.id, kind: "promote" })}>Use as input</button>}
               {it.masked && owner && !revealed && <button onClick={() => setPending({ id: it.id, kind: "reveal" })}>Reveal</button>}
               {revealed && <button onClick={() => setRevealed(null)}>Hide</button>}
-              <button onClick={() => retire.mutate()} disabled={retire.isPending}>Retire</button>
+              <button title="Remove it from the profile. History and evidence stay." onClick={() => retire.mutate()} disabled={retire.isPending}>Retire</button>
             </span>)}
         </td>
       </tr>

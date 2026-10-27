@@ -12,6 +12,7 @@ import HumintTab from "./case/HumintTab";
 import MapTab from "./case/MapTab";
 import WorkflowsTab from "./case/WorkflowsTab";
 import Workbench from "./case/verification/Workbench";
+import FindingValue from "../components/FindingValue";
 import { Badge, Empty, ErrorBox, Loading, fmt, val } from "../components/ui";
 import { api, apiUrl, authHeader, type CaseT, type FindingT, type GraphT } from "../lib/api";
 import { setAppCtx } from "../lib/appContext";
@@ -102,7 +103,7 @@ function Findings({ id }: { id: string }) {
           <tbody>
             {q.data.items.map((f) => (
               <tr key={f.id}>
-                <td>{f.subject}</td><td>{f.predicate}</td><td><code>{val(f.value)}</code></td>
+                <td>{f.subject}</td><td>{f.predicate}</td><td style={{ maxWidth: 420 }}><FindingValue value={f.value} predicate={f.predicate} /></td>
                 <td><Badge v={f.confidence} /><div className="muted">{f.confidence_reason}</div></td>
                 <td>{fmt(f.observed_at)}</td>
                 <td>{f.source_url?.startsWith("http") ? <a href={f.source_url} target="_blank" rel="noreferrer noopener">{f.adapter}</a> : f.adapter}

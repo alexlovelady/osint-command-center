@@ -87,3 +87,16 @@ attacker on the same machine, hardware attacks, a compromised OS credential stor
 | Secrets or others' addresses warehoused from a page | Passages are redacted before storage; script blocks are not read; only addresses are kept | **T** `test_sensitive_material_near_an_address_is_never_stored_or_shown` |
 | The assistant deciding for the analyst | No tool confirms, rejects, merges or promotes; the one action is a bounded passive pass behind an approval card | **T** `test_no_tool_can_confirm_reject_merge_or_promote_an_address` |
 | Self-declared commit author addresses mistaken for ownership | Commit authors are low-confidence, flagged with the author name, and conflict when the name differs | **T** `test_commit_authors_with_other_names_are_conflicts_and_stay_possible` |
+
+## One-click investigation orchestration
+
+| Threat | Control |
+|---|---|
+| A found handle or page widens scope silently | Seeds are the subject's inputs and confirmed associations only (`expansion.seeds`); a lead needs a person's decision and a reason; a rejected lead is refused as an input |
+| Automatic mode contacts third parties the user did not name | Sources that send an input to a third party run only when named in the run's approval list; the manifest shows recipients before the click |
+| Runaway collection | Depth, source-run, per-input, per-pass and runtime caps; failed sources are not retried by the orchestrator; authorization, offline and closed-case checks at every step |
+| A queued run outlives its authorization | Each step re-checks the live authorization and stops with a recorded reason |
+| Bulk review turns an owner's word into proof | Owner confirmation is stored as self-attested, shown separately, and cannot become corroboration; evidence must be about the same site; batches have a preview and an undo |
+| Cross-case access to runs, results or decisions | Every route re-checks case membership and role; outsiders get 404 |
+| Restricted data in progress views or logs | Masked everywhere; phone numbers are masked in manifests and summaries; events carry source names and counts, not values |
+| A model decides or starts research | The Copilot, automation and MCP packages do not import the orchestrator or the review functions (asserted by a test) |

@@ -8,7 +8,7 @@ import UpdatesCard from "./UpdatesCard";
 
 interface S { offline: boolean; max_concurrency: number; data_dir: string }
 
-export default function Settings() {
+export default function Settings({ title = "Settings" }: { title?: string }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["settings"], queryFn: () => api<S>("/settings") });
   const put = useMutation({ mutationFn: (values: Record<string, unknown>) => api<S>("/settings", { method: "PUT", json: { values } }),
@@ -16,7 +16,7 @@ export default function Settings() {
   const [tok, setTok] = useState("");
   return (
     <>
-      <h2>Settings</h2>
+      <h2>{title}</h2>
       {q.isLoading && <Loading what="settings" />}
       {q.isError && <ErrorBox error={q.error} />}
       {q.data && (

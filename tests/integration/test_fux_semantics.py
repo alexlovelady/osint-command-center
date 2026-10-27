@@ -162,3 +162,27 @@ async def test_url_variants_of_one_profile_are_one_account_and_every_count_recon
     assert sum("youtube.com" in u for u in urls) == 1 and sum("venmo.com" in u for u in urls) == 1
     assert a["seen_by_more_than_one_tool"] >= 3 and "one signal, not two" in a["explain"]
     assert a["tool_hits"] >= a["unique_accounts"]
+
+
+async def test_hundreds_of_candidates_stay_fast_and_reconcile(api):
+    import time
+
+    from profile_helpers import seed_candidates
+    p = await make(api, kinds=("email",))
+    await api.post(f"{B}/subjects/{p['sid']}/identifiers", json={"kind": "username", "value": "bulkuser"})
+    st = api.app.state.core
+    sights = []
+    for i in range(300):
+        sights.append(("sherlock", f"https://site{i}.example/bulkuser", f"Site{i}"))
+        sights.append(("maigret", f"https://site{i}.example/bulkuser/about" if i % 2 else f"https://site{i}.example/bulkuser", f"Site{i}"))
+    seed_candidates(st, p["cid"], "bulkuser", sights)
+    t0 = time.perf_counter()
+    acc = (await api.get(f"{B}/subjects/{p['sid']}/master/accounting")).json()
+    inbox = (await api.get(f"{B}/subjects/{p['sid']}/review-inbox")).json()
+    doc = await master(api, p)
+    took = time.perf_counter() - t0
+    assert acc["accounts"]["tool_hits"] == 600 and acc["accounts"]["unique_accounts"] == 450 and acc["accounts"]["seen_by_more_than_one_tool"] == 150
+    assert inbox["by_kind"]["account"] == 450 and len(sec(doc, "online_footprint")["items"]) >= 450
+    assert took < 20, f"too slow: {took:.1f}s"
+    again = (await api.get(f"{B}/subjects/{p['sid']}/master/accounting")).json()                       # repeated refresh adds nothing
+    assert again["accounts"]["unique_accounts"] == 450

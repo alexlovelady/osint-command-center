@@ -6,6 +6,7 @@ import CopilotPanel from "./components/CopilotPanel";
 import NavIcon from "./components/NavIcon";
 import { api, getToken } from "./lib/api";
 import { setAppCtx } from "./lib/appContext";
+import { useAdvanced } from "./lib/mode";
 import CaseView from "./pages/CaseView";
 import Automations from "./pages/Automations";
 import Cases from "./pages/Cases";
@@ -14,14 +15,19 @@ import Overview from "./pages/Overview";
 import Settings from "./pages/Settings";
 import Setup from "./pages/Setup";
 import Tools from "./pages/Tools";
+import Home, { Investigations } from "./pages/investigate/Home";
+import Investigation from "./pages/investigate/Investigation";
+import NewInvestigation from "./pages/investigate/NewInvestigation";
+import Review from "./pages/investigate/Review";
+import SimpleSettings from "./pages/investigate/SimpleSettings";
 import UniversalSearch from "./pages/UniversalSearch";
 
 function useRoute(): [string, (r: string) => void] {
-  const [r, setR] = useState(() => window.location.hash.replace(/^#\/?/, "").split("&")[0] || "overview");
+  const [r, setR] = useState(() => window.location.hash.replace(/^#\/?/, "").split("&")[0] || "");
   useEffect(() => {
     const on = () => {
       getToken(); // a #token=… fragment set after load is captured and scrubbed, not treated as a route
-      setR(window.location.hash.replace(/^#\/?/, "").split("&")[0] || "overview");
+      setR(window.location.hash.replace(/^#\/?/, "").split("&")[0] || "");
     };
     window.addEventListener("hashchange", on);
     return () => window.removeEventListener("hashchange", on);
@@ -29,11 +35,14 @@ function useRoute(): [string, (r: string) => void] {
   return [r, (x) => { window.location.hash = `/${x}`; }];
 }
 
+const SIMPLE_NAV: [string, string][] = [["home", "Home"], ["investigations", "Investigations"], ["review", "Review"]];
 const NAV: [string, string][] = [["overview", "Overview"], ["cases", "Cases"], ["automations", "Automations"], ["darkint", "DARKINT"], ["tools", "Tool Manager"], ["setup", "Setup"], ["settings", "Settings"]];
 
 export default function App() {
   getToken(); // capture + scrub #token=… before routing reads the hash
-  const [route, go] = useRoute();
+  const [rawRoute, go] = useRoute();
+  const [adv, setAdv] = useAdvanced();
+  const route = rawRoute || (adv ? "overview" : "home");
   const [search, setSearch] = useState(false);
   const [copilot, setCopilot] = useState(() => { try { return localStorage.getItem("osintcc.copilot.open") === "1"; } catch { return false; } });
   const toggleCopilot = (v: boolean) => { setCopilot(v); try { localStorage.setItem("osintcc.copilot.open", v ? "1" : "0"); } catch { /* the panel still works without storage */ } };
@@ -64,7 +73,12 @@ export default function App() {
   else if (section === "automations") page = <Automations workflowId={id} />;
   else if (section === "darkint") page = <Darkint openCase={(i) => go(`case/${i}`)} />;
   else if (section === "tools") page = <Tools />;
-  else if (section === "settings") page = <Settings />;
+  else if (section === "settings") page = <><SimpleSettings /><Settings title="Data, network and administration" /></>;
+  else if (section === "home") page = <Home go={go} />;
+  else if (section === "investigations") page = <Investigations go={go} />;
+  else if (section === "new") page = <NewInvestigation go={go} />;
+  else if (section === "investigation" && id) page = <Investigation id={id} go={go} />;
+  else if (section === "review") page = <Review go={go} />;
   else if (section === "setup") page = <Setup />;
   else if (section === "overview") page = <Overview go={go} />;
   else page = <ErrorBox error={new Error("Page not found")} />;
@@ -73,7 +87,11 @@ export default function App() {
       <nav className="side" aria-label="Primary">
         <h1>{productName}</h1>
         <div className="brand-sub">Open source · Lawful · Cited</div>
-        {NAV.map(([k, label]) => (
+        {[...SIMPLE_NAV, ...(adv ? [] : [["settings", "Settings"] as [string, string]])].map(([k, label]) => (
+          <a key={k} href={`#/${k}`} data-tour={`nav-${k}`} aria-current={section === k || (k === "investigations" && section === "investigation") ? "page" : undefined}><NavIcon name={k} />{label}</a>
+        ))}
+        {adv && <div className="brand-sub" style={{ margin: "12px 8px 2px" }}>Workbench</div>}
+        {adv && NAV.map(([k, label]) => (
           <a key={k} href={`#/${k}`} data-tour={`nav-${k}`} aria-current={section === k || (k === "cases" && section === "case") ? "page" : undefined}><NavIcon name={k} />{label}</a>
         ))}
         <p className="muted" style={{ margin: "18px 8px", fontSize: 12 }}>
@@ -84,6 +102,7 @@ export default function App() {
         <header className="top">
           <button onClick={() => setSearch(true)} aria-label="Open universal search (Ctrl+K)">Universal search <kbd>Ctrl+K</kbd></button>
           <button onClick={() => toggleCopilot(!copilot)} aria-pressed={copilot} aria-label="Toggle the AI Copilot">Copilot</button>
+          <button onClick={() => setAdv(!adv)} aria-pressed={adv} aria-label="Advanced mode">Advanced mode</button>
           <span className="grow" />
           <span className="muted">{navigator.onLine ? "network: available" : "offline"}</span>
         </header>

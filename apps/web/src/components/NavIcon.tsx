@@ -1,6 +1,9 @@
 // Simple line icons for the sidebar (decorative: the link text carries the meaning).
 const P: Record<string, string> = {
   overview: "M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10",
+  home: "M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10",
+  investigations: "M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12zM15 15l6 6",
+  review: "M5 4h14v16H5zM8 9l2 2 4-4M8 15h8",
   cases: "M3 7h6l2 2h10v10H3z",
   automations: "M4 5h6v4H4zM14 5h6v4h-6zM9 15h6v4H9zM7 9v3h10V9M12 12v3",
   darkint: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4",

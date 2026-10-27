@@ -2,7 +2,7 @@
 
 Generated from the SQLAlchemy models by `scripts/gen_docs.py`. SQLite in WAL mode with foreign keys on; schema changes only through Alembic migrations (`backend/osintcc/db/migrations`). FTS5 `search_index` is maintained by triggers and is not an ORM table.
 
-88 tables.
+90 tables.
 
 ## ai_calls
 
@@ -927,6 +927,48 @@ A source known to the case ONLY by alias. Reliability/credibility are analyst ju
 | due_at | DATETIME | yes |  |
 | created_by | VARCHAR(80) | no |  |
 | answered_at | DATETIME | yes |  |
+
+## investigation_events
+
+Append-only activity log for a run: the replayable record behind the progress view.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| run_id | VARCHAR(36) | no | FK → investigation_runs |
+| seq | INTEGER | no |  |
+| kind | VARCHAR(24) | no |  |
+| message | TEXT | no |  |
+| detail_json | JSON | no |  |
+| at | DATETIME | no |  |
+
+## investigation_runs
+
+One-click investigation: a durable, bounded orchestration over the existing research, expansion and review services. It owns no results of its own.
+
+| Column | Type | Null | Key |
+|---|---|---|---|
+| id | VARCHAR(36) | no | PK |
+| case_id | VARCHAR(36) | no | FK → cases |
+| subject_id | VARCHAR(36) | no | FK → subjects |
+| kind | VARCHAR(12) | no |  |
+| status | VARCHAR(24) | no |  |
+| phase | VARCHAR(24) | no |  |
+| pass_no | INTEGER | no |  |
+| policy_json | JSON | no |  |
+| approved_sources | JSON | no |  |
+| excluded_sources | JSON | no |  |
+| manifest_json | JSON | no |  |
+| counts_json | JSON | no |  |
+| stop_reason | VARCHAR(40) | no |  |
+| last_error | TEXT | no |  |
+| requested_by | VARCHAR(80) | no |  |
+| idempotency_key | VARCHAR(64) | yes |  |
+| created_at | DATETIME | no |  |
+| updated_at | DATETIME | no |  |
+| started_at | DATETIME | yes |  |
+| finished_at | DATETIME | yes |  |
+| deadline_at | DATETIME | yes |  |
 
 ## job_events
 

@@ -5,6 +5,7 @@ const TOKEN = "e2e-token-local-only";
 const AUTH = { Authorization: `Bearer ${TOKEN}` };
 
 async function openApp(page: Page) {
+  await page.addInitScript(() => localStorage.setItem("osintcc.advanced", "1"));
   await page.goto(`/#token=${TOKEN}`);
   await expect(page.getByRole("heading", { name: "OSINT Command Center" })).toBeVisible();
   await page.evaluate(() => localStorage.setItem("osintcc.copilot.open", "0"));

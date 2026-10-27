@@ -220,6 +220,14 @@ def _finish(db: Session, run: InvestigationRun, status: str, reason: str, messag
     emit(db, run, "finished", message, {"status": status, "reason": reason})
 
 
+def _fresh_since(run: InvestigationRun) -> datetime | None:
+    raw = run.counts_json.get("fresh_since")
+    try:
+        return datetime.fromisoformat(raw) if raw else None
+    except (TypeError, ValueError):
+        return None
+
+
 def _pending_decisions(db: Session, subject: Subject) -> int:
     n = db.scalar(select(func.count()).select_from(ProfileCandidateLink).where(ProfileCandidateLink.subject_id == subject.id, ProfileCandidateLink.state.in_(("candidate", "unsure")))) or 0
     n += db.scalar(select(func.count()).select_from(AssociatedEmail).where(AssociatedEmail.subject_id == subject.id, AssociatedEmail.state == "candidate")) or 0
@@ -256,11 +264,12 @@ def advance(st: Any, run_id: str) -> dict[str, Any]:
         master.repair_lead_types(db, subject)
         candidates.sync_from_findings(db, subject)
         db.flush()
-        plan = expansion.plan(db, subject, case, st.adapters, st.settings, st)
+        fresh = _fresh_since(run)
+        plan = expansion.plan(db, subject, case, st.adapters, st.settings, st, fresh_since=fresh)
         approved, excluded = set(run.approved_sources), set(run.excluded_sources)
         per_ident: dict[str, int] = {}
         for t in _tasks(db, subject):
-            if t.identifier_id and t.status != "cancelled":
+            if t.identifier_id and t.status != "cancelled" and (fresh is None or (_aware(t.created_at) or _now()) >= fresh):
                 per_ident[t.identifier_id] = per_ident.get(t.identifier_id, 0) + 1
         chosen: list[dict[str, Any]] = []
         waiting_approval: set[str] = set()
@@ -295,7 +304,7 @@ def advance(st: Any, run_id: str) -> dict[str, Any]:
         if chosen and stop != "budget_exhausted":
             try:
                 out = expansion.run(db, subject, case, st.adapters, st.settings, actor=run.requested_by, keys=[s["key"] for s in chosen],
-                                    confirmed_sources=sorted({s["source_id"] for s in chosen} & approved))
+                                    confirmed_sources=sorted({s["source_id"] for s in chosen} & approved), fresh_since=fresh)
             except ProfileError as exc:
                 run.last_error = exc.message[:300]
                 emit(db, run, "error", f"A step could not be started: {exc.message[:160]}")
@@ -354,6 +363,11 @@ async def drive(st: Any, run_id: str) -> None:
             await asyncio.sleep(0.5)
         else:
             await asyncio.sleep(0)
+    with st.sm() as db:                                                   # the loop ran out: say so instead of leaving the run looking busy forever
+        run = db.get(InvestigationRun, run_id)
+        if run and run.status in ACTIVE:
+            _finish(db, run, "complete_with_limits", "stalled", "Stopped waiting: a check did not finish. Use Check for more to continue.")
+            db.commit()
 
 
 def launch(st: Any, run_id: str) -> None:
@@ -385,7 +399,7 @@ def pause(db: Session, run: InvestigationRun, actor: str) -> None:
 
 
 def resume(db: Session, run: InvestigationRun, actor: str) -> None:
-    if run.status not in ("paused", "awaiting_review", "complete_with_limits", "failed", "draft"):
+    if run.status not in ("paused", "awaiting_review", "complete_with_limits", "completed", "failed", "draft"):
         raise ProfileError("not_resumable", "this investigation is running or finished")
     subject = db.get(Subject, run.subject_id)
     assert subject is not None
@@ -398,6 +412,18 @@ def resume(db: Session, run: InvestigationRun, actor: str) -> None:
         run.started_at = _now()
     emit(db, run, "resumed", "Resumed")
     audit.record(db, "investigation.resume", actor=actor, case_id=run.case_id, resource_type="investigation", resource_id=run.id)
+
+
+def refresh(db: Session, run: InvestigationRun, actor: str) -> None:
+    """Run the permitted checks again, now. Earlier results and tasks stay as history; the same limits and approvals apply."""
+    if run.status in ACTIVE:
+        raise ProfileError("not_resumable", "this investigation is still running")
+    if run.status == "cancelled":
+        raise ProfileError("not_resumable", "a stopped investigation cannot be refreshed: start a new one")
+    run.counts_json = {**run.counts_json, "fresh_since": _now().isoformat()}
+    resume(db, run, actor)
+    emit(db, run, "refresh", "Refresh requested: permitted checks will run again within the same limits")
+    audit.record(db, "investigation.refresh", actor=actor, case_id=run.case_id, resource_type="investigation", resource_id=run.id)
 
 
 def cancel(db: Session, run: InvestigationRun, actor: str) -> None:
@@ -470,18 +496,19 @@ def summary(db: Session, st: Any, run: InvestigationRun, role: str = "owner") ->
     cov = research.coverage(db, subject, st.adapters)
     analysis = gaps.analyze(db, st, subject, case, st.adapters, st.settings, role=role)
     inbox = review_inbox(db, st, subject, role=role)
-    limits = _limits(db, st, run, subject, case)
+    man = build_manifest(db, st, subject, case)
+    limits = _limits(run, man)
     return {"run": {"id": run.id, "status": run.status, "kind": run.kind, "policy": run.policy_json, "approved_sources": run.approved_sources, "excluded_sources": run.excluded_sources,
                     "stop_reason": run.stop_reason, "created_at": run.created_at, "requested_by": run.requested_by},
             "subject": {"id": subject.id, "case_id": case.id, "display_name": subject.display_name, "type": subject.type, "mode": subject.mode, "purpose": subject.purpose},
             "authorization": consent.current_status(db, subject), "progress": prog, "facts": {k: v[:12] for k, v in facts.items()}, "fact_counts": {k: len(v) for k, v in facts.items()},
             "possible_associations": possible, "coverage": cov["categories"], "accounting": accounting.pipeline(db, subject), "decisions": {"open": len(inbox["items"]), "top": inbox["items"][:3]},
-            "limits": limits, "next_actions": analysis["next_actions"][:5], "email_first": analysis["email_first"], "manifest": run.manifest_json,
+            "limits": limits, "next_actions": analysis["next_actions"][:5], "email_first": analysis["email_first"],
+            "manifest": {"counts": man["counts"], "rows": man["rows"], "third_parties": man["third_parties"], "approvable": man["approvable"]},
             "invite": "Want better coverage? Add another email, username, business name or owned domain. One is enough to start; each extra input gives the sources more to work with."}
 
 
-def _limits(db: Session, st: Any, run: InvestigationRun, subject: Subject, case: Case) -> list[dict[str, str]]:
-    man = build_manifest(db, st, subject, case)
+def _limits(run: InvestigationRun, man: dict[str, Any]) -> list[dict[str, str]]:
     out = []
     for r in man["rows"]:
         if r["status"] in ("needs_key", "needs_authorization", "unsupported_input", "not_installed", "separate_approval", "needs_approval"):
@@ -589,3 +616,26 @@ def apply_reviews(db: Session, subject: Subject, ids: list[str], action: str, *,
             exceptions.append({"id": f"item:{iid}", "reason": exc.message})
     audit.record(db, "investigation.review", actor=actor, case_id=subject.case_id, resource_type="subject", resource_id=subject.id, metadata={"action": action, "count": done, "bulk_id": bulk})
     return {"preview": False, "applied": done, "bulk_id": bulk, **impact, "undo": "Accounts decided in this batch can be undone with the bulk id; other items can be reopened one by one."}
+
+
+def use_as_input(db: Session, subject: Subject, ref: str, *, role: str, actor: str, basis: str) -> dict[str, Any]:
+    """A lead (or a confirmed address / account) becomes a starting point only by this deliberate act, with a reason. The authorization still decides what runs from it."""
+    if role == "viewer":
+        raise ProfileError("forbidden", "viewers cannot change inputs")
+    kind, _, raw = ref.partition(":")
+    if kind == "item":
+        it = master.promote_to_input(db, subject, f"item:{raw}", role=role, actor=actor, basis=basis)
+        return {"input": it.type, "id": f"item:{it.id}"}
+    if kind == "seed":
+        em = db.get(AssociatedEmail, raw)
+        if em is not None and em.subject_id == subject.id:
+            ident = emails.promote(db, subject, em.id, actor)
+            return {"input": "email", "id": ident.id}
+        c = db.get(ProfileCandidateLink, raw)
+        if c is not None and c.subject_id == subject.id:
+            if c.state != "confirmed":
+                raise ProfileError("not_confirmed", "only a confirmed account can be used as an input")
+            from .service import add_identifier
+            ident = add_identifier(db, subject, "url", c.canonical_url, actor=actor)
+            return {"input": "url", "id": ident.id}
+    raise ProfileError("not_found", "that item cannot be used as an input")

@@ -189,3 +189,7 @@ Baseline before this work: tag `pre-aiv-darkint` (797 backend tests, 57 vitest, 
 ## Master Target Profile Enrichment (2026-10-26)
 
 Implemented per `docs/master-profile-status.md`: Master Profile Editor (migration 0016 `profile_items`, `profile/master.py`, `profile/gaps.py`, `/subjects/{id}/master*`, UI in the Profile tab), the email-first research fix (domain sources no longer accept email; shared-provider list; four exact-email adapters, fixture-tested), per-category research gaps and next actions, restricted-value handling and token-only identity references. Verified: ruff, mypy, 1057 backend tests, 77 vitest tests, Playwright (with axe), frozen-sidecar smoke 62/62. Not live-verified against any third-party service.
+
+## One-click investigation and simplified experience (2026-10-27)
+
+Implemented per `docs/one-click-investigation.md`: data-semantics fixes (handle vs name, repository vs profile, self-attested vs corroborated, evidence applicability, reclassification, result accounting), the durable orchestrator and API (migration 0017), the simple UI (Home, Investigations, New investigation, Investigation with Overview/Profile/Findings/Activity & Coverage, Review, Settings) and the Advanced-mode switch. Fixture-tested only for the third-party sources; none was exercised live.

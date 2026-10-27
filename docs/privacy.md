@@ -93,3 +93,11 @@ cases you name when you start it, to the local client that launched it.
 ## Associated emails and the cross-INT plan
 
 An address is stored as a **candidate** only when a stored source shows it; the passage around it is redacted for secrets and for other people's addresses before storage, and viewers see addresses masked and no passages. Nothing is guessed or tried. A candidate is not an input: it is never sent to a breach provider and no research runs from it. Only an address a person **confirmed** (with the owner's attestation or independent corroboration, recorded as such) can be added as an input, and then only inside what the authorization covers: a client consent that names its identifiers does not cover a newly found address until the owner extends it. A rejected address is never researched again. The plan runs passive, authorized steps only, within depth and budget limits; exposure checks and active verification keep their own previews and approvals. A cloud model receives counts and generic text only.
+
+## One-click investigation
+
+- An investigation starts only with a recorded authorization. Without one it stays a draft and nothing is contacted.
+- Before it starts, the plan lists which providers would receive which input (host names included). Pressing Investigate approves exactly the providers left ticked; everything else is shown as needing approval. The investigation record stores that approval list and every step it took (`investigation_runs`, `investigation_events`).
+- The investigation never researches from a found handle, address or link until a person confirms it and chooses Use as input. A mailbox provider's domain, or a domain implied by an email address, is never researched.
+- Phone numbers, dates of birth, addresses and identity references stay masked in every API response, event, report and model prompt; phone numbers are not searched at all.
+- Nothing is sent to a cloud model. Local AI is optional and does not receive restricted values.

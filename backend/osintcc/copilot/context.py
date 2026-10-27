@@ -38,7 +38,7 @@ from ..db.models import (
 from .kb import KnowledgeBase
 
 RESTRICTED = ("RESTRICTED", "SECRET")
-ROUTES = {"overview", "cases", "tools", "setup", "settings", "case", "automations"}
+ROUTES = {"overview", "cases", "tools", "setup", "settings", "case", "automations", "home", "investigations", "new", "investigation", "review"}
 AUTO_TABS = ["Library", "My automations", "Runs", "Inbox", "Settings", "Builder"]
 TABS = ["Search", "Plans", "Findings", "Graph", "Timeline", "Map", "Evidence", "Imports", "Analysis", "Cross-links", "Workflows", "Verification", "Humint", "AI", "Hardware", "Notes", "Reports"]
 CONF_RANK = {"high": 3, "medium": 2, "low": 1, "unknown": 0}

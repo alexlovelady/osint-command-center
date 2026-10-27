@@ -299,8 +299,13 @@ async def test_tp10_no_model_path_can_change_candidate_or_claim_state():
     import osintcc.profile.service as svc
     src = pathlib.Path(__file__).resolve().parents[2] / "backend" / "osintcc"
     users = [p.name for p in src.rglob("*.py") if ("candidates.review(" in p.read_text(encoding="utf8") or "review_claim(" in p.read_text(encoding="utf8"))]
-    assert set(users) <= {"profile.py", "candidates.py", "service.py", "lifecycle.py", "master.py"}, users   # lifecycle: a person resolving a correction; master: the editor, behind a human API call
+    assert set(users) <= {"profile.py", "candidates.py", "service.py", "lifecycle.py", "master.py", "investigate.py"}, users   # lifecycle: a person resolving a correction; master: the editor, behind a human API call
     assert callable(cand.review) and callable(svc.review_claim)
+    # the one-click investigation may DECIDE only through its human-facing API route: no model-facing package imports it
+    for pkg in ("copilot", "automations", "mcp", "ai"):
+        d = src / pkg
+        if d.is_dir():
+            assert not [f.name for f in d.rglob("*.py") if "profile.investigate" in f.read_text(encoding="utf8") or "profile import investigate" in f.read_text(encoding="utf8")], pkg
 
 
 async def test_timeline_has_basis_and_is_ordered(api):

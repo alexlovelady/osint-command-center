@@ -38,11 +38,14 @@ def pipeline(db: Session, subject: Subject) -> dict[str, Any]:
         finds = list(db.scalars(select(Finding).where(Finding.case_id == subject.case_id, Finding.adapter_id == t.source_id, Finding.run_id.in_(run_ids)))) if run_ids else []
         cand = [c for c in links if t.source_id in c.adapters]
         its = [i for i in items if i.collection_method == f"adapter:{t.source_id}"]
-        retrieved = sum(x.result_count for x in mine)
+        latest: dict[str | None, ResearchTask] = {}
+        for x in mine:
+            latest[x.identifier_id] = x                      # a refresh adds a newer task; only the latest per input counts as "returned"
+        retrieved = sum(x.result_count for x in latest.values())
         rows.append({"source_id": t.source_id, "source": _label(t.source_id), "status": mine[-1].status, "runs": len(mine), "retrieved": retrieved, "findings": len(finds),
                      "evidence": len({f.evidence_id for f in finds}), "candidate_accounts": len(cand), "profile_items": len(its),
                      "shared_with_other_tools": sum(1 for c in cand if len(c.adapters) > 1),
-                     "explain": _explain(retrieved, len(finds), len(cand), len(its)), "limitations": mine[-1].limitations})
+                     "explain": _explain(retrieved, len(finds), len(cand), len(its)), "limitations": mine[-1].limitations or _cap_note(t.source_id, retrieved)})
     raw = sum(len(c.finding_ids) for c in links)               # every stored sighting of a profile page, by any tool
     for aid in sorted({a for c in links for a in c.adapters} - seen):
         cand = [c for c in links if aid in c.adapters]
@@ -77,3 +80,12 @@ def _explain(retrieved: int, findings: int, cands: int, items: int) -> str:
     if items:
         parts.append(f"{items} profile entries (duplicates of an existing entry are not added again)")
     return " → ".join(parts)
+
+
+CAPS = {"github_email_search": (5, "GitHub returns at most 5 results per query here, so a full result set may be larger than what is shown. A run that hits the cap is a partial look, not a full count."),
+        "web_search_email": (10, "A web search returns a limited page of results; further pages were not requested.")}
+
+
+def _cap_note(source_id: str, retrieved: int) -> str:
+    cap = CAPS.get(source_id)
+    return cap[1] if cap and retrieved >= cap[0] else ""

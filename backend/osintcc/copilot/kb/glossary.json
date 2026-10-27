@@ -218,5 +218,21 @@
  {
   "term": "Shared mailbox provider",
   "definition": "A domain such as gmail.com that thousands of unrelated people use. An address there says nothing about who owns the domain, so domain, DNS and certificate lookups are never run from it."
+ },
+ {
+  "term": "Complete, with limits",
+  "definition": "An investigation that ran every permitted check but could not use some methods (a missing key, no supported source for an input, a limit reached). The limits are listed; it is never described as complete coverage."
+ },
+ {
+  "term": "Independently corroborated",
+  "definition": "Supported by evidence that is not the subject's own statement and not just a tool seeing the same handle. Different from self-attested."
+ },
+ {
+  "term": "Lead",
+  "definition": "A handle, address, link or fact a source showed next to something you entered. It is a candidate, not a fact, and is not researched further until you confirm it and choose Use as input."
+ },
+ {
+  "term": "Investigation limits",
+  "definition": "Bounds on one investigation: leads followed at most 2 steps out, at most 100 source runs, 10 per input, 30 minutes. Each stop is recorded with its reason."
  }
 ]

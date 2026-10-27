@@ -293,3 +293,53 @@ async def test_smart_paste_guesses_types_and_phone_is_masked_everywhere(api, wor
     p = await prepare(api, [{"kind": "phone", "value": "+1 555 010 4242"}, {"kind": "email", "value": "x@example.org"}])
     master = (await api.get(f"{B}/subjects/{p['subject_id']}/master")).json()
     assert "4242" not in str(master) and "555 010" not in str(master)
+
+
+async def test_a_lead_that_repeats_an_input_is_one_entry_with_more_evidence(api, world):
+    p = await prepare(api, [{"kind": "email", "value": "alex@gmail.com"}, {"kind": "username", "value": "alexlovelady"}], start=True, approved_sources="listed")
+    await finish(api, p["run"]["id"])
+    doc = (await api.get(f"{B}/subjects/{p['subject_id']}/master")).json()
+    foot = [i for s in doc["sections"] if s["key"] == "online_footprint" for i in s["items"] if i["value"] == "alexlovelady" and i["type"] == "username"]
+    assert len(foot) == 1 and foot[0]["is_input"] is True and foot[0]["verification_state"] == "unassessed"      # the lead was attached to the input, not added beside it
+    assert len(foot[0]["evidence"]) >= 1                                                                    # and it shows where else the handle was seen
+
+
+async def test_use_as_input_is_a_deliberate_step_that_needs_a_reason_and_confirmed_state(api, world):
+    p = await prepare(api, [{"kind": "email", "value": "alex@gmail.com"}], start=True, approved_sources="listed")
+    await finish(api, p["run"]["id"])
+    inbox = (await api.get(f"{B}/subjects/{p['subject_id']}/review-inbox")).json()
+    handle = next(i for i in inbox["items"] if i["kind"] == "item" and i["title"] == "alexlovelady")
+    no = await api.post(f"{B}/subjects/{p['subject_id']}/review-inbox/use-as-input", json={"id": handle["id"], "basis": ""})
+    assert no.status_code == 422 and no.json()["code"] == "basis_required"
+    ok = await api.post(f"{B}/subjects/{p['subject_id']}/review-inbox/use-as-input", json={"id": handle["id"], "basis": "I checked: it is my handle"})
+    assert ok.status_code == 200
+    assert {i["kind"] for i in (await api.get(f"{B}/subjects/{p['subject_id']}/identifiers")).json()["items"]} == {"email", "username"}
+    assert (await api.post(f"{B}/subjects/{p['subject_id']}/review-inbox/use-as-input", json={"id": "seed:nope", "basis": "x"})).json()["code"] == "not_found"
+
+
+async def test_an_organization_records_how_the_person_is_connected_to_it(api, world):
+    p = await prepare(api, [{"kind": "organization", "value": "Acme Widgets", "relationship": "founder", "since": "2020"}], kind="business", mode="organization")
+    doc = (await api.get(f"{B}/subjects/{p['subject_id']}/master")).json()
+    rel = [i for s in doc["sections"] for i in s["items"] if i["value"] == "Founder of Acme Widgets"]
+    assert rel and rel[0]["origin"] == "analyst_supplied" and rel[0]["verification_state"] != "corroborated"       # a stated connection is a claim, not a verified fact
+
+
+async def test_refresh_runs_the_permitted_checks_again_and_resume_does_not(api, world):
+    p = await prepare(api, [{"kind": "email", "value": "alex@gmail.com"}], start=True, approved_sources="listed")
+    rid = p["run"]["id"]
+    await finish(api, rid)
+    first = sum("api.gravatar.com" in u for u in world["seen"])
+    assert first >= 1
+    assert (await api.post(f"{B}/investigations/{rid}/resume")).status_code == 200
+    await finish(api, rid)
+    assert sum("api.gravatar.com" in u for u in world["seen"]) == first                                 # resume only looks for new work: nothing repeats
+    assert (await api.post(f"{B}/investigations/{rid}/refresh")).status_code == 200
+    await finish(api, rid)
+    assert sum("api.gravatar.com" in u for u in world["seen"]) > first                                  # refresh runs them again, inside the same limits
+    ev = (await api.get(f"{B}/investigations/{rid}/events")).json()["events"]
+    assert any(e["kind"] == "refresh" for e in ev)
+    summ = (await api.get(f"{B}/investigations/{rid}/summary")).json()
+    grav = [s for s in summ["accounting"]["sources"] if s["source_id"] == "gravatar_email"][0]
+    assert grav["runs"] >= 2 and grav["retrieved"] == 0                                                 # history kept; "returned" counts the latest run only
+    assert (await api.post(f"{B}/investigations/{rid}/cancel")).status_code == 200
+    assert (await api.post(f"{B}/investigations/{rid}/refresh")).status_code == 422

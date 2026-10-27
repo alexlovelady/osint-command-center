@@ -11,7 +11,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: { baseURL: `http://127.0.0.1:${WEB}`, channel: "msedge", trace: "retain-on-failure", screenshot: "only-on-failure" },
   webServer: [
-    { command: `uv run python ../../scripts/e2e_server.py ${API} ${WEB}`, url: `http://127.0.0.1:${API}/api/v1/health/live`, reuseExistingServer: false, timeout: 60_000 },
+    { command: `uv run python ../../scripts/${process.env.E2E_SERVER ?? "e2e_server.py"} ${API} ${WEB} ${process.env.E2E_SERVER_ARGS ?? ""}`, url: `http://127.0.0.1:${API}/api/v1/health/live`, reuseExistingServer: false, timeout: 60_000 },
     { command: `pnpm exec vite --host 127.0.0.1 --port ${WEB} --strictPort`, url: `http://127.0.0.1:${WEB}`, reuseExistingServer: false, timeout: 60_000,
       env: { OSINTCC_BACKEND: `http://127.0.0.1:${API}` } },
   ],

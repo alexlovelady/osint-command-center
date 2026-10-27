@@ -5,6 +5,7 @@ const TOKEN = "e2e-token-local-only";
 const EML = "From: Alice <alice@example.org>\r\nTo: bob@example.net\r\nSubject: hello\r\nDate: Mon, 03 Mar 2025 10:00:00 +0000\r\nMessage-ID: <1@example.org>\r\n\r\nSee https://example.org/x\r\n";
 
 async function openApp(page: Page) {
+  await page.addInitScript(() => localStorage.setItem("osintcc.advanced", "1"));
   await page.goto(`/#token=${TOKEN}`);
   await expect(page.getByRole("heading", { name: "OSINT Command Center" })).toBeVisible();
 }

@@ -26,7 +26,7 @@ const prof = (role: string) => ({ subject: { id: "s1", display_name: "Jane" }, c
 const item = (o: Partial<MasterItem>): MasterItem => ({ id: "item:1", category: "contact", type: "email", type_label: "Email address", value: "jane@acme-example.com", masked: false, restricted: false, evidence: [],
   origin: "analyst_supplied", confidence: "unknown", verification_state: "unassessed", state_label: "Unassessed", is_input: true, feeds_research: true, caveat: "", ...o });
 const sec = (key: string, title: string, items: MasterItem[], types: string[]): MasterSection => ({ key, title, items, types, empty_note: items.length ? "" : "Not researched. An empty section is unknown, never evidence that nothing exists.",
-  counts: { unassessed: items.length, candidate: 0, corroborated: 0, conflicting: 0, rejected: 0, not_available: 0 } });
+  counts: { unassessed: items.length, candidate: 0, corroborated: 0, conflicting: 0, rejected: 0, not_available: 0, self_attested: 0 } });
 const doc = (role: string, over: Partial<MasterDoc> = {}): MasterDoc => ({
   subject_id: "s1", role, restricted_hidden: 0, notice: "Inputs are what you provided. An empty field means not researched.", restricted_note: "Restricted: shown masked.",
   states: [{ key: "unassessed", label: "Unassessed" }, { key: "candidate", label: "Candidate" }, { key: "corroborated", label: "Corroborated" }, { key: "conflicting", label: "Conflicting" }, { key: "rejected", label: "Rejected" }, { key: "not_available", label: "Not available" }],
