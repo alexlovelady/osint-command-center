@@ -23,6 +23,7 @@ import secrets
 import uuid
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import urlsplit
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -42,15 +43,18 @@ from ..db.models import (
     SubjectIdentifier,
 )
 from ..telemetry import audit
-from . import consent, emails
+from . import candidates, consent, emails
 from .normalize import IdentifierError, canonical_url, normalize_identifier
-from .service import ProfileError, add_claim, add_identifier, remove_identifier, review_claim
+from .service import ProfileError, add_claim, add_identifier, evidence_refs, remove_identifier, review_claim
 
 CATEGORIES = [("identity", "Identity"), ("contact", "Contact"), ("locations", "Locations"), ("education", "Education"), ("employment", "Employment"), ("online_footprint", "Online footprint"),
               ("business", "Business and organizations"), ("devices", "Devices and infrastructure"), ("images_documents", "Images and documents"), ("security_exposure", "Security exposure"),
               ("relationships", "Relationships"), ("timeline", "Timeline"), ("custom", "Custom attributes")]
 STATES = ("unassessed", "candidate", "corroborated", "conflicting", "rejected", "not_available")
-STATE_LABEL = {"unassessed": "Unassessed", "candidate": "Candidate", "corroborated": "Corroborated", "conflicting": "Conflicting", "rejected": "Rejected", "not_available": "Not available"}
+# Stored states are STATES. "self_attested" is a DISPLAY state: an owner's own confirmation, shown apart from independent corroboration.
+DISPLAY_STATES = (*STATES, "self_attested")
+STATE_LABEL = {"unassessed": "Unassessed", "candidate": "Candidate", "corroborated": "Independently corroborated", "conflicting": "Conflicting", "rejected": "Rejected", "not_available": "Not available",
+               "self_attested": "Self-attested"}
 ORIGINS = ("subject_provided", "analyst_supplied", "published_source", "verified_provider", "discovered")
 METHODS = ("manual", "import")
 RESTRICTED_NOTE = "Restricted: shown masked. An owner can reveal it with a reason; the reveal is audited. It is never exported, indexed or sent to a model."
@@ -66,7 +70,7 @@ TYPES: dict[str, dict[str, Any]] = {
     "full_name": T("identity", "Full name", identifier="name"), "alias": T("identity", "Alias or alternate name", identifier="alias"),
     "date_of_birth": T("identity", "Date of birth", restricted=True, single=True), "biography": T("identity", "Publicly documented biographical note"),
     "national_id_ref": T("identity", "Identity-document or SSN reference (token only)", reference=True),
-    "email": T("contact", "Email address", identifier="email"), "username": T("contact", "Username", identifier="username"), "phone": T("contact", "Phone number", restricted=True),
+    "email": T("contact", "Email address", identifier="email"), "username": T("online_footprint", "Username or handle", identifier="username"), "phone": T("contact", "Phone number", restricted=True),
     "business_contact": T("contact", "Published business contact point", claim="professional_contact"),
     "place": T("locations", "General place", claim="location_public", sensitivity="RESTRICTED"), "location_history": T("locations", "Location history entry", restricted=True),
     "residential_address": T("locations", "Residential address", restricted=True, single=True),
@@ -74,7 +78,7 @@ TYPES: dict[str, dict[str, Any]] = {
     "publication": T("education", "Publication", claim="publication"),
     "employer": T("employment", "Employer", claim="employer"), "position": T("employment", "Position", claim="role"), "association": T("employment", "Professional association", claim="business_association"),
     "profile_url": T("online_footprint", "Social, developer, forum or gaming profile", identifier="url"), "website": T("online_footprint", "Website", identifier="url"),
-    "archived_profile": T("online_footprint", "Archived profile page"),
+    "archived_profile": T("online_footprint", "Archived profile page"), "repository": T("online_footprint", "Public code repository"),
     "organization": T("business", "Organization affiliation", identifier="organization"), "filing": T("business", "Public filing or registration"), "owned_domain": T("business", "Owned or authorized domain", identifier="domain"),
     "device": T("devices", "Authorized device or asset"),
     "document": T("images_documents", "Document reference", claim="document"),
@@ -88,6 +92,11 @@ _DATE = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")
 
 def _now() -> datetime:
     return datetime.now(UTC)
+
+
+def _cat(it: ProfileItem) -> str:
+    """The category an item is shown under: its type's own, so a reclassified or corrected item moves with its type."""
+    return str(TYPES.get(it.type, TYPES["custom"])["category"]) if it.type != "custom" else it.category
 
 
 def _aware(d: datetime | None) -> datetime | None:
@@ -217,6 +226,115 @@ def sync_existing(db: Session, subject: Subject, actor: str = "system") -> int:
     return n
 
 
+_HANDLE = re.compile(r"^@?[A-Za-z0-9][A-Za-z0-9_.\-]{1,38}$")
+_CODE_HOSTS = ("github.com", "gitlab.com", "bitbucket.org", "codeberg.org", "sr.ht")
+
+
+def classify_lead(kind: str, raw: str, via: str = "") -> tuple[str | None, str]:
+    """(item type, why) for a value a source showed next to an address. A git author name or profile name that is one handle-shaped token is a HANDLE, not a person's name,
+    and a repository link is not a profile link. The raw value and the source's own label are kept either way."""
+    t = LEAD_TYPES.get(kind)
+    v = raw.strip()
+    if kind == "name" and v and " " not in v and _HANDLE.match(v):
+        low = v.lstrip("@")
+        if low == low.lower() or any(c in low for c in "_-.0123456789") or low.casefold() == via.casefold():
+            return "username", "one handle-shaped word with no spaces: treated as an account handle, not a legal name (the source's own label was 'name')"
+    if kind == "url":
+        try:
+            u = urlsplit(canonical_url(v))
+        except ValueError:
+            return t, ""
+        parts = [x for x in u.path.split("/") if x]
+        if (u.hostname or "") in _CODE_HOSTS and len(parts) >= 2:
+            return "repository", "a repository page, not the person's profile page"
+    return t, ""
+
+
+def repair_lead_types(db: Session, subject: Subject) -> int:
+    """Items an earlier version typed wrongly (a handle as a full name, a repository as a profile link) are corrected once, with the original kept and the change reversible.
+    Only untouched discovered candidates are changed: anything a person has reviewed or edited is left alone."""
+    n = 0
+    for it in db.scalars(select(ProfileItem).where(ProfileItem.subject_id == subject.id, ProfileItem.origin == "discovered", ProfileItem.status == "active", ProfileItem.verification_state == "candidate")):
+        if "classification" in it.attributes or it.type not in ("full_name", "profile_url"):
+            continue
+        kind = "name" if it.type == "full_name" else "url"
+        want, why = classify_lead(kind, it.value, str(it.attributes.get("via", "")))
+        if want and want != it.type and why:
+            _retype(db, it, want, actor="system", reason="automatic correction: " + why, automatic=True)
+            n += 1
+    return n
+
+
+def _retype(db: Session, it: ProfileItem, to_type: str, *, actor: str, reason: str, automatic: bool = False) -> None:
+    disp, norm = _normalize(to_type, it.value)
+    cls = dict(it.attributes.get("classification") or {})
+    hist = list(cls.get("history") or [])
+    if not hist:
+        cls["original"] = {"type": it.type, "category": _cat(it), "automatic": True}
+    hist.append({"from": it.type, "to": to_type, "by": actor, "reason": reason[:300], "at": _now().isoformat(), "automatic": automatic, "value": it.value})
+    cls["history"] = hist
+    it.attributes = {**it.attributes, "classification": cls}
+    it.type, it.category, it.value, it.normalized_value = to_type, TYPES[to_type]["category"], disp, norm
+    it.version += 1
+    it.updated_at = _now()
+    audit.record(db, "profile.item_reclassify", actor=actor, case_id=it.case_id, resource_type="profile_item", resource_id=it.id, metadata={"from": hist[-1]["from"], "to": to_type, "automatic": automatic})
+
+
+def preview_reclassify(db: Session, subject: Subject, item_id: str, to_type: str) -> dict[str, Any]:
+    it = _get(db, subject, item_id)
+    _check_reclassify(it, to_type)
+    disp, norm = _normalize(to_type, it.value)
+    return {"item": f"item:{it.id}", "from_type": it.type, "to_type": to_type, "from_category": _cat(it), "to_category": TYPES[to_type]["category"], "value": disp, "normalized_value": norm,
+            "effects": [f"Moves from {_cat(it).replace('_', ' ')} to {TYPES[to_type]['category'].replace('_', ' ')}.", "The extracted value, source, evidence and dates are unchanged.",
+                        "The verification state and confidence are unchanged: retyping is not verification.", "The earlier type stays in the history and the change can be undone."],
+            "feeds_research": False}
+
+
+def _check_reclassify(it: ProfileItem, to_type: str) -> None:
+    if to_type not in TYPES or to_type == "custom":
+        raise ProfileError("invalid_type", "choose a type from the catalog")
+    a, b = TYPES.get(it.type, TYPES["custom"]), TYPES[to_type]
+    if a["restricted"] or b["restricted"] or a["reference"] or b["reference"]:
+        raise ProfileError("restricted_type", "restricted types cannot be created by reclassifying")
+    if it.backing_kind is not None or it.is_input:
+        raise ProfileError("backed_item_fixed", "an input or a reviewed claim keeps its type: add it again with the right type and retire this one, so research history stays attached")
+    if it.type == to_type:
+        raise ProfileError("same_type", "that is already its type")
+
+
+def reclassify(db: Session, subject: Subject, item_id: str, *, to_type: str, role: str, actor: str, reason: str) -> ProfileItem:
+    if role == "viewer":
+        raise ProfileError("forbidden", "viewers cannot reclassify items")
+    if len(reason.strip()) < 5:
+        raise ProfileError("reason_required", "say why the type is wrong (a few words)")
+    it = _get(db, subject, item_id)
+    _check_reclassify(it, to_type)
+    _retype(db, it, to_type, actor=actor, reason=reason.strip())
+    return it
+
+
+def undo_reclassify(db: Session, subject: Subject, item_id: str, *, role: str, actor: str) -> ProfileItem:
+    if role == "viewer":
+        raise ProfileError("forbidden", "viewers cannot reclassify items")
+    it = _get(db, subject, item_id)
+    hist = list((it.attributes.get("classification") or {}).get("history") or [])
+    if not hist:
+        raise ProfileError("nothing_to_undo", "this item has never been reclassified")
+    last = hist[-1]
+    if last["to"] != it.type:
+        raise ProfileError("changed_since", "the type was changed again; undo the later change first")
+    cls = dict(it.attributes["classification"])
+    cls["history"] = hist[:-1]
+    cls["locked"] = True                                      # an undone correction is not applied again automatically
+    disp, norm = _normalize(last["from"], it.value)
+    it.type, it.category, it.value, it.normalized_value = last["from"], TYPES[last["from"]]["category"], disp, norm
+    it.attributes = {**it.attributes, "classification": cls}
+    it.version += 1
+    it.updated_at = _now()
+    audit.record(db, "profile.item_reclassify_undo", actor=actor, case_id=subject.case_id, resource_type="profile_item", resource_id=it.id, metadata={"from": last["to"], "to": last["from"]})
+    return it
+
+
 def sweep_leads(db: Session, subject: Subject, actor: str = "system") -> int:
     """Turn cited exact-email references into candidate items. A lead is a CANDIDATE: never an input, never a fact."""
     runs = {t.run_id: t for t in db.scalars(select(ResearchTask).where(ResearchTask.subject_id == subject.id)) if t.run_id}
@@ -227,10 +345,12 @@ def sweep_leads(db: Session, subject: Subject, actor: str = "system") -> int:
             continue
         v = f.value_json
         for kind, vals in (v.get("leads") or {}).items():
-            t = LEAD_TYPES.get(kind)
-            if t is None:
+            if kind not in LEAD_TYPES:
                 continue
             for raw in vals:
+                t, why = classify_lead(kind, raw, str((v.get("leads") or {}).get("username", [""])[0] if (v.get("leads") or {}).get("username") else ""))
+                if t is None:
+                    continue
                 try:
                     disp, norm = _normalize(t, raw)
                 except ProfileError:
@@ -241,7 +361,8 @@ def sweep_leads(db: Session, subject: Subject, actor: str = "system") -> int:
                 db.add(ProfileItem(subject_id=subject.id, case_id=subject.case_id, category=TYPES[t]["category"], type=t, value=disp, normalized_value=norm, source_id=str(v.get("source") or f.adapter_id),
                                    evidence_ids=[f.evidence_id], collection_method=f"adapter:{f.adapter_id}", origin="discovered", recorded_by=actor, observed_at=f.observed_at, confidence=f.confidence,
                                    verification_state="candidate", sensitivity=TYPES[t]["sensitivity"], scope_id=scope, attributes={"match": v.get("match", ""), "via": v.get("via_kind", ""),
-                                                                                                                                      "reason": f.confidence_reason, "reference": v.get("url", "")},
+                                                                                                                                      "reason": f.confidence_reason, "reference": v.get("url", ""), "label_from_source": kind,
+                                                                                                                                      **({"classification": {"original": {"type": LEAD_TYPES[kind], "automatic": True}, "basis": why, "history": [{"from": LEAD_TYPES[kind], "to": t, "by": "system", "automatic": True, "reason": why, "at": _now().isoformat(), "value": disp}]}} if why else {})},
                                    retention_policy={"days": subject.retention_days}))
                 n += 1
     db.flush()
@@ -279,7 +400,7 @@ def item_dict(db: Session, it: ProfileItem, *, role: str, conflicting: bool = Fa
         e = db.get(Evidence, eid)
         if e:
             ev.append({"id": e.id, "title": e.title, "kind": e.kind, "sha256": e.sha256, "url": e.original_url})
-    return {"id": f"item:{it.id}", "category": it.category, "type": it.type, "type_label": spec["label"], "custom_type": it.custom_type, "value": shown, "masked": restricted and not revealed,
+    return {"id": f"item:{it.id}", "category": _cat(it), "type": it.type, "type_label": spec["label"], "custom_type": it.custom_type, "value": shown, "masked": restricted and not revealed,
             "restricted": restricted, "normalized_value": "" if restricted else it.normalized_value, "attributes": {} if restricted else it.attributes, "source_id": it.source_id, "evidence": ev,
             "collection_method": it.collection_method, "origin": it.origin, "recorded_by": it.recorded_by, "observed_at": it.observed_at, "last_verified_at": it.last_verified_at,
             "confidence": it.confidence, "verification_state": state, "state_label": STATE_LABEL[state], "self_attested": it.self_attested, "sensitivity": it.sensitivity, "scope_id": it.scope_id,
@@ -293,13 +414,15 @@ def _mirrors(db: Session, st: Any, subject: Subject, role: str) -> dict[str, lis
     out: dict[str, list[dict[str, Any]]] = {"contact": [], "online_footprint": [], "images_documents": [], "security_exposure": []}
     for e in emails.list_for(db, st, subject, role=role)["items"]:
         out["contact"].append({"id": f"email:{e['id']}", "category": "contact", "type": "associated_email", "type_label": "Associated email (candidate)", "value": e["address"], "masked": e["masked"],
-                               "restricted": False, "verification_state": {"confirmed": "corroborated", "likely": "candidate", "possible": "candidate", "rejected": "rejected"}[e["classification"]],
+                               "restricted": False, "verification_state": ("self_attested" if e["classification"] == "confirmed" and e.get("confirmation_kind") != "independently_corroborated"
+                                                                            else "corroborated" if e["classification"] == "confirmed" else "candidate" if e["classification"] in ("likely", "possible") else "rejected"),
                                "state_label": e["label"], "evidence": e["evidence"], "origin": "discovered", "readonly": True, "open": "Associated emails", "note": "; ".join(e["explanation"])[:200],
                                "is_input": e["is_input"], "feeds_research": e["is_input"], "confidence": "unknown", "caveat": ""})
     for c in db.scalars(select(ProfileCandidateLink).where(ProfileCandidateLink.subject_id == subject.id)):
-        st_ = {"confirmed": "corroborated", "rejected": "rejected", "candidate": "candidate", "unsure": "candidate"}[c.state]
+        own = candidates.ownership(db, c)
+        st_ = {"confirmed": "self_attested" if own != "independently_corroborated" else "corroborated", "rejected": "rejected", "candidate": "candidate", "unsure": "candidate"}[c.state]
         out["online_footprint"].append({"id": f"account:{c.id}", "category": "online_footprint", "type": "account_candidate", "type_label": "Public account (review queue)", "value": c.canonical_url,
-                                        "masked": False, "restricted": False, "verification_state": st_, "state_label": STATE_LABEL[st_], "evidence": [], "origin": "discovered", "readonly": True,
+                                        "masked": False, "restricted": False, "verification_state": st_, "state_label": STATE_LABEL[st_], "evidence": evidence_refs(db, c.evidence_ids), "origin": "discovered", "readonly": True,
                                         "open": "Review queue", "note": c.hypothesis, "is_input": False, "feeds_research": False, "confidence": "unknown", "caveat": "A handle that exists is not the person."})
     if role != "viewer":
         from . import images as pimages
@@ -332,6 +455,7 @@ def _asset_cover(db: Session, subject: Subject, host: str) -> dict[str, Any]:
 
 def sections(db: Session, st: Any, subject: Subject, *, role: str, state: str | None = None, q: str | None = None) -> dict[str, Any]:
     sync_existing(db, subject)
+    repair_lead_types(db, subject)
     sweep_leads(db, subject)
     conflicts = _conflicts(db, subject)
     mirrors = _mirrors(db, st, subject, role)
@@ -341,7 +465,7 @@ def sections(db: Session, st: Any, subject: Subject, *, role: str, state: str | 
     for key, title in CATEGORIES:
         items: list[dict[str, Any]] = []
         for it in rows:
-            if it.category != key:
+            if _cat(it) != key:
                 continue
             if TYPES.get(it.type, TYPES["custom"])["restricted"] and role == "viewer":
                 hidden += 1
@@ -360,10 +484,10 @@ def sections(db: Session, st: Any, subject: Subject, *, role: str, state: str | 
             items = [i for i in items if i["verification_state"] == state]
         if q:
             items = [i for i in items if q.casefold() in str(i.get("value", "")).casefold() or q.casefold() in str(i.get("type_label", "")).casefold()]
-        counts = {s: sum(1 for i in items if i["verification_state"] == s) for s in STATES}
+        counts = {s: sum(1 for i in items if i["verification_state"] == s) for s in DISPLAY_STATES}
         out.append({"key": key, "title": title, "items": items, "counts": counts, "types": [t["type"] for t in type_catalog() if t["category"] == key],
                     "empty_note": "Not researched. An empty section is unknown, never evidence that nothing exists." if not items else ""})
-    return {"subject_id": subject.id, "role": role, "sections": out, "restricted_hidden": hidden, "states": [{"key": s, "label": STATE_LABEL[s]} for s in STATES],
+    return {"subject_id": subject.id, "role": role, "sections": out, "restricted_hidden": hidden, "states": [{"key": s, "label": STATE_LABEL[s]} for s in DISPLAY_STATES],
             "notice": "Inputs are what you provided; claims are what evidence supports. An empty field means not researched. Coverage describes attempted authorized methods only.",
             "types": type_catalog(), "restricted_note": RESTRICTED_NOTE}
 

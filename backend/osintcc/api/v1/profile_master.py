@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...main import ApiError
-from ...profile import gaps, master, providers
+from ...profile import accounting, gaps, master, providers
 from ...profile.service import ProfileError
 from ...telemetry import audit
 from .profile import perr, subject_for
@@ -31,8 +31,8 @@ async def get_master(request: Request, subject_id: str, state: str | None = None
     st = S(request)
     with st.sm() as db:
         s, case, role = subject_for(db, request, subject_id)
-        if state and state not in master.STATES:
-            raise ApiError(422, "invalid_state", f"state must be one of {', '.join(master.STATES)}")
+        if state and state not in master.DISPLAY_STATES:
+            raise ApiError(422, "invalid_state", f"state must be one of {', '.join(master.DISPLAY_STATES)}")
         doc = master.sections(db, st, s, role=role, state=state, q=(q or "")[:100] or None)
         analysis = gaps.analyze(db, st, s, case, st.adapters, st.settings, role=role) if role != "viewer" else None
         if role in ("owner", "editor"):
@@ -269,3 +269,47 @@ async def add_shared_provider(request: Request, body: DomainIn):
         audit.record(db, "profile.shared_provider_add", actor=actor(request), metadata={"domain": body.domain.lower()[:100]})
         db.commit()
         return {"domains": providers.all_domains(db), "added": body.domain.lower(), "custom": doms}
+
+
+class ReclassifyIn(Strict):
+    to_type: str = Field(min_length=1, max_length=32)
+    reason: str = Field(default="", max_length=300)
+    preview: bool = False
+
+
+@router.post("/subjects/{subject_id}/master/items/{item_id}/reclassify")
+async def reclassify(request: Request, subject_id: str, item_id: str, body: ReclassifyIn):
+    """Change an item's type (and with it its category). With preview=true nothing changes and the effects are listed. The value, evidence and verification state are untouched."""
+    with S(request).sm() as db:
+        s, _, role = subject_for(db, request, subject_id, "editor")
+        try:
+            if body.preview:
+                return master.preview_reclassify(db, s, item_id, body.to_type)
+            it = master.reclassify(db, s, item_id, to_type=body.to_type, role=role, actor=actor(request), reason=body.reason)
+        except ProfileError as exc:
+            db.commit()
+            raise perr(exc) from exc
+        db.commit()
+        return master.item_dict(db, it, role=role)
+
+
+@router.post("/subjects/{subject_id}/master/items/{item_id}/reclassify/undo")
+async def undo_reclassify(request: Request, subject_id: str, item_id: str):
+    with S(request).sm() as db:
+        s, _, role = subject_for(db, request, subject_id, "editor")
+        try:
+            it = master.undo_reclassify(db, s, item_id, role=role, actor=actor(request))
+        except ProfileError as exc:
+            raise perr(exc) from exc
+        db.commit()
+        return master.item_dict(db, it, role=role)
+
+
+@router.get("/subjects/{subject_id}/master/accounting")
+async def get_accounting(request: Request, subject_id: str):
+    """Per source: returned -> findings -> unique candidate accounts -> profile entries, counted from the stored records."""
+    with S(request).sm() as db:
+        s, _, _ = subject_for(db, request, subject_id, "editor")
+        out = accounting.pipeline(db, s)
+        db.commit()
+        return out

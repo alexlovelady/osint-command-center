@@ -63,8 +63,26 @@ def canonical_url(url: str) -> str:
     return urlunsplit(("https", host + port, path, query, ""))
 
 
+_SECTIONS = re.compile(r"/(about|videos|featured|community|playlists|shorts|streams|releases|channels|posts|followers|following|repositories|stars|likes|media|with_replies)$", re.IGNORECASE)
+_SECTION_HOSTS = ("youtube.com", "m.youtube.com", "tiktok.com", "twitter.com", "x.com", "github.com", "gitlab.com", "twitch.tv", "venmo.com", "instagram.com")
+
+
+def profile_root(url: str) -> str:
+    """The profile's own page: `/@handle/about` and `/@handle/videos` are the same account as `/@handle`. The original URL is never altered or discarded."""
+    c = canonical_url(url)
+    p = urlsplit(c)
+    if p.hostname and p.hostname in _SECTION_HOSTS:
+        path = p.path
+        for _ in range(2):
+            path = _SECTIONS.sub("", path, count=1)
+        if p.hostname in ("venmo.com", "www.venmo.com"):
+            path = re.sub(r"^/u/", "/", path)
+        return urlunsplit(("https", p.netloc, path, "", ""))
+    return c
+
+
 def cluster_key(url: str) -> str:
-    return hashlib.sha256(canonical_url(url).encode()).hexdigest()
+    return hashlib.sha256(profile_root(url).encode()).hexdigest()
 
 
 def mask_value(kind: str, value: str) -> str:

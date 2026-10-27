@@ -8,6 +8,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import urlsplit
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -90,8 +91,36 @@ def _aware(d: datetime) -> datetime:
     return d if d.tzinfo else d.replace(tzinfo=UTC)
 
 
+def ownership(db: Session, c: ProfileCandidateLink) -> str:
+    """How a confirmed account was confirmed: 'self_attested' (the owner said so), 'independently_corroborated' (evidence that is not the tool's own observation was attached), or ''."""
+    if c.state != "confirmed":
+        return ""
+    ev = db.scalars(select(ProfileReviewEvent).where(ProfileReviewEvent.target_type == "candidate", ProfileReviewEvent.target_id == c.id, ProfileReviewEvent.to_state == "confirmed",
+                                                     ProfileReviewEvent.reverts_event_id.is_(None)).order_by(ProfileReviewEvent.created_at.desc())).first()
+    if ev is None:
+        return "self_attested"
+    return "independently_corroborated" if ev.evidence_ids else "self_attested"
+
+
+def _host_root(url: str) -> str:
+    h = (urlsplit(url).hostname or "").lower()
+    parts = h.split(".")
+    return ".".join(parts[-2:]) if len(parts) >= 2 else h
+
+
+def evidence_applies(db: Session, evidence_id: str, c: ProfileCandidateLink) -> bool:
+    """Evidence can support an account only if it is about that account's site. A GitHub API capture says nothing about a Venmo or TikTok page. Evidence with no web address
+    (a document or screenshot a person added) is accepted: the person vouches for its relevance, and the record says so."""
+    ev = db.get(Evidence, evidence_id)
+    if ev is None:
+        return False
+    if ev.original_url:
+        return _host_root(ev.original_url) == _host_root(c.canonical_url)
+    return ".raw" not in (ev.kind or "")
+
+
 def candidate_dict(db: Session, c: ProfileCandidateLink) -> dict:
-    return {"id": c.id, "canonical_url": c.canonical_url, "site": c.site, "hypothesis": c.hypothesis, "adapters": c.adapters,
+    return {"ownership": ownership(db, c), "id": c.id, "canonical_url": c.canonical_url, "site": c.site, "hypothesis": c.hypothesis, "adapters": c.adapters,
             "independent_signals": c.source_independence, "state": c.state, "reviewed_by": c.reviewed_by, "reviewed_at": c.reviewed_at,
             "review_basis": c.review_basis, "first_seen_at": c.first_seen_at, "last_seen_at": c.last_seen_at, "observation_count": len(c.finding_ids),
             "evidence": evidence_refs(db, c.evidence_ids), "finding_ids": c.finding_ids,
@@ -144,6 +173,9 @@ def review(db: Session, subject: Subject, candidate_ids: list[str], *, to_state:
         rows.append(c)
     if to_state == "confirmed":
         for c in rows:  # evidence that is not just the tool's own handle-existence observation
+            bad = [e for e in extra if not evidence_applies(db, e, c)]
+            if bad:
+                raise ProfileError("evidence_not_applicable", f"{c.canonical_url}: the selected evidence is not about this site, so it cannot support this account")
             independent = [e for e in extra if e not in c.evidence_ids]
             if attestation != "subject" and not independent:
                 raise ProfileError("corroboration_required", f"{c.canonical_url}: confirming needs the subject's attestation or independent "
