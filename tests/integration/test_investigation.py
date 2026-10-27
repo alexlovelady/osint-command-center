@@ -339,7 +339,7 @@ async def test_refresh_runs_the_permitted_checks_again_and_resume_does_not(api, 
     ev = (await api.get(f"{B}/investigations/{rid}/events")).json()["events"]
     assert any(e["kind"] == "refresh" for e in ev)
     summ = (await api.get(f"{B}/investigations/{rid}/summary")).json()
-    grav = [s for s in summ["accounting"]["sources"] if s["source_id"] == "gravatar_email"][0]
+    grav = next(s for s in summ["accounting"]["sources"] if s["source_id"] == "gravatar_email")
     assert grav["runs"] >= 2 and grav["retrieved"] == 0                                                 # history kept; "returned" counts the latest run only
     assert (await api.post(f"{B}/investigations/{rid}/cancel")).status_code == 200
     assert (await api.post(f"{B}/investigations/{rid}/refresh")).status_code == 422
