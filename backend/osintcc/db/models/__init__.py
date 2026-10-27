@@ -910,6 +910,8 @@ from .profile import (  # noqa: F401  (target-profile tables, addendum TP-1.0)
     ExposureIndicator,
     ImageAsset,
     ImageMatch,
+    InvestigationEvent,
+    InvestigationRun,
     ProfileCandidateLink,
     ProfileClaim,
     ProfileItem,

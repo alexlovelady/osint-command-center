@@ -390,3 +390,46 @@ class ProfileItem(Base):
         Index("ix_profile_item_lookup", "subject_id", "category", "type"),
         Index("ix_profile_item_backing", "backing_kind", "backing_id"),
     )
+
+
+INVESTIGATION_STATES = ("draft", "queued", "collecting", "correlating", "expanding", "awaiting_review", "complete_with_limits", "completed", "paused", "cancelled", "failed")
+
+
+class InvestigationRun(Base):
+    """One-click investigation: a durable, bounded orchestration over the existing research, expansion and review services. It owns no results of its own."""
+    __tablename__ = "investigation_runs"
+    id: Mapped[str] = pk()
+    case_id: Mapped[str] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    subject_id: Mapped[str] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(12), default="person")                      # person | business
+    status: Mapped[str] = mapped_column(String(24), default="draft")
+    phase: Mapped[str] = mapped_column(String(24), default="")
+    pass_no: Mapped[int] = mapped_column(Integer, default=0)
+    policy_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    approved_sources: Mapped[list[str]] = mapped_column(JSON, default=list)             # the single bounded approval: provider source ids the user named
+    excluded_sources: Mapped[list[str]] = mapped_column(JSON, default=list)
+    manifest_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)           # snapshot of what was planned and why each row can or cannot run
+    counts_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    stop_reason: Mapped[str] = mapped_column(String(40), default="")
+    last_error: Mapped[str] = mapped_column(Text, default="")
+    requested_by: Mapped[str] = mapped_column(String(80), default="local")
+    idempotency_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = ts()
+    updated_at: Mapped[datetime] = ts()
+    started_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    finished_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    deadline_at: Mapped[datetime | None] = ts(nullable=True, default=False)
+    __table_args__ = (UniqueConstraint("subject_id", "idempotency_key", name="uq_investigation_idem"),)
+
+
+class InvestigationEvent(Base):
+    """Append-only activity log for a run: the replayable record behind the progress view."""
+    __tablename__ = "investigation_events"
+    id: Mapped[str] = pk()
+    run_id: Mapped[str] = mapped_column(ForeignKey("investigation_runs.id", ondelete="CASCADE"), index=True)
+    seq: Mapped[int] = mapped_column(Integer)
+    kind: Mapped[str] = mapped_column(String(24))
+    message: Mapped[str] = mapped_column(Text, default="")
+    detail_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    at: Mapped[datetime] = ts()
+    __table_args__ = (UniqueConstraint("run_id", "seq", name="uq_investigation_event_seq"),)

@@ -393,6 +393,8 @@ def _conflicts(db: Session, subject: Subject) -> set[str]:
 def item_dict(db: Session, it: ProfileItem, *, role: str, conflicting: bool = False, revealed: bool = False) -> dict[str, Any]:
     spec = TYPES.get(it.type, TYPES["custom"])
     state = "conflicting" if conflicting and it.verification_state not in ("rejected",) else _effective_state(db, it)
+    if state == "candidate" and it.attributes.get("attested_by_owner"):
+        state = "self_attested"                     # the owner said so; that is not independent corroboration
     restricted = spec["restricted"]
     shown = it.value if (not restricted or revealed) else _mask(it.type, it.value)
     ev = []
@@ -618,6 +620,7 @@ def set_state(db: Session, subject: Subject, item_id: str, *, to_state: str, rol
         if not independent:
             it.self_attested = True
             it.verification_state = "candidate"
+            it.attributes = {**it.attributes, "attested_by_owner": True}
             it.last_verified_at = _now()
             it.evidence_ids = ev
             db.add(ProfileReviewEvent(subject_id=subject.id, case_id=subject.case_id, target_type="item", target_id=it.id, from_state=prev, to_state="candidate", reviewer=actor,
@@ -627,6 +630,7 @@ def set_state(db: Session, subject: Subject, item_id: str, *, to_state: str, rol
     it.evidence_ids = ev
     it.verification_state = to_state
     it.last_verified_at = _now()
+    it.attributes = {k: v for k, v in it.attributes.items() if k != "attested_by_owner"}
     it.self_attested = False if to_state == "corroborated" else it.self_attested
     if it.backing_kind == "claim" and it.backing_id and to_state in ("corroborated", "rejected", "conflicting", "candidate"):
         review_claim(db, subject, it.backing_id, to_state={"corroborated": "verified", "rejected": "rejected", "conflicting": "conflicting", "candidate": "candidate"}[to_state],
@@ -637,6 +641,25 @@ def set_state(db: Session, subject: Subject, item_id: str, *, to_state: str, rol
     db.add(ProfileReviewEvent(subject_id=subject.id, case_id=subject.case_id, target_type="item", target_id=it.id, from_state=prev, to_state=to_state, reviewer=actor, basis=basis.strip(),
                               attestation="corroborated" if to_state == "corroborated" else "none", evidence_ids=ev))
     audit.record(db, "profile.item_state", actor=actor, case_id=subject.case_id, resource_type="profile_item", resource_id=it.id, metadata={"from": prev, "to": to_state})
+    return it
+
+
+def self_attest(db: Session, subject: Subject, item_id: str, *, role: str, actor: str, basis: str) -> ProfileItem:
+    """The owner says this is theirs. Recorded as exactly that: it is shown as Self-attested and never counts as independent corroboration. No evidence is required to say so."""
+    if role == "viewer":
+        raise ProfileError("forbidden", "viewers cannot change verification states")
+    if not basis.strip():
+        raise ProfileError("basis_required", "record the reason or method for this decision")
+    it = _get(db, subject, item_id)
+    if TYPES.get(it.type, TYPES["custom"])["restricted"] and role != "owner":
+        raise ProfileError("forbidden", "only the case owner can decide on restricted fields")
+    prev = _effective_state(db, it)
+    it.self_attested, it.verification_state = True, "candidate" if it.verification_state != "corroborated" else it.verification_state
+    it.attributes = {**it.attributes, "attested_by_owner": True}
+    it.last_verified_at = _now()
+    db.add(ProfileReviewEvent(subject_id=subject.id, case_id=subject.case_id, target_type="item", target_id=it.id, from_state=prev, to_state="candidate", reviewer=actor,
+                              basis=f"self-attestation recorded, not corroboration: {basis.strip()}"[:900], attestation="subject", evidence_ids=[]))
+    audit.record(db, "profile.item_state", actor=actor, case_id=subject.case_id, resource_type="profile_item", resource_id=it.id, metadata={"from": prev, "to": "self_attested"})
     return it
 
 
@@ -663,6 +686,8 @@ def promote_to_input(db: Session, subject: Subject, item_id: str, *, role: str, 
         raise ProfileError("not_an_input_type", "this kind of fact is not used as a research input")
     if it.is_input:
         return it
+    if it.verification_state == "rejected":
+        raise ProfileError("rejected_item", "this was rejected: reopen it (Needs review) before using it as an input. A rejected value never drives research")
     if it.verification_state != "corroborated" and not basis.strip():
         raise ProfileError("basis_required", "say why this discovered value belongs to the subject")
     ident = add_identifier(db, subject, spec["identifier"], it.normalized_value if spec["identifier"] not in ("name", "organization") else it.value, actor=actor,

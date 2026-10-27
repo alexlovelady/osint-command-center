@@ -230,13 +230,11 @@ async def test_discovered_values_start_as_candidates_and_rejected_ones_never_bec
     )
     assert rej.status_code == 200 and rej.json()["verification_state"] == "rejected"
     use = await api.post(murl(p, f"/items/{url['id']}/use-as-input"), json={"basis": "I checked: it is mine"})
-    assert use.status_code == 200  # a person may still decide to use it
+    assert use.status_code == 422 and use.json()["code"] == "rejected_item"  # a rejected value never drives research until a person reopens it
     again = [i for i in section(await master(api, p), "online_footprint")["items"] if i["id"] == url["id"]]
-    assert (
-        again and again[0]["verification_state"] == "rejected"
-    )  # but the rejection is still on record, shown as such
+    assert again and again[0]["verification_state"] == "rejected"
     ids = (await api.get(f"{B}/subjects/{p['sid']}/identifiers")).json()["items"]
-    assert len(ids) == 2
+    assert len(ids) == 1
 
 
 # ---- 9. contradictions, timestamps, reversible dedupe ----------------------------------------------------------------------------------------------
@@ -312,7 +310,7 @@ async def test_self_attestation_is_not_corroboration(api, world):
     assert r.status_code == 422 and r.json()["code"] == "self_attestation_only"
     cur = next(i for i in section(await master(api, p), "employment")["items"] if i["id"] == it["id"])
     assert (
-        cur["verification_state"] == "candidate"
+        cur["verification_state"] == "self_attested"
         and cur["self_attested"] is True
         and "not independent corroboration" in cur["caveat"]
     )

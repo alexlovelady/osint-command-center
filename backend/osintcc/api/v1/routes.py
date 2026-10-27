@@ -1326,6 +1326,9 @@ router.include_router(_profile_emails.router)
 from . import profile_master as _profile_master
 
 router.include_router(_profile_master.router)
+from . import investigations as _investigations
+
+router.include_router(_investigations.router)
 from . import branding as _branding
 
 router.include_router(_branding.router)

@@ -123,6 +123,8 @@ def create_app(settings: Settings | None = None, *, adapters: dict[str, IntelAda
         scheduler.recover()
         app.state.recovered_automation_runs = state.automation.recover()
         app.state.recovered_aiv_runs = state.aiv.recover()
+        from .profile import investigate as _investigate
+        app.state.recovered_investigations = _investigate.recover(state) if settings.run_scheduler else 0
         from .plugins.manager import PluginManager
         state.plugin_manager = PluginManager(state)
         state.plugin_manager.sync()  # re-register enabled, hash-verified plugins

@@ -150,7 +150,7 @@ def _apply_relationship(db: Session, c: ProfileCandidateLink, reviewer: str) -> 
 
 
 def review(db: Session, subject: Subject, candidate_ids: list[str], *, to_state: str, reviewer: str, basis: str, attestation: str = "none",
-           evidence_ids: list[str] | None = None) -> dict:
+           evidence_ids: list[str] | None = None, force_bulk: bool = False) -> dict:
     """Bulk decision by a person. Confirmation needs the subject's own attestation or independent corroborating evidence."""
     if to_state not in ("confirmed", "rejected", "unsure", "candidate"):
         raise ProfileError("invalid_state", "state must be confirmed, rejected, unsure or candidate")
@@ -180,7 +180,7 @@ def review(db: Session, subject: Subject, candidate_ids: list[str], *, to_state:
             if attestation != "subject" and not independent:
                 raise ProfileError("corroboration_required", f"{c.canonical_url}: confirming needs the subject's attestation or independent "
                                    "corroborating evidence; a matching handle alone is not enough")
-    bulk = str(uuid.uuid4()) if len(rows) > 1 else None
+    bulk = str(uuid.uuid4()) if (len(rows) > 1 or force_bulk) else None
     for c in rows:
         prev = c.state
         c.state, c.reviewed_by, c.reviewed_at, c.review_basis = to_state, reviewer, _now(), basis.strip()
